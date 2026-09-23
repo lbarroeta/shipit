@@ -41,7 +41,7 @@ deliverable and the user pastes it into the tracker.
 
 - **No product code, no file plan, no verification commands.** Naming the files to
   touch is `plan`'s output, and doing it here fossilises a guess into the backlog.
-- **Prose language.** Human-facing output follows `language` in `.sdd/config.json` (absent → `en`). Code, identifiers, commit subjects and branch names stay English.
+- **Prose language.** The ticket draft follows `language.task`; what this skill prints follows `language.plan` in `.sdd/config.json`. Legacy string `language` → that value for every key but `code`; absent → `en`. Identifiers, commit subjects and branch names always stay English.
 - **No external side effects.** No git, no PR, no tracker write. The draft file is
   the whole deliverable.
 - **Show the draft before delivering.** A ticket in a shared backlog is awkward to

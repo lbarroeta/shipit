@@ -65,9 +65,9 @@ and keep it exported — the commands read it to find the skills. Uninstall:
 
 ## Update
 
-One command per runtime, and nothing to migrate: every runtime reads the same
-`skills/` directory, and a `.sdd/` contract written by an older version keeps
-working. New skills arrive as new commands — after this release, `/shipit:task`.
+One command per runtime: every runtime reads the same `skills/` directory, and a
+`.sdd/` contract written by an older version keeps working. Then one command per
+repo to adopt what the new version adds — see *Then, once per repository* below. New skills arrive as new commands — after this release, `/shipit:task`.
 
 ### Claude Code
 
@@ -110,6 +110,16 @@ ran it. Export `SHIPIT_ROOT` first if your checkout is not in the default place.
 
 The new command has to resolve. `/shipit:task` in Claude Code and Codex,
 `/shipit-task` in OpenCode, where `opencode debug config` lists all eight.
+
+### Then, once per repository
+
+```
+/shipit:init --upgrade
+```
+
+Brings `.sdd/config.json` up to the installed version: adds new keys, converts old
+shapes, and asks only the decisions the new version introduced — nothing else is
+re-detected or re-asked. Already current → it says so and stops.
 
 ## The cycle
 
@@ -264,11 +274,20 @@ loudly rather than buried in JSON.
 
 ### Output language
 
-`init` asks once which language shipit should write in, and records it as `language`
-in `.sdd/config.json` (`en` by default). It governs prose a human reads — plan,
-implementation report, QA guide, PR body. Code, identifiers,
-commit subjects, branch names and `.sdd/` itself stay English, so the repo stays
-greppable for everyone. Change it by editing the key, or `/shipit:init --language es`.
+`init` asks once which language shipit should write in, one per action, and records
+them under `language` in `.sdd/config.json` (`en` by default):
+
+```json
+"language": { "plan": "es", "task": "es", "pr": "en", "code": "en" }
+```
+
+`plan` covers the plan, implementation report, QA guide and what skills print;
+`task` covers tickets and tracker comments; `pr` the PR body and thread replies;
+`code` comments written in code. Identifiers, commit subjects, branch names and
+`.sdd/` itself always stay English, so the repo stays greppable for everyone. An
+old `"language": "es"` still works: it sets `plan`, `task` and `pr`, and `code`
+stays `en`. Change it by editing the keys, or
+`/shipit:init --language plan=es,pr=en,code=en`.
 
 ### The pointer that makes it read
 

@@ -1,5 +1,5 @@
 {
-  "shipit_version": "0.7.0",
+  "shipit_version": "0.8.0",
   "generated_at": "YYYY-MM-DD",
   "sdd_tracking": "committed",
   "handoff": {
@@ -10,7 +10,12 @@
     "default_branch": "main",
     "remote": "origin"
   },
-  "language": "en",
+  "language": {
+    "plan": "en",
+    "task": "en",
+    "pr": "en",
+    "code": "en"
+  },
   "docs": {
     "agent_docs": [],
     "owned_by_shipit": [".sdd/"]

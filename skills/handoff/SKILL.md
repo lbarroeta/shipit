@@ -86,7 +86,7 @@ Rules:
   file list. `tracker-writes.md` owns the content; do not improvise it.
 - Never move a tracker issue backwards, and read its current status before any
   transition. `tracker-writes.md` lists the terminal states per adapter.
-- **Prose language.** Human-facing output follows `language` in `.sdd/config.json` (absent → `en`). Code, identifiers, commit subjects and branch names stay English.
+- **Prose language.** PR title, PR body and review-thread replies follow `language.pr`; tracker comments and created issues follow `language.task`; what this skill prints follows `language.plan` in `.sdd/config.json`. Legacy string `language` → that value for every key but `code`; absent → `en`. Identifiers, commit subjects and branch names always stay English.
 - **Stage by explicit path.** Never `git add -A`, never `git add .`.
 - **`sdd_tracking: local` excludes every `.sdd/*` path from staging**, in every
   mode, even when the report's `Files Changed` lists one. Drop it from the manifest
