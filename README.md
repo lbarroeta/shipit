@@ -65,9 +65,9 @@ and keep it exported — the commands read it to find the skills. Uninstall:
 
 ## Update
 
-One command per runtime, and nothing to migrate: every runtime reads the same
-`skills/` directory, and a `.sdd/` contract written by an older version keeps
-working. New skills arrive as new commands — after this release, `/shipit:task`.
+One command per runtime: every runtime reads the same `skills/` directory, and a
+`.sdd/` contract written by an older version keeps working. Then one command per
+repo to adopt what the new version adds — see *Then, once per repository* below. New skills arrive as new commands — after this release, `/shipit:task`.
 
 ### Claude Code
 
@@ -110,6 +110,16 @@ ran it. Export `SHIPIT_ROOT` first if your checkout is not in the default place.
 
 The new command has to resolve. `/shipit:task` in Claude Code and Codex,
 `/shipit-task` in OpenCode, where `opencode debug config` lists all eight.
+
+### Then, once per repository
+
+```
+/shipit:init --upgrade
+```
+
+Brings `.sdd/config.json` up to the installed version: adds new keys, converts old
+shapes, and asks only the decisions the new version introduced — nothing else is
+re-detected or re-asked. Already current → it says so and stops.
 
 ## The cycle
 

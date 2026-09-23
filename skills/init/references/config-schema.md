@@ -156,3 +156,13 @@ does nothing and says which capability the run needed.
   contract reports the drift and lets the user re-run `init`.
 - A command that fails *because it does not exist* means the contract has drifted.
   Say that explicitly rather than reporting it as a code failure.
+
+## Upgrades
+
+Read by `init --upgrade`, top to bottom, every row after the config's
+`shipit_version`. A release that changes the config's shape adds a row; one that
+does not, adds nothing.
+
+| Version | Change | Action |
+| --- | --- | --- |
+| `0.8.0` | `language` became one language per action | String → ask the four keys, each prefilled: `plan`, `task`, `pr` with the string, `code` with `en`. Absent → ask, default `en` per key. Already an object → nothing |

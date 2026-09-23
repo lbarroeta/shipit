@@ -121,7 +121,8 @@ two happened in the report.
 ## Workflow
 
 1. **Preflight.** `git rev-parse --show-toplevel` for the root; `git rev-parse --abbrev-ref origin/HEAD` for the default branch. Not a git repo → say so and stop: tier 0 is unmet.
-2. **Refresh check.** `.sdd/` already exists → switch to Refresh mode below.
+2. **Refresh check.** `.sdd/` already exists → switch to Refresh mode below —
+   or Upgrade mode, with `--upgrade`.
 3. **Ask tracking.** First `init` only — there is no recorded decision yet. Ask
    whether `.sdd/` should be committed (default — a team contract visible to CI,
    teammates, and any other agent) or stay local (nobody else sees it; each
@@ -181,10 +182,32 @@ two happened in the report.
   connected this time; a `none` that was a clean detection is left alone.
 - Report what changed, what was kept, and what became `unknown` since last run.
 
+## Upgrade mode
+
+`--upgrade`: bring an existing `.sdd/config.json` up to this plugin's version
+without re-running detection. The config's `shipit_version` against the plugin's
+is the whole scope.
+
+1. No `.sdd/config.json` → say so and stop; that is a first `init`.
+2. Same version → say "already current" and stop. Newer config than plugin → say
+   so and stop; never downgrade.
+3. Walk `references/config-schema.md § Upgrades` for every row after the recorded
+   version, in order, and apply each row's action.
+4. Any key in `assets/config-template.json` still missing from the config → add it
+   with the template value, unless the schema marks it asked (`sdd_tracking`,
+   `language`) — those are asked, same as a first `init`.
+5. Set `shipit_version`. Show the config diff and ask once before writing.
+
+Only `config.json` is touched. Values already recorded are never changed except
+by a row's action. The `.md` files, the pointer and detection are Refresh mode's
+job — say so in the report if they look stale.
+
 ## Flags
 
 - `--language <tag>` — set `plan`, `task` and `pr` without asking; `code` untouched.
   `--language plan=es,pr=en,code=en` sets only the keys named. For CI and re-runs.
+- `--upgrade` — migrate `config.json` to this plugin's version, per *Upgrade mode*.
+  Run it after updating the plugin.
 - `--tracker <adapter>` — set `tracker.adapter` without detecting or asking:
   `linear`, `github-issues`, `jira`, `shortcut`, or `none`. For CI, and for
   correcting a detection in one command instead of hand-editing `config.json`. An
