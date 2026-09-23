@@ -98,7 +98,7 @@ two happened in the report.
   supplied the name.
 - **`language` is asked, never detected.** The language a repo's docs are written
   in does not imply the language its owner wants shipit to write in. Ask once,
-  default `en`, record it in `language`.
+  default `en` per key, record it in `language.{plan,task,pr,code}`.
 - **`sdd_tracking` is asked once.** First `init` only, before anything is written.
   Refresh reads the recorded value and never re-asks except on a discrepancy
   against real git state.
@@ -130,12 +130,13 @@ two happened in the report.
    answer to `sdd_tracking`. Local → check `git check-ignore -q .sdd` first, and
    append a `.sdd/` entry to `.git/info/exclude` only if nothing already covers
    it — never to `.gitignore`.
-4. **Ask the output language.** First `init` only, in the same breath as tracking.
-   Which language should shipit write in — plan, report, QA guide, PR body?
-   Default `en`. Accept a tag (`es`, `pt-BR`) or a plain name; store the tag in
-   `language`. Prose only: code, identifiers, commit subjects,
-   branch names and `.sdd/` itself stay English. See
-   `references/config-schema.md § Scope of language`.
+4. **Ask the output languages.** First `init` only, in the same breath as tracking.
+   One question, four answers, each defaulting to `en`: plans and reports
+   (`plan`), tickets and tracker comments (`task`), PR body and thread replies
+   (`pr`), comments in code (`code`). A single answer fills `plan`, `task` and
+   `pr`; `code` stays `en` unless named. Accept a tag (`es`, `pt-BR`) or a plain
+   name; store the tag. Identifiers, commit subjects, branch names and `.sdd/`
+   itself stay English. See `references/config-schema.md § Scope of language`.
 5. **Detect.** Work through `references/detection-recipes.md` in order. It owns every recipe; do not improvise a detection this file does not describe.
 6. **Verify commands.** Run each candidate command. Green → write it. Red or absent → `null` plus `unknown[]`. Record the result in `commands_verified`.
 7. **Derive layers.** From real directories, with one exemplar each. No fixed list of layer names.
@@ -169,8 +170,10 @@ two happened in the report.
   disagrees: recorded `local` but `git ls-files .sdd | head -1` returns a
   tracked path, or `git check-ignore -q .sdd` now fails. Either disagreement is
   reported and asked again, same as a hand-edited file.
-- `language` is a human decision, not a detection: keep the recorded value, never
-  re-ask. `--language` overrides it; a config predating the field gets `en`.
+- `language` is a human decision, not a detection: keep the recorded values, never
+  re-ask. `--language` overrides it; a config predating the field gets `en` per
+  key. A legacy string is migrated to the object per `§ Scope of language` —
+  `plan`, `task`, `pr` take the string, `code` gets `en` — and reported.
 - `tracker.adapter` is kept as recorded and never re-asked. `--tracker` overrides it.
   The one exception: detection now contradicts the recorded value with a connected
   MCP — report that as a discrepancy and ask, the same as a hand-edited file. A
@@ -180,7 +183,8 @@ two happened in the report.
 
 ## Flags
 
-- `--language <tag>` — set `language` without asking. For CI and re-runs.
+- `--language <tag>` — set `plan`, `task` and `pr` without asking; `code` untouched.
+  `--language plan=es,pr=en,code=en` sets only the keys named. For CI and re-runs.
 - `--tracker <adapter>` — set `tracker.adapter` without detecting or asking:
   `linear`, `github-issues`, `jira`, `shortcut`, or `none`. For CI, and for
   correcting a detection in one command instead of hand-editing `config.json`. An
@@ -198,7 +202,7 @@ two happened in the report.
   `CLAUDE.md` is a symlink or a copy.
 - Tracking: committed or local, and whether `.git/info/exclude` was touched.
 - Stack detected, one line.
-- Output language recorded, and whether it came from the question or `--language`.
+- Output language per key, and whether it came from the question or `--language`.
 - Commands verified, with the exit code each returned.
 - **`unknown[]`, listed loudly.** Silence here is what poisons every later plan.
 - Layers found, with their exemplars.

@@ -264,11 +264,20 @@ loudly rather than buried in JSON.
 
 ### Output language
 
-`init` asks once which language shipit should write in, and records it as `language`
-in `.sdd/config.json` (`en` by default). It governs prose a human reads — plan,
-implementation report, QA guide, PR body. Code, identifiers,
-commit subjects, branch names and `.sdd/` itself stay English, so the repo stays
-greppable for everyone. Change it by editing the key, or `/shipit:init --language es`.
+`init` asks once which language shipit should write in, one per action, and records
+them under `language` in `.sdd/config.json` (`en` by default):
+
+```json
+"language": { "plan": "es", "task": "es", "pr": "en", "code": "en" }
+```
+
+`plan` covers the plan, implementation report, QA guide and what skills print;
+`task` covers tickets and tracker comments; `pr` the PR body and thread replies;
+`code` comments written in code. Identifiers, commit subjects, branch names and
+`.sdd/` itself always stay English, so the repo stays greppable for everyone. An
+old `"language": "es"` still works: it sets `plan`, `task` and `pr`, and `code`
+stays `en`. Change it by editing the keys, or
+`/shipit:init --language plan=es,pr=en,code=en`.
 
 ### The pointer that makes it read
 

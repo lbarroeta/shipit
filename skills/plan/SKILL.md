@@ -45,7 +45,7 @@ Read narrow. Bulk-loading is the single biggest token sink in this flow.
 ## Hard rules
 
 - No product code. No full implementation snippets.
-- **Prose language.** Human-facing output follows `language` in `.sdd/config.json` (absent → `en`). Code, identifiers, commit subjects and branch names stay English.
+- **Prose language.** The plan and what this skill prints follow `language.plan` in `.sdd/config.json`. Legacy string `language` → that value for every key but `code`; absent → `en`. Identifiers, commit subjects and branch names always stay English.
 - Nothing not required by the acceptance criteria: no refactor, no dependency, no
   feature flag, no background job, no webhook, no abstraction.
 - Every planned test names its applicable `.sdd/rules/tests/*.md`, or the layer

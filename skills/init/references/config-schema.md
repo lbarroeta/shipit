@@ -25,7 +25,10 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `repo.name` | string | Basename of the git toplevel |
 | `repo.default_branch` | string | From `origin/HEAD` |
 | `repo.remote` | string | Usually `origin` |
-| `language` | string | Language for human-facing prose. BCP-47 tag or plain name (`en`, `es`, `pt-BR`). Asked once by `init`, default `en`. See below |
+| `language.plan` | string | Plan, implementation report, QA guide, and what every skill prints. BCP-47 tag or plain name (`en`, `es`, `pt-BR`). Asked once by `init`, default `en`. See below |
+| `language.task` | string | Ticket drafts, created issues, tracker comments. Default `en` |
+| `language.pr` | string | PR title and body, review-thread replies. Default `en` |
+| `language.code` | string | Comments written in code. Default `en` |
 | `docs.agent_docs` | string[] | Symlinks resolved; each file listed once |
 | `docs.owned_by_shipit` | string[] | Always `[".sdd/"]` |
 | `stack.languages` | string[] | With version pin files as evidence in `stack.md` |
@@ -83,12 +86,25 @@ test, and the whole red-green loop degrades to running the full suite.
 
 ## Scope of `language`
 
-Applies to prose a human reads: plan narrative, implementation report, QA guide,
-PR title and body, and what a skill prints.
+One language per action, so a plan can be read in Spanish while the PR and the
+code stay English for the team:
 
-Never applies to: code, identifiers, comments in code, commit subjects, branch
-names, file paths, and the `.sdd/` contract itself — those stay English so the
-repo stays greppable and portable across teams.
+| Key | Governs |
+| --- | --- |
+| `plan` | Plan narrative, implementation report, QA guide, what a skill prints |
+| `task` | Ticket drafts, created issues, tracker comments |
+| `pr` | PR title and body, review-thread replies |
+| `code` | Comments written in code |
+
+A key never borrows another's value: a comment in code follows `code`, even when
+it is written while executing a plan in `plan`'s language.
+
+Legacy string form (`"language": "es"`) → that value for `plan`, `task` and `pr`;
+`code` stays `en`. Absent → every key `en`. A missing key inside the object → `en`.
+
+Never applies to: identifiers, commit subjects, branch names, file paths, and
+the `.sdd/` contract itself — those stay English so the repo stays greppable and
+portable across teams.
 
 ## Warning on `worktree.link[]`
 
