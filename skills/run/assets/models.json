@@ -1,0 +1,12 @@
+{
+  "anthropic": {
+    "plan": {"model": "claude-opus-5-5", "effort": "high"},
+    "implement": {"model": "claude-sonnet-5-5", "effort": "high"},
+    "handoff": {"model": "claude-sonnet-5-5", "effort": "high"}
+  },
+  "openai": {
+    "plan": {"model": "gpt-6.1-sol", "effort": "high"},
+    "implement": {"model": "gpt-6-luna", "effort": "xhigh"},
+    "handoff": {"model": "gpt-6-luna", "effort": "xhigh"}
+  }
+}

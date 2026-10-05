@@ -29,6 +29,9 @@ plugin disabled, so the number reported is a delta, not an absolute.
 | `init-ambiguous-tracker` | Guessing a tracker from a branch pattern two adapters share, or writing `none` in a way nothing downstream can distinguish from a real absence |
 | `task-epic-split` | A chain of tickets where only the last one is worth merging; a ticket that does `plan`'s job |
 | `task-no-tracker` | Creating an issue somewhere the repo did not configure, and calling `none` a gap |
+| `run-dirty-main` | Switching main or adopting uncommitted user changes before an orchestrated task |
+| `run-resume-qa` | Restarting from main, duplicating delivery, or calling automated checks human QA approval |
+| `run-model-unavailable` | Role-playing subagents or silently substituting unavailable stage models |
 
 Every case targets a rule that, when broken, produces confidently wrong output
 rather than an error. Those are the failures worth paying for a grader to catch.

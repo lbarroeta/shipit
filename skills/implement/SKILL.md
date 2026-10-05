@@ -26,6 +26,10 @@ and verified with commands that are known to run in this repo.
 ## Hard rules
 
 - Require an approved plan. Missing → stop and ask.
+  In a coordinated `shipit:run`, an explicit user request to execute the fetched
+  issue authorizes the plan within its acceptance criteria after the coordinator's
+  contract check. Require that recorded request and scope in the delegation;
+  never infer approval from the planner's output or claim human plan review.
 - **Prose language.** Report and QA guide follow `language.plan`; the PR description follows `language.pr`; comments written in code follow `language.code` (default `en`) — never `language.plan` — in `.sdd/config.json`. Legacy string `language` → that value for every key but `code`; absent → `en`. Identifiers, commit subjects and branch names always stay English.
 - No scope expansion. No redesign. No new abstraction. No dependency upgrade.
 - No behaviour change outside the plan.
@@ -92,7 +96,10 @@ and verified with commands that are known to run in this repo.
    `assets/pr-description-template.md` into the report. Write it; do not post it.
    Every section there earns its place or is dropped — an empty heading costs a
    reviewer more than it gives.
-9. **Deliver.** Validation green and the report written → invoke `handoff` in
+9. **Deliver.** `--defer-handoff` → return the report and validation results to
+   the caller without invoking `handoff`. Used by `shipit:run` so its delivery
+   subagent gets the configured model. Otherwise, validation green and the report
+   written → invoke `handoff` in
    `implementation` mode and pass it the report. Its report is appended to yours
    verbatim, never summarized into a claim it did not make. Do not invoke it when
    the run ended `# Implementation Blocked` or `# Implementation Incomplete`, or
@@ -104,7 +111,12 @@ and verified with commands that are known to run in this repo.
 
 ## User change protection
 
-Uncommitted changes are user-owned unless this run made them. Stop before editing
+Uncommitted changes are user-owned unless this run made them. A `shipit:run`
+delegation may name the generated plan as a run-owned artifact; verify that path
+and the saved run record before treating it as such. On resume, pending manifests
+and archived revision manifests establish ownership only for paths whose saved
+content hashes still match. Verify those hashes before continuing prior edits.
+This does not grant ownership of other pre-existing changes. Stop before editing
 when a required file has changes you did not make, when existing changes make the
 plan ambiguous or risky, or when the plan would revert user work. Report the
 conflicting paths, why they conflict, and the exact decision needed. Unrelated user
@@ -161,3 +173,8 @@ Use `assets/implementation-report-template.md`. Sections in that order: QA Hando
 QA Steps For Non-Developer, Plan, Summary, Files Changed, Tests Added/Updated,
 Validation Commands Run, Security Notes, Handoff, Known Risks or Follow-ups,
 PR Preparation.
+
+## Flag
+
+`--defer-handoff`: validation and report only; no delivery agent or external side
+effects. The default standalone workflow still invokes `handoff` automatically.

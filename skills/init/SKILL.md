@@ -116,6 +116,8 @@ two happened in the report.
   about who gets pinged, and the answer is worthless from someone who has not run
   the cycle yet. Name it in the report so it is discoverable; let them edit the
   file.
+- **`run.models` is configuration, not detection.** First init writes `{}` to use
+  the plugin's pinned stage routes. Refresh/upgrade preserves existing overrides.
 - No product code. No branch, commit, PR, or tracker write.
 
 ## Workflow

@@ -1,9 +1,12 @@
 {
-  "shipit_version": "0.8.0",
+  "shipit_version": "0.9.0",
   "generated_at": "YYYY-MM-DD",
   "sdd_tracking": "committed",
   "handoff": {
     "allow": ["branch", "commit", "push", "pr_body"]
+  },
+  "run": {
+    "models": {}
   },
   "repo": {
     "name": "",

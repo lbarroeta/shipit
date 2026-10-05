@@ -21,7 +21,8 @@ written), `implementation` (after a change is verified), `review` (after PR feed
 is resolved). Ask which one when it is not given and the branch does not make it
 obvious.
 
-`implement` invokes this skill itself once validation is green, passing its report.
+By default, `implement` invokes this skill once validation is green, passing its
+report. With `--defer-handoff`, the `run` coordinator delegates it separately.
 `task` invokes it only when `issue_create` is allowed. `pr-fix` never does — the
 user runs `/shipit:handoff` by hand after reviewing the fixes. Being invoked either
 way changes nothing: run the same preflight, and trust the report for **content**
@@ -196,6 +197,22 @@ exists before a branch does.
   stay in the report for the user to post.
 - **Status** — `tracker_status` only: move to the review state. Leave QA-ready,
   completed, cancelled, and duplicate states untouched.
+
+### Coordinated run and retry
+
+When `shipit:run` supplies a run state and delivery journal, read them before
+preflight and every effect. `../run/references/orchestration.md § Delivery
+reconciliation` owns that protocol. Verify the saved validation still covers the
+current file contents; stop on drift. Record each successful effect immediately,
+including its exact proof, and skip effects confirmed in both journal and actual
+repo/remote/tracker state. A previously committed manifest is verified against the
+saved/reconciled commit instead of required to appear in the working diff. This
+exception applies only to proven effects of this run; unrelated commits do not
+satisfy it. If reconciliation is ambiguous, stop without repeating the write.
+
+Save the handoff report separately under the supplied run directory. Keep the
+checkpointed builder report immutable; the coordinator links both reports rather
+than appending to it. Standalone callers retain the append behavior below.
 
 ## Mode: review
 
