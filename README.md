@@ -135,8 +135,10 @@ For an existing issue/card, Claude Code and local Codex can run the whole cycle:
 ```
 
 `run` fetches the task through your configured tracker, checks its acceptance
-criteria, switches to `main`, runs `git pull --ff-only`, and creates the task
-branch. Three real, sequential subagents then plan, implement/validate and deliver
+criteria, switches to `main`, fetches its remote and merges the upstream SHA with
+`--ff-only --no-overwrite-ignore`, then creates the task branch. This protected
+equivalent of `git pull --ff-only` also preserves ignored local files. Three real,
+sequential subagents then plan, implement/validate and deliver
 under `handoff.allow`. The coordinator waits for each result; missing models,
 blocked criteria or failed validation stop the pipeline. Pending user changes are
 never stashed or discarded. Your repo must already have `.sdd/` configured, Python

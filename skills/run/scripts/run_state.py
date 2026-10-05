@@ -6,8 +6,10 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
+import tempfile
 import uuid
 
 
@@ -15,9 +17,9 @@ class Blocked(Exception):
     pass
 
 
-def git(repo, *args):
+def git(repo, *args, env=None):
     result = subprocess.run(
-        ["git", "-C", str(repo), *args], capture_output=True, text=True
+        ["git", "-C", str(repo), *args], capture_output=True, text=True, env=env
     )
     if result.returncode:
         raise Blocked(f"git {' '.join(args)}: {result.stderr.strip() or result.stdout.strip()}")
@@ -26,9 +28,42 @@ def git(repo, *args):
 
 def read_json(path):
     try:
-        return json.loads(Path(path).read_text())
+        value = json.loads(Path(path).read_text())
     except (OSError, ValueError) as exc:
         raise Blocked(f"Cannot read {path}: {exc}") from exc
+    if not isinstance(value, dict):
+        raise Blocked(f"JSON object required in {path}.")
+    return value
+
+
+def read_result(path):
+    result = read_json(path)
+    for field in ("status", "artifact"):
+        if not isinstance(result.get(field), str) or not result[field].strip():
+            raise Blocked(f"Subagent result needs a non-empty {field} string.")
+    for field in ("requested", "effective"):
+        if field in result:
+            route = result[field]
+            if not isinstance(route, dict):
+                raise Blocked(f"Subagent {field} must be an object.")
+            for key, value in route.items():
+                if key not in {"model", "effort"} or (value is not None and (
+                        not isinstance(value, str) or not value.strip())):
+                    raise Blocked(f"Subagent {field} needs model/effort strings or null values.")
+    if "validation" in result:
+        checks = result["validation"]
+        if not isinstance(checks, list) or any(
+            not isinstance(check, dict) or not isinstance(check.get("command"), str)
+            or not check["command"].strip() or type(check.get("exit_code")) is not int
+            for check in checks
+        ):
+            raise Blocked("Subagent validation needs command strings and integer exit codes.")
+    if "files" in result and (not isinstance(result["files"], list) or any(
+            not isinstance(name, str) or not name for name in result["files"])):
+        raise Blocked("Subagent files manifest must be a list of non-empty path strings.")
+    if "delivery_status" in result and not isinstance(result["delivery_status"], str):
+        raise Blocked("Subagent delivery_status must be a string.")
+    return result
 
 
 def write_json(path, value):
@@ -194,7 +229,9 @@ def begin(repo, args):
             if len(upstream) != 2 or upstream[1] != "refs/heads/main":
                 raise Blocked("main needs an upstream tracking a remote main branch.")
             git(repo, "switch", "--no-overwrite-ignore", "main")
-            git(repo, "pull", "--ff-only")
+            git(repo, "fetch", "--", upstream[0])
+            incoming = git(repo, "rev-parse", "main@{upstream}")
+            git(repo, "merge", "--ff-only", "--no-overwrite-ignore", incoming)
             base = git(repo, "rev-parse", "HEAD")
             if base != git(repo, "rev-parse", "main@{upstream}"):
                 raise Blocked("main contains local commits absent from upstream; no reset was performed.")
@@ -258,22 +295,48 @@ def changed_paths(repo):
     return set(filter(None, tracked.split("\0") + untracked.split("\0")))
 
 
+def proposed_tree(repo, files):
+    index = Path(git(repo, "rev-parse", "--git-path", "index"))
+    if not index.is_absolute():
+        index = repo / index
+    with tempfile.TemporaryDirectory(prefix="shipit-index-") as directory:
+        temporary = Path(directory) / "index"
+        env = {**os.environ, "GIT_INDEX_FILE": str(temporary)}
+        if index.exists():
+            shutil.copy2(index, temporary)
+        else:
+            git(repo, "read-tree", "HEAD", env=env)
+        indexed = set(git(repo, "ls-files", "--cached", "-z", env=env).split("\0"))
+        stage_paths = sorted(name for name in files if name in indexed or os.path.lexists(repo / name))
+        if stage_paths:
+            git(repo, "--literal-pathspecs", "add", "--all", "--", *stage_paths, env=env)
+        return git(repo, "write-tree", env=env)
+
+
 def verify_validation(repo, state):
     for name, expected in state.get("validated_files", {}).items():
         if file_digest(repo / name) != expected:
             raise Blocked(f"Validated file changed: {name}. Return to implementation.")
     if changed_paths(repo) - set(state.get("validated_files", {})):
         raise Blocked("Unvalidated paths appeared after the builder finished.")
+    if not state.get("validated_tree"):
+        raise Blocked("Validated tree snapshot missing. Return to implementation.")
+    if proposed_tree(repo, state["validated_files"]) != state["validated_tree"]:
+        raise Blocked("Validated tree changed. Return to implementation.")
     if git(repo, "rev-parse", "HEAD") == state.get("validated_head"):
         if digest(git(repo, "diff", "--binary", "HEAD")) != state.get("validated_diff"):
             raise Blocked("Validated diff changed. Return to implementation.")
+    else:
+        git(repo, "merge-base", "--is-ancestor", state["validated_head"], "HEAD")
+        if git(repo, "rev-parse", "HEAD^{tree}") != state["validated_tree"]:
+            raise Blocked("Committed tree differs from the validated manifest. Reconcile delivery.")
 
 
 def checkpoint(repo, state, args):
     expected = {"plan": "implement", "implement": "handoff", "handoff": "qa"}
     if state["stage"] != args.stage:
         raise Blocked(f"Expected stage {state['stage']}, received {args.stage}.")
-    result = read_json(args.result_file)
+    result = read_result(args.result_file)
     if result.get("status") != "completed":
         raise Blocked("A blocked/failed subagent cannot advance the workflow.")
     artifact = Path(result.get("artifact", "")).resolve()
@@ -304,6 +367,7 @@ def checkpoint(repo, state, args):
         state["validated_files"] = {name: file_digest(repo / name) for name in files}
         state["validated_head"] = git(repo, "rev-parse", "HEAD")
         state["validated_diff"] = digest(git(repo, "diff", "--binary", "HEAD"))
+        state["validated_tree"] = proposed_tree(repo, files)
     if args.stage == "handoff" and result.get("delivery_status") not in {"completed", "skipped"}:
         raise Blocked("A partial/blocked delivery remains at handoff for reconciliation.")
     state["artifacts"][args.stage] = {"path": str(artifact), "sha256": file_digest(artifact)}
@@ -359,7 +423,7 @@ def main():
             require_owner(state, locks, args.owner)
             if args.command == "pause":
                 if args.result_file:
-                    result = read_json(args.result_file)
+                    result = read_result(args.result_file)
                     artifact = Path(result.get("artifact", "")).resolve()
                     files = result.get("files")
                     if (result.get("status") not in {"blocked", "failed"} or not artifact.is_file()

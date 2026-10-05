@@ -28,9 +28,12 @@ still require the user's decision; no agent may invent acceptance criteria.
 Destructive work, publishing and messaging retain the existing skills' boundaries.
 
 Read only `.sdd/config.json`, `.sdd/conventions.md`, this skill's
-`references/orchestration.md` and `references/runtime-adapters.md`. Each child reads
-its assigned skill and that skill's conditional references itself. Missing contract
-→ `/shipit:init` first. Missing native delegation, stage model/effort, Python 3.10+
+`references/orchestration.md` and `references/runtime-adapters.md`. Before native
+dispatch, also read the applicable `../../agents/run-*.md` definition, or the
+explicit local agent definition selected by the runtime adapter, to verify its
+model/effort pair. Each child reads its assigned skill and that skill's conditional
+references itself. Missing contract → `/shipit:init` first. Missing native
+delegation, stage model/effort, Python 3.10+
 or required tracker access → stop with the exact gap. Never install a runtime or
 fall back to another model silently. Workflows requiring independent worktrees
 remain `/shipit:plan --worktree`; this first `run` flow owns one existing checkout
@@ -59,9 +62,11 @@ and passes `--no-worktree` to its planner.
    First query `status`: a saved qa/done result with no new human feedback is
    displayed without switching branches or acquiring locks. Otherwise the
    helper locks the issue **and** checkout. For a new task it requires a clean tree,
-   switches to literal `main`, runs `git pull --ff-only` against its upstream, then
-   creates the task branch from the synced SHA. Missing `main`/upstream, divergence,
-   local-only commits or a failed pull blocks before planning. Never stash, reset,
+   switches to literal `main`, fetches its remote and merges the fetched upstream
+   SHA with `--ff-only --no-overwrite-ignore`, then creates the task branch from
+   the synced SHA. This is a protected equivalent of `git pull --ff-only`.
+   Missing `main`/upstream, divergence, local-only commits or a failed update block
+   before planning. Never stash, reset,
    force-push or adopt an unrelated branch. Resume keeps the saved branch and
    checkout; it never pulls `main` again. If another task's branch is selected,
    it switches to the saved branch only when clean. Resolve and verify availability

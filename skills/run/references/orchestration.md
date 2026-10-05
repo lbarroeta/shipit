@@ -114,6 +114,11 @@ before continuing. Unexpected content returns to validation.
 A retry skips effects confirmed in both journal and actual state. If a crash
 occurred after an effect but before journaling, reconcile from the branch log,
 commit manifest/content, remote branch, existing branch PR and tracker history.
+The helper saves the full proposed Git tree using a temporary index, including
+new files, deletions, modes and symlinks without staging the real index. A changed
+HEAD must descend from `validated_head` and its entire tree must match that saved
+tree; matching file hashes alone cannot authorize unrelated committed changes.
+Older checkpoints without this tree snapshot must return to implementation.
 An already committed manifest is checked against that exact commit, not falsely
 required to appear as an uncommitted diff. If ownership/content cannot be proven,
 pause and report ambiguity. Never make empty commits, duplicate PRs/comments or

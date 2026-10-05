@@ -1,6 +1,7 @@
 """Exercise run preparation/recovery against disposable local Git repositories."""
 
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -128,7 +129,7 @@ class RunStateTests(unittest.TestCase):
         self.git(self.seed, "add", "remote.txt")
         self.git(self.seed, "commit", "-m", "Remote-only commit")
         self.git(self.seed, "push")
-        self.assertIn("pull --ff-only", self.begin(success=False)["reason"])
+        self.assertIn("merge --ff-only", self.begin(success=False)["reason"])
         self.assertEqual(self.git(self.repo, "rev-parse", "HEAD"), original)
 
     def test_withheld_branch_does_not_mutate_git(self):
@@ -262,6 +263,38 @@ class RunStateTests(unittest.TestCase):
             result = self.result(state, "implement", validation=checks, files=files)
             self.assertIn(message, self.checkpoint(state, "implement", result, success=False)["reason"])
 
+    def test_malformed_child_results_return_blocked_json_without_state_change(self):
+        state = self.begin()
+        state = self.checkpoint(state, "plan", self.result(state, "plan"))
+        result = self.result(state, "implement", files=[],
+                             validation=[{"command": "test", "exit_code": 0}])
+        valid = json.loads(result.read_text())
+        before = Path(state["state_path"]).read_text()
+        for invalid in (
+            [], None, dict(valid, effective=None), dict(valid, requested=[]),
+            dict(valid, validation=[None]), dict(valid, validation={"command": "test"}),
+            dict(valid, validation=[{"command": [], "exit_code": 0}]),
+            dict(valid, artifact=None), dict(valid, files=[[]]),
+        ):
+            with self.subTest(invalid=invalid):
+                result.write_text(json.dumps(invalid))
+                response = self.checkpoint(state, "implement", result, success=False)
+                self.assertEqual(response["status"], "blocked")
+                self.assertEqual(Path(state["state_path"]).read_text(), before)
+
+    def test_malformed_incomplete_result_preserves_state_and_locks(self):
+        state = self.begin()
+        result = self.result(state, "plan")
+        before = Path(state["state_path"]).read_text()
+        for invalid in ([], None, {"status": "blocked", "artifact": None, "files": []}):
+            with self.subTest(invalid=invalid):
+                result.write_text(json.dumps(invalid))
+                response = self.owned(state, "pause", "--reason", "Invalid child",
+                                      "--result-file", str(result), success=False)
+                self.assertEqual(response["status"], "blocked")
+                self.assertEqual(Path(state["state_path"]).read_text(), before)
+        self.owned(state, "pause", "--reason", "Valid pause still owns locks")
+
     def test_validate_detects_content_drift_and_extra_paths(self):
         state = self.implemented()
         self.owned(state, "verify")
@@ -270,6 +303,71 @@ class RunStateTests(unittest.TestCase):
         (self.repo / "product.txt").write_text("updated\n")
         (self.repo / "extra.txt").write_text("unowned\n")
         self.assertIn("Unvalidated paths", self.owned(state, "verify", success=False)["reason"])
+
+    def test_verify_rejects_unrelated_committed_paths(self):
+        state = self.implemented()
+        (self.repo / ".sdd/config.json").write_text("{}\n")
+        self.git(self.repo, "add", "product.txt", ".sdd/config.json")
+        self.git(self.repo, "commit", "-m", "Validated and unrelated changes")
+        self.assertEqual(self.owned(state, "verify", success=False)["status"], "blocked")
+
+    def test_verify_rejects_committed_mode_drift(self):
+        state = self.implemented()
+        (self.repo / "product.txt").chmod(0o755)
+        self.git(self.repo, "add", "product.txt")
+        self.git(self.repo, "commit", "-m", "Unvalidated executable mode")
+        self.assertEqual(self.owned(state, "verify", success=False)["status"], "blocked")
+
+    def test_verify_accepts_exact_delivery_with_new_and_deleted_files(self):
+        state = self.begin()
+        state = self.checkpoint(state, "plan", self.result(state, "plan"))
+        (self.repo / "product.txt").unlink()
+        (self.repo / "new.txt").write_text("validated new file\n")
+        (self.repo / "new.txt").chmod(0o755)
+        (self.repo / "link.txt").symlink_to("missing-target.txt")
+        result = self.result(state, "implement", files=["product.txt", "new.txt", "link.txt"],
+                             validation=[{"command": "git diff --check", "exit_code": 0}])
+        state = self.checkpoint(state, "implement", result)
+        index = Path(self.git(self.repo, "rev-parse", "--absolute-git-dir")) / "index"
+        index_before = index.read_bytes()
+        self.owned(state, "verify")
+        self.assertEqual(index.read_bytes(), index_before)
+        self.assertEqual(self.git(self.repo, "diff", "--cached", "--name-only"), "")
+        self.git(self.repo, "add", "--all", "--", "product.txt", "new.txt", "link.txt")
+        self.git(self.repo, "commit", "-m", "Exact delivery fixture")
+        self.owned(state, "verify")
+
+    def test_verify_rejects_broken_symlink_target_drift(self):
+        state = self.begin()
+        state = self.checkpoint(state, "plan", self.result(state, "plan"))
+        link = self.repo / "link.txt"
+        link.symlink_to("missing-one.txt")
+        result = self.result(state, "implement", files=["link.txt"],
+                             validation=[{"command": "git diff --check", "exit_code": 0}])
+        state = self.checkpoint(state, "implement", result)
+        self.owned(state, "verify")
+        link.unlink()
+        link.symlink_to("missing-two.txt")
+        self.git(self.repo, "add", "link.txt")
+        self.git(self.repo, "commit", "-m", "Unvalidated symlink target")
+        self.assertIn("Validated tree changed", self.owned(state, "verify", success=False)["reason"])
+
+    def test_snapshot_preserves_racy_index_detection(self):
+        state = self.begin()
+        state = self.checkpoint(state, "plan", self.result(state, "plan"))
+        self.git(self.repo, "config", "core.trustctime", "false")
+        product = self.repo / "product.txt"
+        cached_time = product.stat().st_mtime_ns
+        index = Path(self.git(self.repo, "rev-parse", "--absolute-git-dir")) / "index"
+        os.utime(index, ns=(cached_time, cached_time))
+        product.write_text("updated\n")
+        os.utime(product, ns=(cached_time, cached_time))
+        result = self.result(state, "implement", files=["product.txt"],
+                             validation=[{"command": "git diff --check", "exit_code": 0}])
+        state = self.checkpoint(state, "implement", result)
+        self.git(self.repo, "add", "product.txt")
+        self.git(self.repo, "commit", "-m", "Racy timestamp fixture")
+        self.owned(state, "verify")
 
     def test_artifact_drift_blocks_resume_and_explicit_replan_invalidates_stages(self):
         state = self.begin()
@@ -309,6 +407,19 @@ class RunStateTests(unittest.TestCase):
         (self.repo / "ignored.txt").write_text("ignored user content\n")
         self.assertIn("switch --no-overwrite-ignore main", self.begin(success=False)["reason"])
         self.assertEqual((self.repo / "ignored.txt").read_text(), "ignored user content\n")
+
+    def test_ignored_user_file_is_not_overwritten_by_main_update(self):
+        (self.repo / ".git/info/exclude").write_text("ignored.txt\n")
+        (self.repo / "ignored.txt").write_text("ignored user content\n")
+        original = self.git(self.repo, "rev-parse", "HEAD")
+        (self.seed / "ignored.txt").write_text("incoming main content\n")
+        self.git(self.seed, "add", "ignored.txt")
+        self.git(self.seed, "commit", "-m", "Track incoming fixture file")
+        self.git(self.seed, "push")
+        self.assertEqual(self.begin(success=False)["status"], "blocked")
+        self.assertEqual((self.repo / "ignored.txt").read_text(), "ignored user content\n")
+        self.assertEqual(self.git(self.repo, "rev-parse", "HEAD"), original)
+        self.assertEqual(self.git(self.repo, "branch", "--list", "codex/42-product"), "")
 
     def test_completed_result_does_not_require_saved_branch(self):
         state = self.implemented()
