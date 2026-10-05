@@ -1,7 +1,7 @@
 {
   "name": "shipit",
-  "version": "0.8.0",
-  "description": "Spec-driven development for any repo. `init` detects your stack, commands, layers and tests from evidence; `task` turns a need into a tracker ticket or an epic; `plan` writes a contract in your checkout (parallel worktrees are opt-in); `implement` executes and verifies it; `handoff` is the only skill with side effects, and `handoff.allow` in your config says which: branch, commit, push and the PR body by default — tracker comments, status moves, thread replies and issue creation are opt-in.",
+  "version": "0.9.0",
+  "description": "Spec-driven development for any repo. run executes an existing issue ID or URL through native planner, builder and delivery subagents with pinned stage models, refreshed main and resumable QA. Individual init, task, plan, implement and handoff skills remain available; handoff.allow controls external effects.",
   "author": {
     "name": "Kodim Tech",
     "url": "https://github.com/KodimTech"
@@ -17,22 +17,29 @@
     "implementation",
     "code-review",
     "pull-request",
-    "worktree"
+    "worktree",
+    "subagents",
+    "qa",
+    "orchestration"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "shipit",
     "shortDescription": "Plan, implement and deliver work under a contract generated from your own repo",
-    "longDescription": "shipit detects your conventions instead of assuming them. `init` reads the repository once, writes a contract at `.sdd/`, and points `AGENTS.md` and `CLAUDE.md` at it so any agent loads it; `task`, `plan`, `implement`, `pr-fix` and `handoff` all work from that contract, so nothing in the plugin needs to know your framework. `task` drafts a Linear, Jira, Shortcut or GitHub ticket — one, or an epic split into independently shippable subtasks — and by default leaves creating it to you. Parallel worktrees are opt-in, and every side effect happens in `handoff`, gated by the `handoff.allow` list in `.sdd/config.json`.",
+    "longDescription": "Spec-driven development for any repo. run executes an existing issue ID or URL through native planner, builder and delivery subagents with pinned stage models, refreshed main and resumable QA. Individual init, task, plan, implement and handoff skills remain available; handoff.allow controls external effects.",
     "developerName": "Kodim Tech",
     "category": "Developer Tools",
-    "capabilities": ["Read", "Write"],
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
     "websiteURL": "https://github.com/KodimTech/shipit",
     "defaultPrompt": [
       "Run shipit init on this repo.",
       "Turn this need into a ticket with shipit.",
       "Plan this ticket with shipit.",
-      "Implement the approved shipit plan."
+      "Implement the approved shipit plan.",
+      "Run shipit on this existing issue ID or URL and deliver it for human QA."
     ]
   }
 }

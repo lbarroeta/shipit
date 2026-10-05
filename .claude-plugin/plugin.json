@@ -1,7 +1,7 @@
 {
   "name": "shipit",
-  "version": "0.8.0",
-  "description": "Spec-driven development for any repo. `init` detects your stack, commands, layers and tests from evidence; `task` turns a need into a tracker ticket or an epic; `plan` writes a contract in your checkout (parallel worktrees are opt-in); `implement` executes and verifies it; `handoff` is the only skill with side effects, and `handoff.allow` in your config says which: branch, commit, push and the PR body by default — tracker comments, status moves, thread replies and issue creation are opt-in.",
+  "version": "0.9.0",
+  "description": "Spec-driven development for any repo. run executes an existing issue ID or URL through native planner, builder and delivery subagents with pinned stage models, refreshed main and resumable QA. Individual init, task, plan, implement and handoff skills remain available; handoff.allow controls external effects.",
   "author": {
     "name": "Kodim Tech",
     "url": "https://github.com/KodimTech"

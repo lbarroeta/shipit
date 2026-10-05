@@ -23,10 +23,10 @@ codex plugin marketplace add KodimTech/shipit
 codex plugin add shipit@shipit
 ```
 
-Start a new session and the eight skills are available. Codex matches them by
+Start a new session and the nine skills are available. Codex matches them by
 description, and the same names work as slash commands — `/shipit:task`,
 `/shipit:plan`, `/shipit:init`, `/shipit:implement`, `/shipit:handoff`,
-`/shipit:pr-fix`, `/shipit:status`, `/shipit:doctor` — exactly as in Claude Code. Same `skills/`
+`/shipit:pr-fix`, `/shipit:status`, `/shipit:doctor`, `/shipit:run` — exactly as in Claude Code. Same `skills/`
 directory and the same `.sdd/` contract, so a repo initialized in one runtime
 works in the others.
 
@@ -45,6 +45,9 @@ ROOT=~/.config/opencode/plugins/shipit
 The installer links the eight commands and verifies OpenCode resolves them. It
 never uses sudo, never installs a package, and never edits `opencode.json`. The
 same three lines are also the update — see below.
+
+The ninth skill, `run`, requires native Claude Code or local Codex subagent
+controls and is not exposed as an OpenCode command.
 
 Already have a checkout somewhere else? Skip the clone and run its
 `scripts/install-opencode.sh` directly — the installer uses whatever checkout it
@@ -67,7 +70,8 @@ and keep it exported — the commands read it to find the skills. Uninstall:
 
 One command per runtime: every runtime reads the same `skills/` directory, and a
 `.sdd/` contract written by an older version keeps working. Then one command per
-repo to adopt what the new version adds — see *Then, once per repository* below. New skills arrive as new commands — after this release, `/shipit:task`.
+repo to adopt what the new version adds — see *Then, once per repository* below.
+This release adds `/shipit:run` in Claude Code and Codex.
 
 ### Claude Code
 
@@ -123,6 +127,48 @@ re-detected or re-asked. Already current → it says so and stops.
 
 ## The cycle
 
+For an existing issue/card, Claude Code and local Codex can run the whole cycle:
+
+```
+/shipit:run ENG-412
+/shipit:run https://linear.app/team/issue/ENG-412/...
+```
+
+`run` fetches the task through your configured tracker, checks its acceptance
+criteria, switches to `main`, runs `git pull --ff-only`, and creates the task
+branch. Three real, sequential subagents then plan, implement/validate and deliver
+under `handoff.allow`. The coordinator waits for each result; missing models,
+blocked criteria or failed validation stop the pipeline. Pending user changes are
+never stashed or discarded. Your repo must already have `.sdd/` configured, Python
+3.10+, a clean checkout and `main` tracking a remote `main`.
+
+| Stage | Claude Code | Codex |
+| --- | --- | --- |
+| Plan | Opus 5.5 / high | Sol 6.1 / high |
+| Implement | Sonnet 5.5 / high | Luna 6 / xhigh |
+| Handoff | Sonnet 5.5 / high | Luna 6 / xhigh |
+
+These are pinned IDs, not moving aliases. Optional per-repo overrides live under
+`run.models.<anthropic|openai>.<stage>` as complete `{model, effort}` pairs;
+Claude overrides also need a matching native agent definition. Old `.sdd/` configs
+use the defaults without an upgrade. An observed runtime substitution blocks the
+stage; unavailable effective-model metadata is disclosed rather than guessed.
+
+The explicit request to run the issue authorizes execution within its criteria,
+after the coordinator checks the generated plan. Scope/security/data blockers
+still go to the user. `implement --defer-handoff` lets the builder return control
+before the separate delivery agent runs; standalone `implement` is unchanged.
+
+State and issue/checkout locks live under the Git common directory, outside the
+diff. Repeating an issue resumes its saved branch and checkpoints without pulling
+main again or duplicating delivery. Give QA feedback in the same chat: failures
+return to the builder on that branch. Ready for QA includes where to test, setup
+and complete plain-language steps. Missing test environment is reported as QA
+blocked; a PR or green tests never means human QA passed. This first pipeline uses
+one existing checkout; use individual `plan --worktree` for independent worktrees.
+
+The individual cycle remains available:
+
 ```
 /shipit:init        read the repo, write .sdd/          once per repo
         │
@@ -145,6 +191,20 @@ Plus two for visibility:
 /shipit:doctor      do I have everything, and what does each gap cost
 /shipit:status      every in-flight worktree, its PR, its tracker state
 ```
+
+To try a PR checkout in Claude Code, start a fresh session with
+`claude --plugin-dir /absolute/path/to/shipit`, then invoke `/shipit:run <ID-or-URL>`
+in the initialized target repo. For Codex, add the checkout as a local marketplace
+with `codex plugin marketplace add /absolute/path/to/shipit`, install its shipit
+entry, then start a new session in the target repo. See the CLI's marketplace
+output for the resolved name; an installed plugin snapshot must be refreshed to
+pick up changes. No real tracker/model execution is implied by the offline checks
+below.
+
+Development validation: `python3 -m unittest discover -s tests -v` exercises Git
+preparation, locks, resume, model/validation gates and human QA checkpoints against
+disposable local repositories. `claude plugin validate .claude-plugin/plugin.json`
+checks the Claude package. See `evals/` for behavioral scenarios.
 
 ## From a need to a ticket
 
@@ -411,6 +471,7 @@ extracted from:
 | `doctor` | ~90 | ~1.4k | new |
 | `status` | ~70 | ~1.2k | new |
 | `task` | not yet measured | not yet measured | new |
+| `run` | not yet measured | not yet measured | new; native subagent work is additional |
 
 The four equivalent skills cost **~380 always-on against the originals' ~442**, and
 the two heaviest got materially cheaper per invocation — the contract removed the
@@ -419,7 +480,8 @@ stack re-discovery that used to live in their bodies.
 Total always-on was **~629 vs ~442** at seven skills, because there were three more
 of them. That is the honest trade: +187 tokens per session bought `init`, `doctor`,
 and `status`. `task` is the eighth and has not been measured yet — expect its
-always-on description to cost about the same as the others, roughly +90. If that is
+always-on description to cost about the same as the others, roughly +90. `run` is
+the ninth; its description and per-subagent context have not been measured. If that is
 not worth it for your setup, disable the plugin per-project rather than working around
 it.
 

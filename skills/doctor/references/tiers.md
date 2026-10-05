@@ -11,6 +11,12 @@ without the thing, not how much you should want it.
 
 That is the whole tier. Everything below is optional.
 
+`shipit:run` has additional requirements specific to its orchestrated pipeline:
+Python 3.10+, native subagent controls, access to its configured model/effort pairs,
+a readable existing tracker issue, and local `main` with a remote `main` upstream.
+Report these when checking readiness for `run`; they do not block the individual
+planning/implementation skills. Never install or substitute them silently.
+
 ## Tier 1 — recommended
 
 Delivery reaches GitHub and your tracker through these. Planning, drafting a

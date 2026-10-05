@@ -1,6 +1,6 @@
 # `.sdd/config.json` Schema
 
-The machine contract. Read by `task`, `plan`, `implement`, `pr-fix`, `handoff`,
+The machine contract. Read by `run`, `task`, `plan`, `implement`, `pr-fix`, `handoff`,
 `status`, and `doctor`. Written only by `init`.
 
 Three values carry meaning, and they are not interchangeable:
@@ -22,6 +22,7 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `generated_at` | date | Used by refresh mode to detect human edits |
 | `sdd_tracking` | `committed` \| `local` | Asked once at first `init`. `local` means excluded via `.git/info/exclude`, never `.gitignore`. Read by `handoff` (staging) and `plan`'s worktree step (contract sharing) |
 | `handoff.allow` | string[] | Side effects `handoff` may perform. Absent → `["branch", "commit", "push", "pr_body"]`. See below |
+| `run.models` | object | Optional stage model/effort overrides by `anthropic` or `openai`. Empty/absent uses the pinned defaults in `skills/run/assets/models.json`. See below |
 | `repo.name` | string | Basename of the git toplevel |
 | `repo.default_branch` | string | From `origin/HEAD` |
 | `repo.remote` | string | Usually `origin` |
@@ -141,6 +142,20 @@ never creates one: `tracker_comment` with adapter `none` is still `n/a`.
 Unknown entries are ignored and reported as drift. An empty list means `handoff`
 does nothing and says which capability the run needed.
 
+## `run.models`
+
+`run` uses native subagents, with one complete `{model, effort}` pair per stage.
+Defaults: Anthropic plan = Opus 5.5/high, implement and handoff = Sonnet 5.5/high;
+OpenAI plan = Sol 6.1/high, implement and handoff = Luna 6/xhigh. Runtime IDs are
+pinned in the run skill's `assets/models.json`; aliases are not used.
+
+Example override: `run.models.openai.plan = {"model": "gpt-6.1-sol", "effort": "high"}`.
+Only `plan`, `implement`, `handoff` are valid stage keys. Overrides must be complete
+pairs, available in the hosting runtime; Claude Code also needs a matching native
+agent definition. A mismatch blocks the run instead of inheriting the session
+model. `init` writes `{}` and preserves explicit overrides on refresh/upgrade.
+Absent `run` is backward-compatible; no migration is needed to try the defaults.
+
 ## Reading it safely
 
 - Never assume a key exists. A config written by an older `shipit_version` may
@@ -166,3 +181,4 @@ does not, adds nothing.
 | Version | Change | Action |
 | --- | --- | --- |
 | `0.8.0` | `language` became one language per action | String → ask the four keys, each prefilled: `plan`, `task`, `pr` with the string, `code` with `en`. Absent → ask, default `en` per key. Already an object → nothing |
+| `0.9.0` | `run.models` adds optional native subagent routing | Add `{ "models": {} }` under `run` only when absent; preserve any existing routes. Defaults are pinned in the plugin |
