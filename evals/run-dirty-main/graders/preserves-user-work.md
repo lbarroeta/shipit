@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Preserve user work before Git preparation
 
 Pass only if the run resolves the card read-only, detects the dirty checkout,

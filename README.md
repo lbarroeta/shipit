@@ -228,6 +228,20 @@ at the draft and creating the issue is your move — add `issue_create` to
 Every ticket is typed **Bug**, **Feature** or **Chore** on the line under the title
 — what triage filters on first — and mapped to whatever your tracker calls that: a
 Shortcut story type, a Jira issue type, a Linear or GitHub label that already exists.
+The same line sets **Priority** (`P0`–`P3`, `P2` by default) and **Size**
+(`XS`–`XL`, sized on scope and uncertainty, never hours; only an epic parent is
+`XL`). `--priority` and `--size` set them outright. On creation they land in the
+tracker's own fields — Linear priority and T-shirt estimate, the `Priority` and
+`Size` fields of a GitHub Project, Jira's priority — and anything without a matching
+field is reported as unmapped rather than invented. `init` detects those fields once
+and records them in `tracker.create.fields`, so `doctor` can say up front that, for
+example, size will not land on a points-only Linear team; a field under another name
+(`Prioridad`) is set there by hand.
+
+Every task also says **what to do**: two to six bullets, each one concrete change
+in behaviour naming the area it lands in, so whoever picks it up knows what has to
+change without the ticket turning into a file list. Subtasks carry it in one
+sentence per row.
 Anything a person can see also carries **QA steps**: five at most, plain language, no
 terminal commands, so a non-developer can confirm the ticket is done. Work with no
 visible surface gets no such section.
@@ -237,7 +251,7 @@ Four things keep it from filling your backlog with noise:
 - **A ticket says what and why, never how.** No file list, no commands, no code —
   that is `plan`'s output, and writing it here fossilises a guess someone will
   follow.
-- **Short is enforced, not encouraged.** 18 lines for a task, one table row per
+- **Short is enforced, not encouraged.** 26 lines for a task, one table row per
   subtask, one sentence for the outcome. A sentence that would not change what
   someone does gets cut.
 - **Blocking ambiguity stops the draft.** Scope, security, or data left open means
@@ -253,13 +267,13 @@ what makes a half-finished epic safe to retry.
 
 ### Trackers
 
-| Adapter | Reached through | An epic is | Bug/Feature/Chore maps to |
-| --- | --- | --- | --- |
-| `linear` | Linear MCP | a parent issue with sub-issues | an existing team label |
-| `jira` | Jira MCP | the project's `Epic` type, enumerated first | the issue type |
-| `shortcut` | Shortcut MCP | a native Epic | the story type, exactly |
-| `github-issues` | `gh` | a parent issue with a task list | an existing repo label |
-| `none` | — | — the draft is the deliverable | — |
+| Adapter | Reached through | An epic is | Bug/Feature/Chore maps to | Priority / Size map to |
+| --- | --- | --- | --- | --- |
+| `linear` | Linear MCP | a parent issue with sub-issues | an existing team label | priority / T-shirt estimate |
+| `jira` | Jira MCP | the project's `Epic` type, enumerated first | the issue type | priority / a `Size` field if any |
+| `shortcut` | Shortcut MCP | a native Epic | the story type, exactly | `Priority` / `Size` custom fields if any |
+| `github-issues` | `gh` | a parent issue with a task list | an existing repo label | the Project's `Priority` / `Size` fields |
+| `none` | — | — the draft is the deliverable | — | — |
 
 `init` detects which one you use, and asks only when it genuinely cannot tell —
 `ENG-412` is a valid Linear id *and* a valid Jira key, so a branch name alone never

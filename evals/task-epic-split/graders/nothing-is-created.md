@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grader: nothing is created — the draft is the deliverable
 
 The repo under test has the default `handoff.allow` — `["branch", "commit", "push",

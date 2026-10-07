@@ -1,5 +1,5 @@
 {
-  "shipit_version": "0.9.0",
+  "shipit_version": "0.10.0",
   "generated_at": "YYYY-MM-DD",
   "sdd_tracking": "committed",
   "handoff": {
@@ -65,7 +65,11 @@
       "project": null,
       "initial_state": null,
       "default_labels": [],
-      "epic_kind": null
+      "epic_kind": null,
+      "fields": {
+        "priority": null,
+        "size": null
+      }
     }
   },
   "graph": null,

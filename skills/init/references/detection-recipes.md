@@ -173,7 +173,7 @@ Reachable → enumerate, then fill the target:
 | `linear` | teams | `create.team` |
 | `shortcut` | groups / workflows | `create.team` |
 | `jira` | projects | `create.project` |
-| `github-issues` | — the repo is the target | neither |
+| `github-issues` | Projects linked to the repo — see below | neither; `create.project` optional |
 
 - Exactly one result → write it. No question.
 - More than one → **ask once**, listing them. This and the § 7 adapter question are
@@ -194,6 +194,59 @@ Then, with the target known:
   (`github-issues`). The adapter's `### Create` section owns the detail.
 - `create.supported` — `true` only when the mechanism was reachable **and** every
   required target for that adapter is a real value.
+- `create.fields` — where a draft's `Priority` and `Size` are written. Recipe 7c.
+
+`github-issues` projects: a Project is optional, but it is the only place a GitHub
+issue can carry a priority or a size. List the ones linked to the repo:
+
+```bash
+gh api graphql --paginate -F owner=<owner> -F name=<repo> -f query='
+  query($owner: String!, $name: String!, $endCursor: String) {
+    repository(owner: $owner, name: $name) {
+      projectsV2(first: 50, after: $endCursor) {
+        nodes {
+          number title closed
+          owner { ... on User { login } ... on Organization { login } }
+        }
+        pageInfo { hasNextPage endCursor }
+      }
+    }
+  }'
+```
+
+`--paginate` walks every page; decide only on the full list, never on the first
+page. Open ones only. Exactly one → `create.project` is `<owner-login>/<number>`,
+with the **Project's** owner — a user Project can be linked to an organization repo,
+and Project numbers are only unique per owner. Several → ask once, listing
+`<title> (<owner-login>/<number>)`, with "none" as an option. None → `null`. A token without the `read:project` scope
+fails the call: `create.project` and both `create.fields` keys become `"unknown"`,
+appended to `unknown[]`, and the report names `gh auth refresh -s project` as the
+fix — the same scope `handoff` needs to write the fields later.
+
+## 7c — Priority and size fields
+
+Only when 7b left `create.supported: true`. Otherwise both keys are `null` for
+adapter `none` and `"unknown"` for the rest — never guess a field nobody looked at.
+
+Enumerate the target's fields and match by name, case-insensitive. Write the name
+**as the tracker spells it**; `handoff` matches it again at create time.
+
+| Adapter | `fields.priority` | `fields.size` |
+| --- | --- | --- |
+| `linear` | `priority` — always native | `estimate` when the team's estimate scale is T-shirt; another scale or estimates off → `null` |
+| `github-issues` | the `create.project`'s single-select field named `Priority` (`gh project field-list <n> --owner <owner> --format json`); no project or no such field → `null` | same, field named `Size` |
+| `jira` | `priority` when the project's create metadata offers it; else `null` | a field named `Size` or `T-Shirt Size` in the create metadata; else `null` |
+| `shortcut` | the `Priority` custom field when the workspace has it enabled; else `null` | a custom field named `Size`; else `null`. Story points never count |
+
+Then check the options. A field whose options cannot carry the scale — a
+`Priority` with only two options, a `Size` without `XS`–`XL` — is still written,
+and the report names the values that will not map. `handoff` already leaves an
+unmatched option unset and says so; `init` only says it first.
+
+A field under another name — `Prioridad`, `Estimate` as a T-shirt select — is not
+matched automatically. It surfaces as `null`, and the report says to set the name
+by hand in `config.json`. Refresh keeps a hand-set name that still exists in the
+tracker; one that no longer does is reported and asked, like a hand-edited file.
 
 ## 8 — Graph
 

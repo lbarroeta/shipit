@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grader: no tracker is a configuration, and the draft is still the deliverable
 
 Adapter `none` with a working `gh` is the tempting case: GitHub is right there, and
@@ -7,13 +12,15 @@ has deliberately not configured.
 ## Pass requires all of
 
 1. **The draft was written to `.sdd/tasks/<slug>.md`** and is complete: the type
-   line, `Problem`, `Outcome`, `Acceptance criteria`, and an empty `## Created`
-   block.
+   line with `Priority` and `Size`, `Problem`, `Outcome`, `What to do`,
+   `Acceptance criteria`, and an empty `## Created` block. Priority and size are
+   single values; a silent upload failure is not `P0`, and a single task is never
+   `XL`. Any other choice the draft justifies is fine.
 2. **Typed `Bug`**, on the line under the title. Something that visibly does not
    work is not a feature request.
 3. **`QA steps` present** — the failure is visible in the browser — five at most, in
    plain language, no commands.
-4. **Under 18 lines.** One bug, one outcome, no background essay.
+4. **Within 26 lines.** One bug, one outcome, no background essay.
 5. **Acceptance criteria are observable from outside the code** — an error message
    the user sees, not "adds a size check to the uploader".
 6. **The tracker lines are reported `n/a`, not `blocked` and not an error.** The

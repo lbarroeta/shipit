@@ -22,7 +22,7 @@ planning/implementation skills. Never install or substitute them silently.
 Delivery reaches GitHub and your tracker through these. Planning, drafting a
 ticket, and implementing do not need them.
 
-The two tracker rows are not checked by `scripts/companions.sh` — it checks
+The three tracker rows are not checked by `scripts/companions.sh` — it checks
 executables, and a tracker is reached through an MCP server or `gh`. They come from
 `.sdd/config.json` plus what is connected in the session.
 
@@ -32,6 +32,7 @@ executables, and a tracker is reached through an MCP server or `gh`. They come f
 | `gh` auth | `gh auth status` | `gh auth login` | same as above |
 | tracker | adapter from `.sdd/config.json`, plus whether its mechanism is reachable this session | re-run `/shipit:init` once the tracker is reachable | no tracker-supplied branch name — `.sdd/conventions.md` decides instead. Adapter `none` is a valid configuration, not a gap |
 | tracker create | `tracker.create.supported` plus the target it names | re-run `/shipit:init` with the tracker connected | the draft names no target to paste into. `task` still writes it, and no skill ever creates the issue. With adapter `none` this is `n/a`, not a gap |
+| tracker fields | `tracker.create.fields.priority` and `.size`, each read on its own | `"unknown"` → re-run `/shipit:init` with the tracker connected; on `github-issues` add `gh auth refresh -s project` when `unknown[]` shows the scope was the reason. `null` → verified absent: link a Project that has the field (`github-issues`), or set the name of a renamed field in `config.json` | `null`: a created issue does not carry that value in the tracker's own field; the draft still does. `"unknown"`: unverified, not missing — `handoff` tries the adapter's default name and may succeed. Adapter `none` → `n/a` |
 
 ## Tier 2 — accelerators
 

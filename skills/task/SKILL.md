@@ -54,7 +54,16 @@ deliverable and the user pastes it into the tracker.
 - **State the type — `Bug`, `Feature`, or `Chore` — on the line under the title.**
   It is what triage filters on first, and a type left to be inferred from the prose
   gets sorted wrong. Each subtask carries its own.
-- **Short is the default.** 18 lines for a single task, one table row per subtask.
+- **Set `Priority` (`P0`–`P3`) and `Size` (`XS`–`XL`) on that same line, every
+  time.** Never blank, never `TBD`, never a range. The request's own value wins;
+  otherwise the rubric in `output-contract.md` decides, and an inferred `P2` goes
+  into `Assumptions`. Each subtask carries its own; only an epic parent is `XL`.
+- **Say explicitly what has to change.** A single task carries `What to do`: two to
+  six bullets, each one concrete change in behaviour or one deliverable, naming the
+  area it lands in. Each subtask row carries it in one sentence. Behaviour, not
+  files — someone reading only that list knows what to build, and `plan` still
+  decides how.
+- **Short is the default.** 26 lines for a single task, one table row per subtask.
   A sentence that would not change what someone does is cut, not shortened.
 - **Anything a person can see gets `QA steps`** — five at most, plain language, no
   commands and no paths. It is how a non-developer confirms the ticket is done.
@@ -74,13 +83,15 @@ deliverable and the user pastes it into the tracker.
 ## Workflow
 
 1. **Preflight.** Load `.sdd/config.json`. Read `tracker.adapter` and
-   `tracker.create`. Derive the slug from the need — no issue id exists yet.
+   `tracker.create`, including `tracker.create.fields`. Derive the slug from the need — no issue id exists yet.
 2. **Shape.** Single task by default. Epic when the need spans two or more entries
    of `layers[]`, or describes two or more user-visible outcomes that could ship on
    different days. `--epic` and `--single` override the heuristic.
 3. **Grounding.** Bounded discovery per the rule above. Name the area and the
    current behaviour. Stop when the problem statement can cite something real.
-4. **Draft.** Fill `assets/task-template.md`. Decide the type from the problem, and
+4. **Draft.** Fill `assets/task-template.md`. Decide the type from the problem,
+   then priority and size from the rubric — a single task that sizes `XL` goes back
+   to step 2 as an epic. Write `What to do` as the explicit list of changes, and
    include `QA steps` only when the change has a surface someone can look at.
 5. **Split gate** — epic only. `references/split-policy.md` owns the caps and the
    independence test. A split that fails it is reported, not shipped.
@@ -98,6 +109,9 @@ deliverable and the user pastes it into the tracker.
 ## Flags
 
 - `--epic` / `--single` — force the shape instead of deriving it.
+- `--priority <P0|P1|P2|P3>` / `--size <XS|S|M|L|XL>` — set the value instead of
+  deriving it. In epic mode they apply to the parent; subtasks are still rated one
+  by one.
 - `--dry-run` — stop at the draft. Nothing is created, nothing is asked.
 - `--plan` — after the draft, run `/shipit:plan` on it. In epic mode it targets
   **the first subtask only**; planning five tickets in one turn is a token bomb, and
@@ -106,6 +120,10 @@ deliverable and the user pastes it into the tracker.
 ## Final report
 
 - Draft path, and the shape — `task`, or `epic` with the subtask count.
+- Type, priority and size — per subtask too in epic mode — and which were inferred.
+- Where priority and size will land, from `tracker.create.fields`: the field
+  names, or `stay in the draft` for a `null` key. `"unknown"` or absent → one line
+  suggesting `/shipit:init` to detect them. Never probe the tracker for them here.
 - Adapter, and whether `handoff.allow` permits `issue_create`. Withheld → one line
   saying the draft is the deliverable and where it is meant to land.
 - Blockers, or assumptions taken.

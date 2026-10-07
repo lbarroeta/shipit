@@ -138,17 +138,22 @@ exists before a branch does.
 - **Create** — one issue for a `task` draft. For an `epic` draft, the parent and one
   issue per `Subtasks` row, linked by the adapter's parent field, **in the order
   that adapter's `### Create` specifies** — most want the parent first, GitHub needs
-  the children first. Title, body, labels and estimate come from the draft
+  the children first. Title, body, labels, priority and size come from the draft
   **verbatim** — never re-worded, never expanded with a section the draft did not
   have. The draft's type maps to the adapter's issue type, story type, or existing
   label; no mapping available → say the type went unmapped, never invent a label.
+  Priority and size map to the tracker's own fields per the adapter's `### Create`
+  table, the same way: matched by name, never created, unmapped said out loud.
 - **Idempotency** — read the draft's `## Created` block first and skip every entry
-  already listed. Re-running on a delivered draft creates nothing. This is what
+  already listed — except its `pending:` fields, which are retried on the existing
+  issue and dropped from the line once set. Re-running on a delivered draft creates nothing. This is what
   makes retrying a partial delivery safe rather than duplicating a backlog.
 - **Record** — append each created issue to `## Created` as
   `- #<local n or "parent"> — <ISSUE-ID> — <url>`, immediately after each creation,
   not in one batch at the end. A crash between two creations must still leave the
-  ledger true.
+  ledger true. A priority or size write that fails after creation appends
+  `— pending: <priority|size>` to that line; an unmapped value is not pending,
+  since a retry cannot fix a field the tracker does not have.
 - **Partial failure** — child 3 of 5 fails: the two already created stay recorded,
   the report is `partial`, and it names the exact failing call. Never delete a
   created issue to "clean up" — say what exists and that a re-run creates only the

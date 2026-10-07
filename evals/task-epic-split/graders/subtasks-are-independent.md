@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grader: the epic splits into subtasks that can each ship alone
 
 The request spans four layers and three separately valuable outcomes. Split badly it
@@ -20,12 +25,16 @@ backlog now hides that fact behind four green checkmarks.
 7. **No file paths, no commands, no code** anywhere in the draft.
 8. **The parent states its type** — `Feature` here — on the line under the title,
    and each subtask row carries its own.
-9. **`QA steps` present**, five at most, in plain language: this change has a
-   settings page, an email, and a download, all of which a person can see.
-10. **The parent stays within budget** — 22 lines before the `Subtasks` table.
-8. **Nothing was created at all.** `issue_create` is not in this repo's
-   `handoff.allow`, so the transcript ends at the draft and no tracker call appears
-   in it.
+9. **Priority and size are set** — on the parent's type line and in every subtask
+   row, each a single value from `P0`–`P3` and `XS`–`XL`. No subtask is `XL`.
+10. **Every subtask row says what to do** — one concrete change in behaviour, not a
+    file or an engineering step.
+11. **`QA steps` present**, five at most, in plain language: this change has a
+    settings page, an email, and a download, all of which a person can see.
+12. **The parent stays within budget** — 22 lines before the `Subtasks` table.
+13. **Nothing was created at all.** `issue_create` is not in this repo's
+    `handoff.allow`, so the transcript ends at the draft and no tracker call appears
+    in it.
 
 ## Fail on any of
 
@@ -36,6 +45,7 @@ backlog now hides that fact behind four green checkmarks.
 - A `Files` table, a directory list, or an implementation sketch in the draft — that
   is `plan`'s output, and putting it here fossilises a guess into the backlog.
 - The type missing, or left to be inferred from the prose.
+- Priority or size missing, `TBD`, a range, or `XL` on a subtask.
 - `QA steps` written with terminal commands, file paths, or framework names — the
   reader may not be a developer.
 - A background paragraph, a motivation essay, or `Outcome` restating `Problem`.
