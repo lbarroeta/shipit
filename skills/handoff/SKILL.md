@@ -138,10 +138,12 @@ exists before a branch does.
 - **Create** — one issue for a `task` draft. For an `epic` draft, the parent and one
   issue per `Subtasks` row, linked by the adapter's parent field, **in the order
   that adapter's `### Create` specifies** — most want the parent first, GitHub needs
-  the children first. Title, body, labels and estimate come from the draft
+  the children first. Title, body, labels, priority and size come from the draft
   **verbatim** — never re-worded, never expanded with a section the draft did not
   have. The draft's type maps to the adapter's issue type, story type, or existing
   label; no mapping available → say the type went unmapped, never invent a label.
+  Priority and size map to the tracker's own fields per the adapter's `### Create`
+  table, the same way: matched by name, never created, unmapped said out loud.
 - **Idempotency** — read the draft's `## Created` block first and skip every entry
   already listed. Re-running on a delivered draft creates nothing. This is what
   makes retrying a partial delivery safe rather than duplicating a backlog.

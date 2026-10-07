@@ -13,6 +13,8 @@ Every subtask must pass all three, or it is not a subtask:
    task.
 3. **Worth landing alone.** Someone benefits, or a risk drops, the day it merges.
 
+And one size check: a subtask that sizes `XL` is still an epic — cut it again.
+
 Fails the test → merge it into the subtask it depends on. Two halves of one change
 are one ticket.
 
@@ -47,10 +49,14 @@ is a worse split than two that pass.
 
 ## The parent
 
-- Carries the problem, the outcome, and the out-of-scope. No acceptance criteria of
-  its own: they are the union of the children, and duplicating them means two places
+- Carries the problem, the outcome, the out-of-scope, and its own priority and size
+  — the size of the whole epic. No `What to do` and no acceptance criteria of its
+  own: they are the union of the children, and duplicating them means two places
   to keep in sync.
 - Carries the ordering rationale when it is not obvious from the dependencies.
+- A child's priority may differ from the parent's — the first slice of a `P1` epic
+  is often `P1` while its polish rows are `P3`. A child rated above its parent means
+  the parent is underrated.
 - Goes into the tracker first. Every child then links to it via whatever that
   tracker calls a parent — `handoff` when it is allowed to create issues, the user
   otherwise. Either way the draft states the relationship.

@@ -1,15 +1,31 @@
 # <the change, imperative, ≤70 chars>
 
-**<Bug | Feature | Chore>** · Source: <user request | url> · <YYYY-MM-DD> · shape: <task | epic>
+**<Bug | Feature | Chore>** · Priority: <P0 | P1 | P2 | P3> · Size: <XS | S | M | L | XL> · Source: <user request | url> · <YYYY-MM-DD> · shape: <task | epic>
+
+<Priority and Size are required, always — the rubric is in
+`references/output-contract.md`. L or XL adds the driver in parentheses:
+`Size: L (refund rules unknown)`. XL only on an epic parent.>
 
 ## Problem
 
 <What is wrong or missing today, and for whom. One or two sentences. Cite
-`path:line` when grounding found the current behaviour. No solution here.>
+`path:line` when grounding found the current behaviour. No solution here.
+A `Bug` states actual vs expected and how to trigger it.>
 
 ## Outcome
 
 <What is true once this is done. One sentence.>
+
+## What to do
+
+<Single task only — in an epic the subtask rows carry it. Two to six bullets, each
+one concrete change in behaviour or one deliverable, in the imperative, naming the
+area it lands in (screen, endpoint, job, email, setting) — not the file. Someone
+reading only this list knows what has to change. No file paths, no code, no
+engineering steps ("add a migration", "write tests").>
+
+- <Change the behaviour of <area>: <from what> → <to what>>
+- <Add / remove <user-visible thing> in <area>>
 
 ## Acceptance criteria
 
@@ -38,16 +54,16 @@ names, no file paths. Five steps at most.>
 the independence test in `references/split-policy.md`. One row per subtask, one
 sentence per cell. Local numbers only — no tracker ids exist yet.>
 
-| # | Type | Title | Acceptance | Depends on |
-| --- | --- | --- | --- | --- |
-| 1 | <bug\|feature\|chore> | <imperative, ≤70 chars> | <the one observable proof> | — |
-| 2 | <bug\|feature\|chore> | <imperative, ≤70 chars> | <the one observable proof> | #1 |
+| # | Type | Priority | Size | Title | What to do | Acceptance | Depends on |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | <bug\|feature\|chore> | <P0-P3> | <XS-L> | <imperative, ≤70 chars> | <the concrete change, one sentence> | <the one observable proof> | — |
+| 2 | <bug\|feature\|chore> | <P0-P3> | <XS-L> | <imperative, ≤70 chars> | <the concrete change, one sentence> | <the one observable proof> | #1 |
 
-## Labels / estimate
+## Labels
 
-<Only labels the tracker already has. Delete this section when there are neither.>
+<Only labels the tracker already has. Delete this section when there are none.>
 
-<label>, <label> · <S | M | L> — <the biggest driver of uncertainty>
+<label>, <label>
 
 ## Assumptions
 

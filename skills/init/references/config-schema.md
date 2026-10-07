@@ -57,6 +57,8 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `tracker.create.initial_state` | string \| null | State name a new issue lands in. Matched by name, never by id |
 | `tracker.create.default_labels` | string[] | Labels a new issue should carry. Only labels the tracker already has |
 | `tracker.create.epic_kind` | string \| null | How this workspace models a parent: `parent-issue`, `epic`, `project`, `task-list` |
+| `tracker.create.fields.priority` | string \| null \| `"unknown"` | Name of the tracker field a draft's `Priority` (`P0`–`P3`) is written to, as the tracker spells it — `priority` in Linear and Jira, `Priority` on a GitHub Project or a Shortcut custom field. `null`: verified absent, priority stays in the draft. `"unknown"`: not determined, `handoff` tries the adapter's default name |
+| `tracker.create.fields.size` | string \| null \| `"unknown"` | Same, for `Size` (`XS`–`XL`). Only a T-shirt field counts — `estimate` in Linear when the team's scale is T-shirt, a `Size` single-select on a GitHub Project, a `Size` field in Jira or Shortcut. A points scale is `null`: a size is never converted to points |
 | `graph` | object \| null | `{tool, out, query, path, explain, update}`. Null unless CLI **and** graph exist |
 | `markers.debt` | string | Default `ponytail:` |
 | `companions.*` | `present` \| `absent` | `ponytail`, `graphify_cli`, `graphify_graph`, `caveman` |
@@ -162,6 +164,8 @@ Absent `run` is backward-compatible; no migration is needed to try the defaults.
   lack fields; treat absent as `null` — except `sdd_tracking`, whose absence means
   the config predates this field and defaults to `committed`, the original
   behaviour.
+- An absent `tracker.create.fields` reads as `"unknown"` for both keys: `handoff`
+  tries the adapter's default field names, exactly as before the field existed.
 - A `tracker.create` block that is absent means the config predates the field.
   Treat it as `supported: false` — `task` writes a draft and reports the drift.
   Never patch the config to add it; that is a re-run of `init`.
@@ -182,3 +186,4 @@ does not, adds nothing.
 | --- | --- | --- |
 | `0.8.0` | `language` became one language per action | String → ask the four keys, each prefilled: `plan`, `task`, `pr` with the string, `code` with `en`. Absent → ask, default `en` per key. Already an object → nothing |
 | `0.9.0` | `run.models` adds optional native subagent routing | Add `{ "models": {} }` under `run` only when absent; preserve any existing routes. Defaults are pinned in the plugin |
+| `0.10.0` | `tracker.create.fields` names where `Priority` and `Size` land | Absent → add `{ "priority": "unknown", "size": "unknown" }` and append both keys to `unknown[]`; adapter `none` → `null` for both, nothing appended. Upgrade does not detect — say `/shipit:init` resolves them once the tracker is reachable |

@@ -146,9 +146,10 @@ two happened in the report.
 8. **Derive test rules.** One real test per kind, reduced to its shape.
 9. **Detect tracker and companions.** Adapter per `references/detection-recipes.md
    § 7` — asked only when detection is undecided — then the create target per § 7b,
-   asked only when the tracker is reachable and offers more than one target. Both
-   questions are conditional; a repo with an obvious tracker is asked neither. Then
-   companion tier status. No installs.
+   asked only when the tracker is reachable and offers more than one target, then
+   the priority and size fields per § 7c, which never ask. Both questions are
+   conditional; a repo with an obvious tracker is asked neither. Then companion
+   tier status. No installs.
 10. **Write.** `config.json` from `assets/config-template.json`; the markdown files from their templates in `assets/`.
 11. **Point at it.** Write the pointer block per *Discovery pointer* above, then link or append `CLAUDE.md`.
     Append `<paths.tasks>` to `.git/info/exclude` if nothing already covers it —
@@ -182,6 +183,9 @@ two happened in the report.
   MCP — report that as a discrepancy and ask, the same as a hand-edited file. A
   recorded `none` that sits in `unknown[]` is re-offered once when a tracker MCP is
   connected this time; a `none` that was a clean detection is left alone.
+- `tracker.create.fields` re-detects when a key is `"unknown"` or `null`. A string
+  is kept while the tracker still has a field by that name — it may have been set
+  by hand for a renamed field. Gone from the tracker → report and ask.
 - Report what changed, what was kept, and what became `unknown` since last run.
 
 ## Upgrade mode
@@ -238,6 +242,10 @@ job — say so in the report if they look stale.
 - The target new issues belong in: the mechanism's state and the team or project
   it names. `create.supported: false` → say what is missing, in one line. With
   `issue_create` withheld, the target is what the draft is pasted into.
+- Where `Priority` and `Size` will land: the field names, or `none` with the reason
+  — no Project, a points-only estimate, a missing `project` scope with
+  `gh auth refresh -s project` as the fix. Option values that will not map are
+  named here, not discovered at create time.
 - **`handoff.allow`, and the one line that it can be widened.** Written as
   `["branch", "commit", "push", "pr_body"]`: `handoff` touches git and the PR body
   and nothing that reaches a human. `pr_ready`, `tracker_comment`,

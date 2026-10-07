@@ -39,8 +39,9 @@ lose rather than implying breakage.
    `{path}`, what `sdd_tracking` is set to, and does a `<!-- shipit:contract -->`
    block exist in `AGENTS.md` and in `CLAUDE.md` (a symlink between the two counts
    as one hit, not a gap).
-3. Add the two tracker rows. The script checks executables and a tracker is not
-   one — these come from `tracker.adapter` and `tracker.create` in the config, plus
+3. Add the three tracker rows. The script checks executables and a tracker is not
+   one — these come from `tracker.adapter`, `tracker.create` and
+   `tracker.create.fields` in the config, plus
    whether that adapter's mechanism is connected in this session. Say which of the
    two sources each half came from; never report an MCP as connected without having
    seen it in the session.
@@ -55,6 +56,7 @@ tier 0  git                 ok       2.51.0
 tier 1  gh                  ok       authenticated as <login>
         tracker             linear   MCP connected
         tracker create      ok       team Engineering · state Backlog
+        tracker fields      partial  priority → priority · size → none (points scale)
 tier 2  graphify cli        ok       ~/.local/bin/graphify
         graphify graph      missing  → graphify .        cost: minutes + tokens
         graph in worktree   n/a      symlinked from main checkout
@@ -82,6 +84,7 @@ reading this should know whether they can proceed, in one line.
 | `gh` | `handoff` cannot open or update PRs. Planning and implementing are unaffected. |
 | tracker `none` | Branch names come from `.sdd/conventions.md` instead. Everything else works. |
 | `handoff.allow` at its default | `handoff` does git and the PR body only. Tracker comments, status moves, thread replies and marking a PR ready are yours. Not a gap — a setting. |
+| `tracker.create.fields` key `null` or `"unknown"` | The draft still sets `Priority` and `Size`; a created issue just does not carry them in the tracker's own fields, and `handoff` reports them unmapped. Adapter `none` → `n/a`. |
 | `tracker.create.supported` false | The draft carries no paste target. `task` drafts either way — creating the issue is always the user's move — and with adapter `none` this is the expected state, not a gap. |
 | graphify CLI | Discovery falls back to `rg`/`git grep`. Same answers, more tokens. |
 | graphify graph | Same as above — having the CLI without a graph changes nothing. |

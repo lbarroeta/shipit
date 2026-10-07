@@ -33,6 +33,16 @@ other adapters are noise.
   story type, or a label. No native concept → a label, and only one that already
   exists. Never introduce a `bug`/`feature` label scheme a repo does not have; say
   the type went unmapped instead.
+- **Priority and size go to fields, not prose.** The draft's `Priority: P0–P3` and
+  `Size: XS–XL` map to the tracker's own priority and size/estimate fields, matched
+  by name per adapter below. `tracker.create.fields` decides which field: a string
+  is the name to match, `null` means the tracker has none — skip it and report
+  unmapped, without enumerating — and `"unknown"` or an absent block means use the
+  adapter's default name from the tables below. Never create a field, an option, or a `priority:*` /
+  `size:*` label. A tracker without a match → the value stays in the draft, the
+  issue is still created, and the report says `priority unmapped` / `size unmapped`.
+  A failure setting the field after the issue exists is `partial`, not a reason to
+  delete the issue.
 - **A comment carries the QA steps and the PR link. Nothing else.** No summary, no
   validation result, no file list, no diff narration, no restating the ticket back
   to the person who wrote it. The PR is where the change is described; the ticket is
@@ -79,9 +89,10 @@ workspace. `tracker.create.project` is optional and attaches the issue to a proj
 | --- | --- |
 | Title | issue title |
 | Type | the team's `Bug` / `Feature` / `Chore` label — Linear has no issue types. Absent → leave unmapped and say so |
-| Problem + Outcome + Acceptance criteria + QA steps + Out of scope | issue description, markdown as written |
-| `Labels / estimate` labels | labels, only ones the team already has |
-| `Labels / estimate` size | estimate, only when the team has estimates enabled |
+| Problem + Outcome + What to do + Acceptance criteria + QA steps + Out of scope | issue description, markdown as written |
+| `Labels` | labels, only ones the team already has |
+| Priority | priority: `P0` → Urgent, `P1` → High, `P2` → Medium, `P3` → Low |
+| Size | estimate, only when the team's estimate scale is T-shirt (`XS`–`XL` by name). Another scale, or estimates off → size unmapped |
 
 State: `tracker.create.initial_state`, matched by name against the team's workflow
 states. No match → use the team's default `Backlog`-type state and say so.
@@ -120,8 +131,28 @@ Terminal: `closed`.
 `gh issue create --title <...> --body <...>`, plus `--label` per label that already
 exists in the repo (`gh label list` first — `gh` fails the whole call on an unknown
 label) and `--project` when `tracker.create.project` is set. The body carries
-`Problem`, `Outcome`, `Acceptance criteria`, `QA steps` and `Out of scope` as
-written.
+`Problem`, `Outcome`, `What to do`, `Acceptance criteria`, `QA steps` and
+`Out of scope` as written.
+
+Priority and size: GitHub issues have neither — they live on a Project as
+single-select fields, by default named `Priority` (`P0`…) and `Size` (`XS`…), which
+is GitHub's own project template; `tracker.create.fields` overrides the names. With `tracker.create.project` set:
+
+1. `gh project list --owner <owner> --format json` → the project number and node id,
+   matched by title.
+2. `gh project field-list <number> --owner <owner> --format json` → the `Priority`
+   and `Size` field ids and the option id whose name matches the draft's value.
+3. Create the issue **without** `--project`, then
+   `gh project item-add <number> --owner <owner> --url <issue-url> --format json` →
+   the item id.
+4. `gh project item-edit --id <item-id> --project-id <node-id> --field-id <field-id>
+   --single-select-option-id <option-id>`, once per field.
+
+No project, no field by that name, or no matching option → that value is unmapped;
+an existing repo label with the exact value (`P1`, `priority: P1`, `size: M`) is the
+only fallback, and only when `gh label list` shows it. A token without the `project`
+scope fails step 1 — report `gh auth refresh -s project` as the fix, create the
+issue anyway, and mark priority and size unmapped.
 
 Type: the repo's own label — `bug`, `enhancement`, `chore`, or whatever it uses.
 `gh label list` decides; a repo without a matching label gets none, and the report
@@ -172,8 +203,10 @@ or with a renamed one, is common and hardcoding the name fails the create call.
 | --- | --- |
 | Title | summary |
 | Type | the issue type — `Bug`, `Story`/`Task`, `Task` for a chore. **Enumerate the project's types and match by name**; they are renamed often |
-| Problem + Outcome + Acceptance criteria + QA steps + Out of scope | description |
-| `Labels / estimate` labels | labels |
+| Problem + Outcome + What to do + Acceptance criteria + QA steps + Out of scope | description |
+| `Labels` | labels |
+| Priority | the `priority` field. Enumerate the instance's priorities and match: `P0` → `Highest` (or `Blocker`), `P1` → `High`, `P2` → `Medium`, `P3` → `Low`. A scheme already named `P0`–`P3` matches directly |
+| Size | a field named `Size` or `T-Shirt Size` when the create metadata offers one, matched by option name. None → size unmapped; never convert to story points |
 
 Epic: the project's `Epic` issue type when it has one, with children linked by the
 parent field (`parent` on modern instances, the epic-link custom field on older
@@ -215,9 +248,10 @@ Target: `tracker.create.team` is the group or workflow the story belongs to.
 | --- | --- |
 | Title | story name |
 | Type | story type, natively: `bug`, `feature`, `chore`. The one adapter where the mapping is exact |
-| Problem + Outcome + Acceptance criteria + QA steps + Out of scope | description |
-| `Labels / estimate` labels | labels |
-| `Labels / estimate` size | estimate, when the workspace uses points |
+| Problem + Outcome + What to do + Acceptance criteria + QA steps + Out of scope | description |
+| `Labels` | labels |
+| Priority | the workspace's `Priority` custom field when enabled: `P0` → `Highest`, `P1` → `High`, `P2` → `Medium`, `P3` → `Low`, or the same names when it already uses `P0`–`P3`. Not enabled → priority unmapped |
+| Size | a custom field named `Size` when one exists, matched by option name. Estimates are points — never convert a T-shirt size into them; none → size unmapped |
 
 Epic: Shortcut has a native Epic. Create the epic first, then each story with
 `epic_id` set to it. `tracker.create.epic_kind` is `epic`.
