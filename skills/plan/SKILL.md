@@ -34,6 +34,10 @@ Read narrow. Bulk-loading is the single biggest token sink in this flow.
 - Required: `references/discovery-protocol.md`. Every run does discovery, and it
   owns the graph-before-`rg` order (graphify is the supported graph tool; its
   read commands come from `config.json`, never from its own skill or docs).
+- Required only when UI is touched and `<paths.rules>/design.md` exists: that
+  file, then the `.sdd/design-system.md` sections it points to for the surface and
+  components involved. A layer rule's `shipit:design` block is the cue. Backend-only
+  → never; not even a glance.
 - Optional, only if touched: `references/ambiguity-policy.md`, and
   `references/worktree-protocol.md` **only when `worktree.enabled` is true**.
   Default is false — do not read it otherwise.
@@ -59,7 +63,10 @@ Read narrow. Bulk-loading is the single biggest token sink in this flow.
 - No verification commands and no red/green sequencing in the plan. `implement`
   owns both.
 - Tracker issue id present → preserve it in the slug: `<issue-id>-<slug>`.
-- UI touched → the plan includes `Manual QA`.
+- UI touched → the plan includes `Manual QA`. With a design contract present it
+  also carries `Design`: the pattern, the existing components by path, the states
+  that apply, and any exception. A `Pending` design decision the work needs is an
+  assumption labelled `pending design decision`, never decided here.
 - Ambiguity that blocks architecture, security, or data → stop with `Blockers`.
   Everything else → `Assumptions`, with the default already taken.
 - No external side effects. `git worktree add` is local and allowed when worktrees
@@ -96,7 +103,8 @@ Read narrow. Bulk-loading is the single biggest token sink in this flow.
    `Out of scope` as `skipped: <X>, add when <Y>`.
 7. **Ambiguity.** `references/ambiguity-policy.md`. Blocking → stop. Otherwise →
    `Assumptions` with the default taken.
-8. **Gates.** UI touched → `Manual QA` filled and UI states in `Notes`. Docs made
+8. **Gates.** UI touched → `Manual QA` filled, UI states in `Notes`, and `Design`
+   filled when `<paths.rules>/design.md` exists. Docs made
    stale → `Docs impact` with exact paths and sections. Neither → delete the
    heading; an empty section is noise.
 9. **Estimate.** One line: S / M / L, and the driver. Uncertainty sizes a plan,

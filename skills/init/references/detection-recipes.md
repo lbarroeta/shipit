@@ -112,7 +112,8 @@ No fixed vocabulary. Derive them:
    discovery. That is a valid outcome, not a failure.
 
 Then write `.sdd/rules/<layer>.md` from `assets/layer-rule-template.md`, stating
-only what the exemplar demonstrates.
+only what the exemplar demonstrates. A layer keyed `design` gets
+`rules/design-layer.md` instead: `rules/design.md` is the design contract's.
 
 ## 7 — Tracker adapter
 
@@ -306,9 +307,9 @@ Resolve symlinks: two paths pointing at one file are one doc, and loading both i
 loading the same file twice. This is also why `CLAUDE.md` is symlinked to
 `AGENTS.md` rather than copied when both are absent.
 
-Ignore any `<!-- shipit:contract -->` block you find: shipit wrote it on a previous
-run. It is a pointer, not a source. A doc containing nothing else is not an agent
-doc and does not go into `docs.agent_docs`.
+Ignore any `<!-- shipit:contract -->` or `<!-- shipit:design -->` block you find:
+shipit wrote it on a previous run. It is a pointer, not a source. A doc containing
+nothing else is not an agent doc and does not go into `docs.agent_docs`.
 
 Then **subtract**. Anything those docs already state does not go into `.sdd/*.md`.
 What remains is what shipit records. Where a doc contradicts the repo, the repo

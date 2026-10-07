@@ -47,6 +47,21 @@ state transitions, response shape, empty/error states, ordering between layers.
 Skip anything the analogue already demonstrates. Record worktree collisions and
 the decision taken.>
 
+## Design
+
+<Only when UI is touched and `<paths.rules>/design.md` exists. Names, never restates:
+values and rule text stay in `.sdd/`. Delete this section otherwise.>
+
+Surface · pattern: <surface> · <pattern from `design-system.md` § Screen patterns>
+
+| Need | Use | Source |
+| --- | --- | --- |
+| <list, form, action, feedback> | `<Component>` variant `<v>` | `<path:line>` |
+| <need met by a rarely used component> | `<Component>` | `<path:line>` · § Not cataloged |
+| <piece nothing covers> | Create `<path>` | exception — see `Decisions` |
+
+States: <the `<paths.rules>/design.md` § 4 states this change renders>
+
 ## Tests
 
 | Test | Rule | Proves |

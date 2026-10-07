@@ -62,7 +62,8 @@ guess for anything named there.
 ````
 
 A file already containing `<!-- shipit:contract -->` has that block **replaced in
-place**, never a second copy appended. If `ln -s` fails — Windows without developer
+place**, never a second copy appended. A `<!-- shipit:design -->` block is
+`design-system`'s and is left exactly where it is. If `ln -s` fails — Windows without developer
 mode — write `CLAUDE.md` as a real file holding the same block, and say which of the
 two happened in the report.
 
@@ -186,6 +187,13 @@ two happened in the report.
 - `tracker.create.fields` re-detects when a key is `"unknown"` or `null`. A string
   is kept while the tracker still has a field by that name — it may have been set
   by hand for a renamed field. Gone from the tracker → report and ask.
+- The design contract belongs to `design-system`, not to detection:
+  `.sdd/design-system.md` and `<paths.rules>/design.md` are never rewritten,
+  moved, or deleted here, and every `<!-- shipit:design -->` block — in a layer
+  rule or an agent doc — is carried over byte-identical. A layer rule rewritten
+  silently keeps its block at the end; the block alone never counts as a human
+  edit. A newly detected UI layer without the block → name it in the report and
+  suggest `/shipit:design-system` to link it.
 - Report what changed, what was kept, and what became `unknown` since last run.
 
 ## Upgrade mode
@@ -254,4 +262,5 @@ job — say so in the report if they look stale.
 - Companion tiers, in `doctor`'s format.
 - Any place an agent doc contradicted the repo.
 - Next step: `/shipit:task` for a need with no ticket yet, `/shipit:plan` for one
-  that has.
+  that has. UI layers found and no `.sdd/design-system.md` → also
+  `/shipit:design-system`, once.

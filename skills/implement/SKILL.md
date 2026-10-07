@@ -19,6 +19,9 @@ and verified with commands that are known to run in this repo.
   `.sdd/rules/tests/<kind>.md` for each test it plans. Only those.
 - Required: `../../references/lean-ladder.md`, relative to this skill directory.
 - Required: `references/validation-standards.md`. Every run validates.
+- Required only when the plan touches UI and `<paths.rules>/design.md` exists:
+  that file, and the `.sdd/design-system.md` sections the plan's `Design` names.
+  Backend-only → never.
 - Optional, only if touched: `references/security-standards.md`.
 - Never bulk-load every rule file or every agent doc. Resolve symlinked docs once.
 - If a rule was skipped, do not claim compliance with it.
@@ -77,11 +80,17 @@ and verified with commands that are known to run in this repo.
 4. **Implement.** The smallest correct change. Repo patterns over new structure —
    including their comment density. Apply the ladder as stance, not as licence to
    deviate from the plan. A deliberate shortcut leaves a debt marker with its
-   ceiling and upgrade trigger.
+   ceiling and upgrade trigger. UI work uses the components, tokens and states the
+   plan's `Design` names, under `rules/design.md`; a value or component the
+   contract lacks is not invented — no exception in the plan → stop and say which.
+   A plan with no `Design` section dated before the contract's `Status` date gets
+   the rules applied directly and a line under `Known Risks or Follow-ups`. Dated
+   after it → the contract gate fails: `Design` is missing.
 5. **Validate.** `references/validation-standards.md`. Scoped to what changed —
    the tests written plus the tests covering the changed files. The full suite is
    CI's job and is not run here without a reason named in that reference. Report
-   exact commands and exit codes.
+   exact commands and exit codes. UI changed with a design contract → each
+   `rules/design.md` § Verify check, as met, not met, or not checked.
 6. **Docs sync.** The plan has a `Docs impact` section → apply each listed edit,
    scoped to the named sections, and list the docs in `Files Changed`. No doc
    rewrites. If the implementation drifted in a way that hits a docs trigger the
