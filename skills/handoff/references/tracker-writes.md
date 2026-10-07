@@ -42,7 +42,8 @@ other adapters are noise.
   `size:*` label. A tracker without a match → the value stays in the draft, the
   issue is still created, and the report says `priority unmapped` / `size unmapped`.
   A failure setting the field after the issue exists is `partial`, not a reason to
-  delete the issue.
+  delete the issue: the `## Created` line for that issue gets `— pending: <field>`,
+  and a re-run retries exactly those fields (see `task` mode in `SKILL.md`).
 - **A comment carries the QA steps and the PR link. Nothing else.** No summary, no
   validation result, no file list, no diff narration, no restating the ticket back
   to the person who wrote it. The PR is where the change is described; the ticket is
@@ -91,7 +92,7 @@ workspace. `tracker.create.project` is optional and attaches the issue to a proj
 | Type | the team's `Bug` / `Feature` / `Chore` label — Linear has no issue types. Absent → leave unmapped and say so |
 | Problem + Outcome + What to do + Acceptance criteria + QA steps + Out of scope | issue description, markdown as written |
 | `Labels` | labels, only ones the team already has |
-| Priority | priority: `P0` → Urgent, `P1` → High, `P2` → Medium, `P3` → Low |
+| Priority | the numeric `priority`: `P0` → `1`, `P1` → `2`, `P2` → `3`, `P3` → `4`. Set the number, never match a name — the app shows `3` as `Medium` and the API calls it `Normal` |
 | Size | estimate, only when the team's estimate scale is T-shirt (`XS`–`XL` by name). Another scale, or estimates off → size unmapped |
 
 State: `tracker.create.initial_state`, matched by name against the team's workflow
@@ -130,27 +131,35 @@ Terminal: `closed`.
 
 `gh issue create --title <...> --body <...>`, plus `--label` per label that already
 exists in the repo (`gh label list` first — `gh` fails the whole call on an unknown
-label) and `--project` when `tracker.create.project` is set. The body carries
+label). Never `--project`: the Project is attached afterwards, below, because that
+is the only way to get the item id the fields need. The body carries
 `Problem`, `Outcome`, `What to do`, `Acceptance criteria`, `QA steps` and
 `Out of scope` as written.
 
 Priority and size: GitHub issues have neither — they live on a Project as
 single-select fields, by default named `Priority` (`P0`…) and `Size` (`XS`…), which
-is GitHub's own project template; `tracker.create.fields` overrides the names. With `tracker.create.project` set:
+is GitHub's own project template; `tracker.create.fields` overrides the names.
 
-1. `gh project list --owner <owner> --format json` → the project number and node id,
-   matched by title.
-2. `gh project field-list <number> --owner <owner> --format json` → the `Priority`
-   and `Size` field ids and the option id whose name matches the draft's value.
-3. Create the issue **without** `--project`, then
+`tracker.create.project` names the Project as `<owner>/<number>` — the owner is the
+Project's, which need not be the repo's: a user Project can be linked to an
+organization repo. With it set:
+
+1. `gh project view <number> --owner <owner> --format json` → the node id.
+2. `gh project field-list <number> --owner <owner> --format json` → the field ids
+   for the names in `tracker.create.fields`, and the option id whose name matches
+   the draft's value.
+3. Create the issue, then
    `gh project item-add <number> --owner <owner> --url <issue-url> --format json` →
    the item id.
 4. `gh project item-edit --id <item-id> --project-id <node-id> --field-id <field-id>
    --single-select-option-id <option-id>`, once per field.
 
-No project, no field by that name, or no matching option → that value is unmapped;
-an existing repo label with the exact value (`P1`, `priority: P1`, `size: M`) is the
-only fallback, and only when `gh label list` shows it. A token without the `project`
+A `create.project` that is a bare title — set by hand, or written before this format
+— is resolved against the Projects linked to the repo (`detection-recipes.md § 7b`);
+no match or more than one → report it and treat both fields as unmapped.
+
+No project, no field by that name, or no matching option → that value is unmapped.
+Never fall back to a label, whatever the repo has. A token without the `project`
 scope fails step 1 — report `gh auth refresh -s project` as the fix, create the
 issue anyway, and mark priority and size unmapped.
 

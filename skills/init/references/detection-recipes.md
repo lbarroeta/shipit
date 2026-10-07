@@ -200,16 +200,25 @@ Then, with the target known:
 issue can carry a priority or a size. List the ones linked to the repo:
 
 ```bash
-gh api graphql -F owner=<owner> -F name=<repo> -f query='
-  query($owner: String!, $name: String!) {
+gh api graphql --paginate -F owner=<owner> -F name=<repo> -f query='
+  query($owner: String!, $name: String!, $endCursor: String) {
     repository(owner: $owner, name: $name) {
-      projectsV2(first: 20) { nodes { number title closed } }
+      projectsV2(first: 50, after: $endCursor) {
+        nodes {
+          number title closed
+          owner { ... on User { login } ... on Organization { login } }
+        }
+        pageInfo { hasNextPage endCursor }
+      }
     }
   }'
 ```
 
-Open ones only. Exactly one → `create.project` is its title. Several → ask once,
-with "none" as an option. None → `null`. A token without the `read:project` scope
+`--paginate` walks every page; decide only on the full list, never on the first
+page. Open ones only. Exactly one → `create.project` is `<owner-login>/<number>`,
+with the **Project's** owner — a user Project can be linked to an organization repo,
+and Project numbers are only unique per owner. Several → ask once, listing
+`<title> (<owner-login>/<number>)`, with "none" as an option. None → `null`. A token without the `read:project` scope
 fails the call: `create.project` and both `create.fields` keys become `"unknown"`,
 appended to `unknown[]`, and the report names `gh auth refresh -s project` as the
 fix — the same scope `handoff` needs to write the fields later.

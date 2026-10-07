@@ -53,7 +53,7 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `tracker.branch_from_tracker` | boolean | Adapter can supply the branch name |
 | `tracker.create.supported` | boolean | Whether a target for new issues is known at all. No skill creates issues; `task` echoes this block so the draft is pasted into the right place |
 | `tracker.create.team` | string \| null \| `"unknown"` | Team, group, or workflow a new issue belongs to. Required by `linear` and `shortcut` |
-| `tracker.create.project` | string \| null \| `"unknown"` | Project or project key. Required by `jira`, optional elsewhere |
+| `tracker.create.project` | string \| null \| `"unknown"` | Project or project key. Required by `jira`, optional elsewhere. `github-issues`: `<owner>/<number>` of a Project linked to the repo, owner being the Project's |
 | `tracker.create.initial_state` | string \| null | State name a new issue lands in. Matched by name, never by id |
 | `tracker.create.default_labels` | string[] | Labels a new issue should carry. Only labels the tracker already has |
 | `tracker.create.epic_kind` | string \| null | How this workspace models a parent: `parent-issue`, `epic`, `project`, `task-list` |

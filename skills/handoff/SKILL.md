@@ -145,12 +145,15 @@ exists before a branch does.
   Priority and size map to the tracker's own fields per the adapter's `### Create`
   table, the same way: matched by name, never created, unmapped said out loud.
 - **Idempotency** — read the draft's `## Created` block first and skip every entry
-  already listed. Re-running on a delivered draft creates nothing. This is what
+  already listed — except its `pending:` fields, which are retried on the existing
+  issue and dropped from the line once set. Re-running on a delivered draft creates nothing. This is what
   makes retrying a partial delivery safe rather than duplicating a backlog.
 - **Record** — append each created issue to `## Created` as
   `- #<local n or "parent"> — <ISSUE-ID> — <url>`, immediately after each creation,
   not in one batch at the end. A crash between two creations must still leave the
-  ledger true.
+  ledger true. A priority or size write that fails after creation appends
+  `— pending: <priority|size>` to that line; an unmapped value is not pending,
+  since a retry cannot fix a field the tracker does not have.
 - **Partial failure** — child 3 of 5 fails: the two already created stay recorded,
   the report is `partial`, and it names the exact failing call. Never delete a
   created issue to "clean up" — say what exists and that a re-run creates only the

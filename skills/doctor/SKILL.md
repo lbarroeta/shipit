@@ -73,6 +73,10 @@ contract
 1 optional gap. shipit works. discovery uses rg until a graph exists.
 ```
 
+`tracker fields` prints each key on its own: a name for a detected field, `none
+(<reason>)` for `null`, and `unverified` for `"unknown"` — never `none`, since
+`handoff` may still map it.
+
 Rules for the last line: state what still works before what is missing. A user
 reading this should know whether they can proceed, in one line.
 
@@ -84,7 +88,8 @@ reading this should know whether they can proceed, in one line.
 | `gh` | `handoff` cannot open or update PRs. Planning and implementing are unaffected. |
 | tracker `none` | Branch names come from `.sdd/conventions.md` instead. Everything else works. |
 | `handoff.allow` at its default | `handoff` does git and the PR body only. Tracker comments, status moves, thread replies and marking a PR ready are yours. Not a gap — a setting. |
-| `tracker.create.fields` key `null` or `"unknown"` | The draft still sets `Priority` and `Size`; a created issue just does not carry them in the tracker's own fields, and `handoff` reports them unmapped. Adapter `none` → `n/a`. |
+| `tracker.create.fields` key `null` | Verified absent. The draft still sets `Priority` and `Size`; a created issue does not carry that one in the tracker's own fields, and `handoff` reports it unmapped. Adapter `none` → `n/a`. |
+| `tracker.create.fields` key `"unknown"` | Not detected, so nothing is known yet. `handoff` tries the adapter's default field name, which may well work — report it as unverified, never as unmapped. |
 | `tracker.create.supported` false | The draft carries no paste target. `task` drafts either way — creating the issue is always the user's move — and with adapter `none` this is the expected state, not a gap. |
 | graphify CLI | Discovery falls back to `rg`/`git grep`. Same answers, more tokens. |
 | graphify graph | Same as above — having the CLI without a graph changes nothing. |

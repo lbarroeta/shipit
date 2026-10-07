@@ -85,4 +85,6 @@ the draft is not ready to go into the tracker yet.>
 
      One line per issue, parent first:
        - #<local n or "parent"> — <ISSUE-ID> — <url>
+     A field write that failed after creation adds `— pending: <priority|size>`;
+     a re-run retries only those.
 -->
