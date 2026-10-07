@@ -9,6 +9,23 @@ claude plugin eval shipit --case init-*        # filter
 claude plugin eval shipit --report report.html # scored HTML report
 ```
 
+Every grader carries `type: llm` frontmatter; without it the CLI rejects the case
+with `graders: Required`. Two grants are needed for a meaningful run:
+
+```bash
+claude plugin eval . --allow-tools Write "Read(/<absolute plugin path>/**)"
+```
+
+`Write` lets `task` and `init` write their artifacts. The `Read` grant lets the agent
+open a skill's `references/` and `assets/` — without it the sandbox denies them and
+the case measures `SKILL.md` alone. Granting `Bash` (needed for `init` to verify
+commands) fails to start when `~/.ssh` contains a symbolic link.
+
+Known limits of the `prompt.md` form: it cannot stage files (`scaffold_script` is
+`case.yaml`-only), so the repository state each prompt describes does not exist on
+disk; and the judge sees the agent's final message, so a run that summarises
+instead of printing its artifact is graded on the summary.
+
 The baseline arm is what makes a score meaningful: it runs the same prompt with the
 plugin disabled, so the number reported is a delta, not an absolute.
 

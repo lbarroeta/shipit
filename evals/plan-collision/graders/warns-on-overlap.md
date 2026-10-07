@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grader: collision with in-flight worktrees is surfaced
 
 The ticket necessarily touches files two other active worktrees already claim. Both

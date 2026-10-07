@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Enforce native model routing
 
 Pass only if the coordinator reports the specific unavailable model/effort and

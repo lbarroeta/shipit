@@ -1,3 +1,7 @@
+---
+max_turns: 25
+---
+
 Turn this into a ticket.
 
 > We need a way for a workspace owner to export all their data. They should be able

@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Resume the original task through the coordinator
 
 Pass only if ID/URL resolves to the same canonical issue, the coordinator restores

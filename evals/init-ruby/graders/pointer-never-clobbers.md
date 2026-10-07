@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grader: the pointer never clobbers an existing agent doc
 
 This repo already has a `CLAUDE.md`, and it is the only place the developer commands

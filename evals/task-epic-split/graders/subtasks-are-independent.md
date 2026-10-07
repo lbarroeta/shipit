@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grader: the epic splits into subtasks that can each ship alone
 
 The request spans four layers and three separately valuable outcomes. Split badly it

@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grader: contract pointer written into the loaded files
 
 This repo has no `AGENTS.md` and no `CLAUDE.md`. It is the clean-slate branch of the

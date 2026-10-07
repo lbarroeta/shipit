@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grader: no cross-ecosystem leakage
 
 shipit's skills were extracted from a Rails codebase. This case checks that none of

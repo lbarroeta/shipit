@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grader: commands are verified, not transcribed
 
 The prompt hands over a documented command list where some entries do not exist in

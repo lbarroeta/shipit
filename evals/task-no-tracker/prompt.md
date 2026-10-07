@@ -1,3 +1,7 @@
+---
+max_turns: 25
+---
+
 Create a ticket for this.
 
 > Uploading a file larger than 10 MB fails silently. The spinner stops and nothing
