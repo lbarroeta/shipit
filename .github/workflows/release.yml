@@ -1,0 +1,46 @@
+name: release
+
+# Tags and releases the plugin whenever the version in plugin.json reaches
+# main without a matching tag, so the latest release always names the
+# version users actually install.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .claude-plugin/plugin.json
+      - .codex-plugin/plugin.json
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version
+        id: version
+        run: |
+          claude=$(jq -r .version .claude-plugin/plugin.json)
+          codex=$(jq -r .version .codex-plugin/plugin.json)
+          if [ "$claude" != "$codex" ]; then
+            echo "::error::Version mismatch: .claude-plugin=$claude .codex-plugin=$codex"
+            exit 1
+          fi
+          echo "tag=v$claude" >> "$GITHUB_OUTPUT"
+
+      - name: Create tag and release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "$TAG already exists; nothing to release."
+            exit 0
+          fi
+          gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --generate-notes --latest
