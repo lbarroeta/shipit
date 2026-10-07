@@ -16,6 +16,8 @@ Never write into a plan:
 - Red → green → refactor sequencing. Owned by `implement`.
 - Test structure, mocking policy, fixture policy. Owned by `.sdd/rules/tests/*`.
 - Layer conventions. Owned by `.sdd/rules/<layer>.md`.
+- Token values, design rules, component APIs. Owned by `.sdd/design-system.md`
+  and `.sdd/rules/design.md`.
 - Stack restatements ("we use X, not Y"). Owned by `.sdd/stack.md`.
 - Generic advice that would apply unchanged to any project in this language.
 
@@ -41,7 +43,7 @@ the deltas.
 needs to know where to work. Worktrees are opt-in, so the usual case is no section
 at all; an empty or placeholder `Worktree` block is a contract violation.
 
-Everything else in the template (`Out of scope`, `Decisions`, `Notes`,
+Everything else in the template (`Out of scope`, `Decisions`, `Notes`, `Design`,
 `Docs impact`, `Manual QA`, `Assumptions`) is **conditional: include only when it
 carries content**. Delete the heading otherwise. Never emit `N/A` filler — an
 empty section is noise, and noise is what the implementer skims past on the way to
@@ -50,9 +52,14 @@ the part that matters.
 Exceptions:
 
 - `Manual QA` is required whenever UI is touched.
+- `Design` is required whenever UI is touched and `<paths.rules>/design.md`
+  exists. It names the pattern, components and states by reference; token values
+  and rule text stay in `.sdd/`. A component it uses that is not in the catalog
+  is a `Create` row with an exception in `Decisions`, or it does not ship.
 - `Docs impact` is required whenever the change makes living documentation stale.
   Triggers: a new dependency; a new layer, module, or table; a new repo-wide
-  convention; a new "do not do X" decision; a CI or deploy change. Any hit → name
+  convention; a new "do not do X" decision; a CI or deploy change; a component,
+  token or pattern the design contract does not list yet. Any hit → name
   the exact doc and section. No hit → delete the section.
 
 ## Estimate
@@ -103,6 +110,8 @@ Run these as checks. Do not emit them into the plan.
 - No line restates `.sdd/*` or an agent doc.
 - New files cite analogues.
 - Tests cite their applicable rule files.
+- UI touched with a design contract → `Design` present; every component it uses
+  is in the catalog or a `Create` row.
 - Every command named exists in `commands.*` and was verified there.
 - No product code.
 - Estimate present, and sized on uncertainty.

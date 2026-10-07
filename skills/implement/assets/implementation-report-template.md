@@ -64,6 +64,10 @@ Exact commands, placeholders substituted, with exit codes.
 Steps skipped because the contract has no such command: <keys, or "none">
 Steps unverifiable because the contract lists them as unknown: <keys, or "none">
 
+Design checks: <each `.sdd/rules/design.md` § Verify item — met, not met, or not
+checked, and how it was seen. Delete for backend-only work or with no design
+contract.>
+
 ## Security Notes
 
 One line per item that applies. A line that would read "n/a" is dropped, not written.

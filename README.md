@@ -23,9 +23,9 @@ codex plugin marketplace add KodimTech/shipit
 codex plugin add shipit@shipit
 ```
 
-Start a new session and the nine skills are available. Codex matches them by
+Start a new session and the ten skills are available. Codex matches them by
 description, and the same names work as slash commands — `/shipit:task`,
-`/shipit:plan`, `/shipit:init`, `/shipit:implement`, `/shipit:handoff`,
+`/shipit:plan`, `/shipit:init`, `/shipit:design-system`, `/shipit:implement`, `/shipit:handoff`,
 `/shipit:pr-fix`, `/shipit:status`, `/shipit:doctor`, `/shipit:run` — exactly as in Claude Code. Same `skills/`
 directory and the same `.sdd/` contract, so a repo initialized in one runtime
 works in the others.
@@ -42,11 +42,11 @@ ROOT=~/.config/opencode/plugins/shipit
 "$ROOT"/scripts/install-opencode.sh
 ```
 
-The installer links the eight commands and verifies OpenCode resolves them. It
+The installer links the nine commands and verifies OpenCode resolves them. It
 never uses sudo, never installs a package, and never edits `opencode.json`. The
 same three lines are also the update — see below.
 
-The ninth skill, `run`, requires native Claude Code or local Codex subagent
+The tenth skill, `run`, requires native Claude Code or local Codex subagent
 controls and is not exposed as an OpenCode command.
 
 Already have a checkout somewhere else? Skip the clone and run its
@@ -71,7 +71,7 @@ and keep it exported — the commands read it to find the skills. Uninstall:
 One command per runtime: every runtime reads the same `skills/` directory, and a
 `.sdd/` contract written by an older version keeps working. Then one command per
 repo to adopt what the new version adds — see *Then, once per repository* below.
-This release adds `/shipit:run` in Claude Code and Codex.
+This release adds `/shipit:design-system` in every runtime.
 
 ### Claude Code
 
@@ -112,8 +112,8 @@ ran it. Export `SHIPIT_ROOT` first if your checkout is not in the default place.
 
 ### Did it land?
 
-The new command has to resolve. `/shipit:task` in Claude Code and Codex,
-`/shipit-task` in OpenCode, where `opencode debug config` lists all eight.
+The new command has to resolve. `/shipit:design-system` in Claude Code and Codex,
+`/shipit-design-system` in OpenCode, where `opencode debug config` lists all nine.
 
 ### Then, once per repository
 
@@ -124,6 +124,9 @@ The new command has to resolve. `/shipit:task` in Claude Code and Codex,
 Brings `.sdd/config.json` up to the installed version: adds new keys, converts old
 shapes, and asks only the decisions the new version introduced — nothing else is
 re-detected or re-asked. Already current → it says so and stops.
+
+Repos with a UI then run `/shipit:design-system` once — see
+[*Adding it to a project already running shipit*](#adding-it-to-a-project-already-running-shipit).
 
 ## The cycle
 
@@ -173,6 +176,8 @@ The individual cycle remains available:
 
 ```
 /shipit:init        read the repo, write .sdd/          once per repo
+        │
+/shipit:design-system  interview → design contract       once per repo with UI; re-run to update
         │
 /shipit:task        a need becomes a ticket, or an epic  when there is no ticket yet
         │
@@ -326,6 +331,11 @@ the default costs nothing in context.
 Plus `.sdd/tasks/`, where `/shipit:task` writes ticket drafts. It is scratch, not
 contract: excluded from git in both tracking modes.
 
+And, once `/shipit:design-system` has run, `.sdd/design-system.md` and
+`.sdd/rules/design.md` — see *A design contract for UI* below. `init` never
+rewrites them, and a refresh carries their `<!-- shipit:design -->` blocks over
+untouched.
+
 `init` asks once, per repo, how it should be tracked:
 
 | Choice | Means |
@@ -386,6 +396,104 @@ a symlink to `AGENTS.md`, so the two never drift. Refresh replaces the block in 
 That is what makes the contract portable across runtimes. Claude Code, Codex,
 OpenCode, Cursor and anything else reading `AGENTS.md` find `.sdd/` the same way,
 without shipit installed.
+
+## A design contract for UI
+
+Agents building UI with no design contract invent one per screen: a new blue, a
+third button, a table with no empty state. `/shipit:design-system` records one,
+from your answers and from what the repo already does.
+
+```
+/shipit:design-system
+```
+
+It is an **interview**, not a form the agent fills in for you. Short rounds of one
+to three questions, in plain language, in the order that decisions depend on each
+other: what kind of application it is (admin panel, customer portal, store,
+public site — or several), who uses it and how often, what they do most, on which
+devices, what identity must be kept, how it should look and how dense it should
+be, and light or dark. An admin panel gets follow-ups on data volume, filters,
+bulk actions and permissions; a portal on what customers must see at a glance.
+You are never asked for a hex code or a border radius — the agent proposes those,
+with the reason, and shows a standalone preview when the runtime can render one.
+"No sé" gets help choosing; "decide tú" is recorded as a delegation with its scope.
+Nothing counts as approved until you confirm it — stop halfway and you get a
+clearly marked draft, or nothing.
+
+It writes two files and two pointers:
+
+| Path | Content |
+| --- | --- |
+| `.sdd/design-system.md` | Product and surfaces, color roles, typography, spacing, radii, themes, responsive, the catalog of components that **exist** (path, parameters, variants, a valid example), screen patterns, and a ledger of decisions — each labelled `existing`, `user`, `delegated` or `proposed` |
+| `.sdd/rules/design.md` | How agents pick patterns and components, when to reuse or create, token use without invented values, loading/empty/error/success/disabled, forms, keyboard and focus, responsive, and the checks that verify a change |
+| `<!-- shipit:design -->` | Appended to each UI layer's rule file, and to `AGENTS.md` next to the contract pointer |
+
+Existing UI is the starting point: its identity is kept unless you choose
+otherwise, and inconsistencies are listed with their split, never turned into
+rules. Values already in your CSS or theme stay there — the contract points at
+them. It changes no product code; implementing what it marks `to implement` is a
+normal `/shipit:task` or `/shipit:plan`.
+
+`plan` reads the design rules only when the task touches UI and records the
+pattern, components and states in a `Design` section; `implement` follows them and
+reports each verification check. Backend-only work never loads them. Re-running it
+updates the same files: approved decisions and your hand edits are kept, and only
+pending or contradicted ones are asked again.
+
+### Adding it to a project already running shipit
+
+Nothing in an initialized repo has to be redone. The design contract sits next to
+the one `init` wrote; it does not replace it.
+
+1. **Update the plugin** in your runtime — see [*Update*](#update) — and start a
+   new session. `/shipit:design-system` (or `/shipit-design-system` in OpenCode)
+   has to resolve.
+2. **Bring the config to 0.11.0:**
+
+   ```
+   /shipit:init --upgrade
+   ```
+
+   This release does not change the config's shape, so it only records the new
+   version and asks nothing. Never ran `init` in this repo? Run `/shipit:init`
+   instead — the design contract needs the layers and the `AGENTS.md` pointer it
+   writes.
+3. **Run the interview** on a clean working tree, so its diff is easy to review:
+
+   ```
+   /shipit:design-system
+   ```
+
+   Plan ten to fifteen minutes. Ask whoever knows the users and the brand to
+   answer it; "decide tú" is fine for anything they do not care about. Existing
+   UI is inspected first, so most questions arrive with a suggested answer taken
+   from your code. Stop halfway and you get a draft, never an approved contract.
+4. **Review and commit** what it wrote — it never commits:
+   - `.sdd/design-system.md` and `.sdd/rules/design.md`, new.
+   - A `<!-- shipit:design -->` block at the end of each UI layer's rule file.
+   - The same block in `AGENTS.md` (and `CLAUDE.md` when it is a real file).
+
+   With `sdd_tracking: local` they stay in your checkout like the rest of `.sdd/`.
+5. **Plans already in flight keep working.** A plan written before the contract
+   has no `Design` section; `implement` applies the design rules directly and
+   says so under *Known Risks or Follow-ups*. Re-run `/shipit:plan` on it if you
+   want the components and states recorded up front.
+6. **Implement what is marked `to implement`** — new tokens, a missing focus
+   style, a component the contract proposes — as ordinary work:
+
+   ```
+   /shipit:task "Apply the design tokens from .sdd/design-system.md"
+   ```
+
+   then `/shipit:plan` and `/shipit:implement` as usual. Nothing changes in the
+   product until that work ships.
+
+Later, re-run `/shipit:design-system` whenever identity changes or pending
+decisions are settled; it updates the same files. `/shipit:init` refreshes keep
+the design files and blocks untouched. One edge case: a repo whose `init`
+created a layer keyed `design` already has its rule at `.sdd/rules/design.md` —
+`design-system` stops and reports it; rename that layer rule to
+`design-layer.md` (and its `rule` entry in `config.json`) before running it.
 
 ## Parallel worktrees — opt-in
 
@@ -487,6 +595,7 @@ extracted from:
 | `doctor` | ~90 | ~1.4k | new |
 | `status` | ~70 | ~1.2k | new |
 | `task` | not yet measured | not yet measured | new |
+| `design-system` | not yet measured | not yet measured | new; the interview is multi-turn by design |
 | `run` | not yet measured | not yet measured | new; native subagent work is additional |
 
 The four equivalent skills cost **~380 always-on against the originals' ~442**, and
@@ -497,7 +606,7 @@ Total always-on was **~629 vs ~442** at seven skills, because there were three m
 of them. That is the honest trade: +187 tokens per session bought `init`, `doctor`,
 and `status`. `task` is the eighth and has not been measured yet — expect its
 always-on description to cost about the same as the others, roughly +90. `run` is
-the ninth; its description and per-subagent context have not been measured. If that is
+the ninth and `design-system` the tenth; neither has been measured. If that is
 not worth it for your setup, disable the plugin per-project rather than working around
 it.
 
@@ -514,7 +623,7 @@ replaced by a scoped subgraph. Measure that with
 | `sdd-implementation` | `/shipit:implement` |
 | `sdd-pr-fix` | `/shipit:pr-fix` |
 | `sdd-handoff` | `/shipit:handoff` |
-| — | `/shipit:init`, `/shipit:task`, `/shipit:doctor`, `/shipit:status` |
+| — | `/shipit:init`, `/shipit:design-system`, `/shipit:task`, `/shipit:doctor`, `/shipit:status` |
 | Conventions hardcoded in the skill | `.sdd/`, generated from your repo |
 | `.claude/plans/` | `<paths.plans>`, default `.sdd/plans/` |
 

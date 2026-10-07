@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "shipit",
-      "description": "Draft tickets, plan, implement, and deliver work under a contract generated from your own repo. Opt-in parallel worktrees, evidence-backed conventions, tracker-agnostic ticket drafting, and a handoff whose side effects are a config list you control.",
+      "description": "Draft tickets, plan, implement, and deliver work under a contract generated from your own repo, with a design contract agents follow for UI. Opt-in parallel worktrees, evidence-backed conventions, tracker-agnostic ticket drafting, and a handoff whose side effects are a config list you control.",
       "source": "./",
       "category": "development",
       "homepage": "https://github.com/KodimTech/shipit"

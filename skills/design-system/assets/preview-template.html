@@ -1,0 +1,106 @@
+<!doctype html>
+<!-- shipit design-system preview. Standalone: it never imports product code and
+     never lives in the product's source tree. Replace every {{…}} with the
+     proposal's values and visible text in `language.plan`; when the proposal is
+     light only, delete the dark block and the theme button. -->
+<html lang="{{language}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{product}} — design proposal</title>
+<style>
+  :root {
+    --background: {{background}}; --surface: {{surface}}; --border: {{border}};
+    --text: {{text}}; --text-muted: {{text-muted}};
+    --primary: {{primary}}; --on-primary: {{on-primary}}; --focus: {{focus}};
+    --success: {{success}}; --warning: {{warning}}; --danger: {{danger}}; --info: {{info}};
+    --disabled: {{disabled}};
+    --font-body: {{font-body}}; --font-heading: {{font-heading}};
+    --text-sm: {{text-sm}}; --text-md: {{text-md}}; --text-lg: {{text-lg}}; --text-xl: {{text-xl}};
+    --space-1: {{space-1}}; --space-2: {{space-2}}; --space-3: {{space-3}}; --space-4: {{space-4}};
+    --control-height: {{control-height}}; --radius: {{radius}}; --shadow: {{shadow}};
+  }
+  [data-theme="dark"] {
+    --background: {{dark-background}}; --surface: {{dark-surface}}; --border: {{dark-border}};
+    --text: {{dark-text}}; --text-muted: {{dark-text-muted}};
+    --primary: {{dark-primary}}; --on-primary: {{dark-on-primary}}; --focus: {{dark-focus}};
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: var(--space-4); background: var(--background); color: var(--text);
+         font: var(--text-md)/1.5 var(--font-body); }
+  h1, h2 { font-family: var(--font-heading); margin: 0 0 var(--space-2); }
+  h1 { font-size: var(--text-xl); } h2 { font-size: var(--text-lg); margin-top: var(--space-4); }
+  .muted { color: var(--text-muted); font-size: var(--text-sm); }
+  .row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+          box-shadow: var(--shadow); padding: var(--space-3); margin-top: var(--space-2); }
+  .swatch { width: 120px; } .swatch div { height: 48px; border-radius: var(--radius); border: 1px solid var(--border); }
+  button { height: var(--control-height); padding: 0 var(--space-3); border-radius: var(--radius);
+           font: inherit; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
+  button.primary { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+  button.danger { background: var(--danger); color: var(--on-primary); border-color: var(--danger); }
+  button:disabled { background: var(--disabled); color: var(--text-muted); cursor: not-allowed; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  label { display: block; font-size: var(--text-sm); margin-bottom: var(--space-1); }
+  input { height: var(--control-height); width: 100%; max-width: 320px; padding: 0 var(--space-2);
+          border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); font: inherit; }
+  input[aria-invalid="true"] { border-color: var(--danger); }
+  .error { color: var(--danger); font-size: var(--text-sm); margin-top: var(--space-1); }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: var(--space-2); border-bottom: 1px solid var(--border); }
+  th { font-size: var(--text-sm); color: var(--text-muted); }
+  .note { border-left: 4px solid; padding: var(--space-2) var(--space-3); background: var(--surface); margin-top: var(--space-2); }
+</style>
+</head>
+<body>
+  <div class="row" style="justify-content: space-between">
+    <div><h1>{{product}}</h1><p class="muted">Design proposal — {{date}}. Not the application; a reference only.</p></div>
+    <button type="button" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'">Switch theme</button>
+  </div>
+
+  <h2>Colors</h2>
+  <div class="row">
+    <div class="swatch"><div style="background: var(--primary)"></div><p class="muted">primary — main action</p></div>
+    <div class="swatch"><div style="background: var(--surface)"></div><p class="muted">surface — cards, panels</p></div>
+    <div class="swatch"><div style="background: var(--text)"></div><p class="muted">text</p></div>
+    <div class="swatch"><div style="background: var(--success)"></div><p class="muted">success</p></div>
+    <div class="swatch"><div style="background: var(--warning)"></div><p class="muted">warning</p></div>
+    <div class="swatch"><div style="background: var(--danger)"></div><p class="muted">danger</p></div>
+  </div>
+
+  <h2>Actions</h2>
+  <div class="row">
+    <button class="primary" type="button">Save changes</button>
+    <button type="button">Cancel</button>
+    <button class="danger" type="button">Delete</button>
+    <button class="primary" type="button" disabled>Disabled</button>
+  </div>
+  <p class="muted">Press Tab to see the focus ring.</p>
+
+  <h2>Form</h2>
+  <div class="card">
+    <label for="name">Customer name</label>
+    <input id="name" value="Ana López">
+    <label for="email" style="margin-top: var(--space-3)">Email</label>
+    <input id="email" value="ana@" aria-invalid="true" aria-describedby="email-error">
+    <p class="error" id="email-error">Enter a complete email address, like name@company.com</p>
+  </div>
+
+  <h2>{{list-pattern-name}}</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>{{col-1}}</th><th>{{col-2}}</th><th>{{col-3}}</th></tr></thead>
+      <tbody>
+        <tr><td>{{row-1}}</td><td>…</td><td>…</td></tr>
+        <tr><td>{{row-2}}</td><td>…</td><td>…</td></tr>
+        <tr><td>{{row-3}}</td><td>…</td><td>…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>States</h2>
+  <div class="card"><strong>No {{items}} yet</strong><p class="muted">{{empty-explanation}}</p><button class="primary" type="button">{{empty-action}}</button></div>
+  <div class="note" style="border-color: var(--success)">Changes saved.</div>
+  <div class="note" style="border-color: var(--danger)">We could not load {{items}}. <button type="button">Try again</button></div>
+</body>
+</html>

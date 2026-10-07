@@ -28,7 +28,8 @@ lose rather than implying breakage.
   language implying shipit is broken.
 - `ponytail` present is reported as something to **turn off**, not as a success.
 - Do not write to `.sdd/config.json`, `AGENTS.md`, or `CLAUDE.md`. `init` owns the
-  `companions` block and the contract pointer; this skill only reads and reports.
+  `companions` block and the contract pointer, `design-system` the design pointer;
+  this skill only reads and reports.
 
 ## Workflow
 

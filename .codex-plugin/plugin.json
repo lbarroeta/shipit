@@ -1,7 +1,7 @@
 {
   "name": "shipit",
-  "version": "0.10.0",
-  "description": "Spec-driven development for any repo. run executes an existing issue ID or URL through native planner, builder and delivery subagents with pinned stage models, refreshed main and resumable QA. Individual init, task, plan, implement and handoff skills remain available; handoff.allow controls external effects.",
+  "version": "0.11.0",
+  "description": "Spec-driven development for any repo. run executes an existing issue ID or URL through native planner, builder and delivery subagents with pinned stage models, refreshed main and resumable QA. Individual init, design-system, task, plan, implement and handoff skills remain available; handoff.allow controls external effects.",
   "author": {
     "name": "Kodim Tech",
     "url": "https://github.com/KodimTech"
@@ -12,6 +12,7 @@
   "keywords": [
     "spec-driven",
     "planning",
+    "design-system",
     "ticket-creation",
     "issue-tracker",
     "implementation",
@@ -26,7 +27,7 @@
   "interface": {
     "displayName": "shipit",
     "shortDescription": "Plan, implement and deliver work under a contract generated from your own repo",
-    "longDescription": "Spec-driven development for any repo. run executes an existing issue ID or URL through native planner, builder and delivery subagents with pinned stage models, refreshed main and resumable QA. Individual init, task, plan, implement and handoff skills remain available; handoff.allow controls external effects.",
+    "longDescription": "Spec-driven development for any repo. run executes an existing issue ID or URL through native planner, builder and delivery subagents with pinned stage models, refreshed main and resumable QA. Individual init, design-system, task, plan, implement and handoff skills remain available; handoff.allow controls external effects.",
     "developerName": "Kodim Tech",
     "category": "Developer Tools",
     "capabilities": [
@@ -36,6 +37,7 @@
     "websiteURL": "https://github.com/KodimTech/shipit",
     "defaultPrompt": [
       "Run shipit init on this repo.",
+      "Set up the design system for this repo with shipit.",
       "Turn this need into a ticket with shipit.",
       "Plan this ticket with shipit.",
       "Implement the approved shipit plan.",
