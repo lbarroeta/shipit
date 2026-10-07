@@ -4,7 +4,7 @@
 # Design system
 
 Status: <draft | approved> — <YYYY-MM-DD>, <confirmed by the user | pending: N decisions>
-Rules for agents: `.sdd/rules/design.md`
+Rules for agents: `<paths.rules>/design.md`
 
 Every row carries a source and, for values, a state:
 
@@ -103,9 +103,9 @@ Not implemented. Never import these; a plan creates them.
 
 ## Screen patterns
 
-| Pattern | Surface | Use when | Composition | States it must render |
-| --- | --- | --- | --- | --- |
-| | | | | |
+| Pattern | Surface | Use when | Composition | States it must render | Source |
+| --- | --- | --- | --- | --- | --- |
+| | | | | | |
 
 ## Decisions
 

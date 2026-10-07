@@ -83,8 +83,9 @@ and verified with commands that are known to run in this repo.
    ceiling and upgrade trigger. UI work uses the components, tokens and states the
    plan's `Design` names, under `rules/design.md`; a value or component the
    contract lacks is not invented — no exception in the plan → stop and say which.
-   A plan with no `Design` section, written before the contract existed, gets the
-   rules applied directly and a line under `Known Risks or Follow-ups`.
+   A plan with no `Design` section dated before the contract's `Status` date gets
+   the rules applied directly and a line under `Known Risks or Follow-ups`. Dated
+   after it → the contract gate fails: `Design` is missing.
 5. **Validate.** `references/validation-standards.md`. Scoped to what changed —
    the tests written plus the tests covering the changed files. The full suite is
    CI's job and is not run here without a reason named in that reference. Report

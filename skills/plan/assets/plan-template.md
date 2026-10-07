@@ -49,7 +49,7 @@ the decision taken.>
 
 ## Design
 
-<Only when UI is touched and `.sdd/rules/design.md` exists. Names, never restates:
+<Only when UI is touched and `<paths.rules>/design.md` exists. Names, never restates:
 values and rule text stay in `.sdd/`. Delete this section otherwise.>
 
 Surface · pattern: <surface> · <pattern from `design-system.md` § Screen patterns>
@@ -57,9 +57,10 @@ Surface · pattern: <surface> · <pattern from `design-system.md` § Screen patt
 | Need | Use | Source |
 | --- | --- | --- |
 | <list, form, action, feedback> | `<Component>` variant `<v>` | `<path:line>` |
+| <need met by a rarely used component> | `<Component>` | `<path:line>` · § Not cataloged |
 | <piece nothing covers> | Create `<path>` | exception — see `Decisions` |
 
-States: <the `rules/design.md` § 4 states this change renders>
+States: <the `<paths.rules>/design.md` § 4 states this change renders>
 
 ## Tests
 

@@ -17,7 +17,8 @@ changed or added for this product cites its decision: `(D<n>)`.
 
 1. Name the surface (`design-system.md` § Product) and the screen pattern
    (§ Screen patterns) the change belongs to. None fits → it is an exception (§ 9).
-2. For each piece of UI, look in § Components first, then search the UI layers.
+2. For each piece of UI, look in § Components and § Not cataloged first, then
+   search the UI layers.
    Use the variant that exists; do not restyle it at the call site.
 3. § Proposed components are not code. Never import one; creating it is planned
    work with its own `Files` row.
@@ -30,8 +31,8 @@ changed or added for this product cites its decision: `(D<n>)`.
   the component's own file is in the plan.
 - Create a component only when nothing covers the need. It uses tokens only, lives
   where its layer rule says, and is added to § Components in the same change.
-- Never copy a component to change it. Two implementations of one role is how
-  § Inconsistencies grows.
+- Never copy a component to change it. Each copy becomes another row in
+  § Inconsistencies.
 
 ## 3 — Tokens
 

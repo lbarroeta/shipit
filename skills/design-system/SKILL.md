@@ -128,7 +128,8 @@ Pending decisions are listed there; never treat them as approved.
 ````
 
 Text outside the markers is never touched. A layer whose rule file is missing gets
-no block; `layers: []` → the `AGENTS.md` block alone.
+no block; `layers: []` → the `AGENTS.md` block alone. `.sdd/rules/` in a block or a
+template stands for `paths.rules`: write the configured value.
 
 ## Update mode
 

@@ -54,8 +54,9 @@ Exceptions:
 - `Manual QA` is required whenever UI is touched.
 - `Design` is required whenever UI is touched and `<paths.rules>/design.md`
   exists. It names the pattern, components and states by reference; token values
-  and rule text stay in `.sdd/`. A component it uses that is not in the catalog
-  is a `Create` row with an exception in `Decisions`, or it does not ship.
+  and rule text stay in `.sdd/`. A component it uses is in § Components or
+  § Not cataloged by path; `Create` with an exception in `Decisions` is only for
+  a need nothing in the repo implements.
 - `Docs impact` is required whenever the change makes living documentation stale.
   Triggers: a new dependency; a new layer, module, or table; a new repo-wide
   convention; a new "do not do X" decision; a CI or deploy change; a component,
@@ -111,7 +112,7 @@ Run these as checks. Do not emit them into the plan.
 - New files cite analogues.
 - Tests cite their applicable rule files.
 - UI touched with a design contract → `Design` present; every component it uses
-  is in the catalog or a `Create` row.
+  exists at a path, or is a `Create` row with its exception.
 - Every command named exists in `commands.*` and was verified there.
 - No product code.
 - Estimate present, and sized on uncertainty.

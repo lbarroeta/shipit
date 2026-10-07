@@ -6,9 +6,11 @@ everywhere: `path:line`. Read slices, not files.
 ## 1 — Where to look
 
 Graph first when `graph` is set in `config.json`: its `query` for "theme, design
-tokens, colors", then "shared UI components". `rg` is the fallback. Look only for
-mechanisms the stack declares in `stack.frameworks` or a manifest — never search
-for a library the repo does not depend on.
+tokens, colors", then "shared UI components". `rg` is the fallback. Native CSS
+and HTML — custom properties, plain stylesheets, `<style>` and inline styles — are
+always checked. A library's mechanism only when the stack declares it in
+`stack.frameworks` or a manifest — never search for one the repo does not depend
+on.
 
 | Mechanism | Evidence |
 | --- | --- |

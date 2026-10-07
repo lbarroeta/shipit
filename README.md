@@ -46,7 +46,7 @@ The installer links the nine commands and verifies OpenCode resolves them. It
 never uses sudo, never installs a package, and never edits `opencode.json`. The
 same three lines are also the update — see below.
 
-The tenth skill, `run`, requires native Claude Code or local Codex subagent
+One skill, `run`, requires native Claude Code or local Codex subagent
 controls and is not exposed as an OpenCode command.
 
 Already have a checkout somewhere else? Skip the clone and run its
