@@ -7,7 +7,7 @@ Plan this ticket.
 Repository state:
 
 - `.sdd/config.json` exists, with `worktree.enabled: true` and
-  `worktree.root: "../worktrees/shop"`.
+  `worktree.root: "../worktrees/shop"`, and `tracker.adapter: "none"`.
 - `git worktree list` reports two worktrees besides the main checkout:
   - `../worktrees/shop/kod-298` on branch `lb/kod-298-order-totals`
   - `../worktrees/shop/kod-305` on branch `lb/kod-305-checkout-copy`

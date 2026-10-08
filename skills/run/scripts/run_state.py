@@ -295,14 +295,16 @@ def changed_paths(repo):
     return set(filter(None, tracked.split("\0") + untracked.split("\0")))
 
 
-def proposed_tree(repo, files):
+def proposed_tree(repo, files, base=None):
     index = Path(git(repo, "rev-parse", "--git-path", "index"))
     if not index.is_absolute():
         index = repo / index
     with tempfile.TemporaryDirectory(prefix="shipit-index-") as directory:
         temporary = Path(directory) / "index"
         env = {**os.environ, "GIT_INDEX_FILE": str(temporary)}
-        if index.exists():
+        if base is not None:
+            git(repo, "read-tree", base, env=env)
+        elif index.exists():
             shutil.copy2(index, temporary)
         else:
             git(repo, "read-tree", "HEAD", env=env)
@@ -321,7 +323,12 @@ def verify_validation(repo, state):
         raise Blocked("Unvalidated paths appeared after the builder finished.")
     if not state.get("validated_tree"):
         raise Blocked("Validated tree snapshot missing. Return to implementation.")
-    if proposed_tree(repo, state["validated_files"]) != state["validated_tree"]:
+    delivery_files = state.get("delivery_files", state["validated_files"])
+    staged = set(filter(None, git(repo, "diff", "--cached", "--name-only", "-z").split("\0")))
+    if staged - set(delivery_files):
+        raise Blocked("Excluded or unvalidated paths are staged; do not commit them.")
+    base = state["validated_head"] if "delivery_files" in state else None
+    if proposed_tree(repo, delivery_files, base) != state["validated_tree"]:
         raise Blocked("Validated tree changed. Return to implementation.")
     if git(repo, "rev-parse", "HEAD") == state.get("validated_head"):
         if digest(git(repo, "diff", "--binary", "HEAD")) != state.get("validated_diff"):
@@ -367,7 +374,11 @@ def checkpoint(repo, state, args):
         state["validated_files"] = {name: file_digest(repo / name) for name in files}
         state["validated_head"] = git(repo, "rev-parse", "HEAD")
         state["validated_diff"] = digest(git(repo, "diff", "--binary", "HEAD"))
-        state["validated_tree"] = proposed_tree(repo, files)
+        plans = [state["artifacts"].get("plan", {})] + [
+            revision["artifacts"].get("plan", {}) for revision in state.get("revisions", [])]
+        plan_paths = {Path(plan["path"]).resolve() for plan in plans if plan.get("path")}
+        state["delivery_files"] = [name for name in files if (repo / name).resolve() not in plan_paths]
+        state["validated_tree"] = proposed_tree(repo, state["delivery_files"], state["validated_head"])
     if args.stage == "handoff" and result.get("delivery_status") not in {"completed", "skipped"}:
         raise Blocked("A partial/blocked delivery remains at handoff for reconciliation.")
     state["artifacts"][args.stage] = {"path": str(artifact), "sha256": file_digest(artifact)}

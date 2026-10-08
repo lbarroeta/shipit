@@ -48,6 +48,16 @@ children have stopped, then use `pause` with that owner before `begin` again. Ne
 delete another active lock. Keep tracker credentials and environment secrets out
 of snapshots, result files and journals.
 
+## Planning status
+
+`../../plan/SKILL.md § Planning status` owns the shared transition rule. The
+planner applies it at preflight, before worktree setup or discovery, after the
+coordinator has prepared Git and verified all stage routes. The coordinator does
+not perform a second write. Verify the planner's reported transition or preserved
+state before checkpointing; a failed transition blocks the stage and requires
+pausing to release the locks. Read-only resolution, Git preparation and resumes
+at implement/handoff/qa/done do not perform this transition.
+
 ## Delegation message
 
 Every child receives: stage; absolute repo and task branch; absolute assigned
@@ -80,7 +90,9 @@ leave unknown values null. The planner must return empty `blockers` for completi
 Builder adds `validation`: exact executed `{ "command": "...", "exit_code": 0 }`
 entries, plus `files`: repo-relative paths exactly matching the tracked diff and
 non-ignored untracked files. Exclude local-only `.sdd` artifacts from that manifest;
-record any skipped checks with reasons in the report.
+retain non-ignored generated plans here for ownership validation, but omit them
+from the report's `Files Changed` delivery manifest. Record any skipped checks
+with reasons in the report.
 Delivery adds `delivery_status` (`completed`, `partial`, `blocked`, `skipped`) and
 actual effect proofs. Use `blocked`/`failed` and a concrete reason when unable to
 finish; never emit `completed` with pending required work.
@@ -114,11 +126,18 @@ before continuing. Unexpected content returns to validation.
 A retry skips effects confirmed in both journal and actual state. If a crash
 occurred after an effect but before journaling, reconcile from the branch log,
 commit manifest/content, remote branch, existing branch PR and tracker history.
-The helper saves the full proposed Git tree using a temporary index, including
-new files, deletions, modes and symlinks without staging the real index. A changed
-HEAD must descend from `validated_head` and its entire tree must match that saved
+The helper saves the proposed delivery tree using a temporary index based on
+`validated_head`, including new files, deletions, modes and symlinks without staging
+the real index. `delivery_files` excludes current and archived generated plans;
+their hashes remain protected by `validated_files` and artifact checkpoints.
+Already tracked plans retain their base version in the delivery tree; local edits
+stay on disk. A changed HEAD must descend from `validated_head` and its entire
+tree must match that saved
 tree; matching file hashes alone cannot authorize unrelated committed changes.
 Older checkpoints without this tree snapshot must return to implementation.
+An older checkpoint whose `validated_files` includes generated plans but lacks
+`delivery_files` must also return to the builder for a new checkpoint; never edit
+saved state or commit plans to satisfy the old tree.
 An already committed manifest is checked against that exact commit, not falsely
 required to appear as an uncommitted diff. If ownership/content cannot be proven,
 pause and report ambiguity. Never make empty commits, duplicate PRs/comments or

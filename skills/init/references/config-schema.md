@@ -121,7 +121,7 @@ alternative is `worktree.setup`, which regenerates what the worktree needs.
 
 ## `handoff.allow`
 
-The permission list for the one skill with side effects. Every entry is opt-in
+The permission list for delivery side effects in `handoff`. Every entry is opt-in
 except the four defaults, and a capability that is absent is simply not performed —
 reported as `skipped (not in handoff.allow)`, never as an error.
 
@@ -143,6 +143,8 @@ never creates one: `tracker_comment` with adapter `none` is still `n/a`.
 
 Unknown entries are ignored and reported as drift. An empty list means `handoff`
 does nothing and says which capability the run needed.
+The startup transition to `In Progress` belongs to `plan` (also inside `run`)
+and is independent of this list.
 
 ## `run.models`
 

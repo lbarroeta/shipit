@@ -147,6 +147,13 @@ blocked criteria or failed validation stop the pipeline. Pending user changes ar
 never stashed or discarded. Your repo must already have `.sdd/` configured, Python
 3.10+, a clean checkout and `main` tracking a remote `main`.
 
+At the start of `plan`, the issue moves to `In Progress` or the tracker's equivalent
+and is read back to verify success. This applies to standalone `/shipit:plan` and
+the planner inside `run`, independently of `handoff.allow`. A missing status
+mapping or tracker write access blocks planning. Plans without an issue, or with
+adapter `none`, stay local. Issues already in progress, review or a terminal state
+are never moved backwards; `run` resumes at later stages do not repeat the transition.
+
 | Stage | Claude Code | Codex |
 | --- | --- | --- |
 | Plan | Opus 5.5 / high | Sol 6.1 / high |
@@ -185,7 +192,7 @@ The individual cycle remains available:
         │
 /shipit:implement   red/green + validation scoped to the change
         │
-/shipit:handoff     branch, commit, push, PR body           the only skill with side effects
+/shipit:handoff     branch, commit, push, PR body           delivery side effects
                     tracker + threads only if allowed
         │
 /shipit:pr-fix      review comments + red CI             as needed
@@ -305,12 +312,14 @@ judgement call:
 "handoff": { "allow": ["branch", "commit", "push", "pr_body"] }
 ```
 
-That is the default `/shipit:init` writes. On it, **nothing reaches a human**: no
-tracker comment, no status transition, no review-thread reply, no marking a PR ready
+That is the default `/shipit:init` writes. On it, **handoff performs no tracker or
+notification writes**: no tracker comment, no status transition, no review-thread reply, no marking a PR ready
 for review, no issue created. Add `tracker_comment`, `tracker_status`,
 `thread_replies`, `pr_ready` or `issue_create` when you want that back — per repo,
 by hand. A capability that is not listed is not performed, and the run says
 `skipped (not in handoff.allow)` rather than doing it anyway.
+The `plan` startup transition to `In Progress` is separate and applies whenever
+planning an existing issue with a configured tracker, including inside `run`.
 
 The opt-in prose lives in a reference `handoff` loads only when the flag is on, so
 the default costs nothing in context.
@@ -330,6 +339,10 @@ the default costs nothing in context.
 
 Plus `.sdd/tasks/`, where `/shipit:task` writes ticket drafts. It is scratch, not
 contract: excluded from git in both tracking modes.
+Generated plans also stay local: `handoff` excludes them from commits in every
+tracking mode, including inside `run`. Planning handoff carries the plan in a PR
+body when a PR exists or the branch has commits ahead of its base; otherwise the
+local plan is the deliverable, with no empty commit to create a PR.
 
 And, once `/shipit:design-system` has run, `.sdd/design-system.md` and
 `.sdd/rules/design.md` — see *A design contract for UI* below. `init` never
