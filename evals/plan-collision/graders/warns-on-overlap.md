@@ -22,8 +22,9 @@ branches that conflict at merge.
 4. **A worktree was created or reused for this task**, and the plan states its path
    and branch in the `Worktree` section.
 5. **The plan was written inside that worktree**, under its `paths.plans`.
-6. **No commit, push, PR, or tracker write occurred.** `git worktree add` is the only
-   git mutation allowed.
+6. **No commit, push, PR, or tracker write occurred.** With adapter `none`, the
+   planning status transition is skipped. `git worktree add` is the only git
+   mutation allowed.
 
 ## Fail on any of
 

@@ -25,6 +25,9 @@ an issue is not execution authorization. Confirm that distinction if intent is
 unclear. Record the explicit user request in the delegation; never call a
 generated plan "human approved". Business, architecture, security or data blockers
 still require the user's decision; no agent may invent acceptance criteria.
+Running the task also authorizes its planner to move the issue to `In Progress`
+when planning starts. This required startup transition is independent of
+`handoff.allow`; later delivery effects still follow that allow-list.
 Destructive work, publishing and messaging retain the existing skills' boundaries.
 
 Read only `.sdd/config.json`, `.sdd/conventions.md`, this skill's
@@ -74,14 +77,18 @@ and passes `--no-worktree` to its planner.
    token and state path.
 4. **Planner.** Delegate `shipit:plan --no-worktree` with the issue snapshot,
    checkout and authorized scope. Wait for completion. Verify the plan exists,
-   meets `plan`'s output contract and has no blockers; checkpoint `plan`. A blocked
-   result stays at this stage. Keep a generated plan's path as a run-owned file
+   meets `plan`'s output contract and has no blockers, including its startup
+   tracker transition (`orchestration.md § Planning status`); checkpoint `plan`.
+   A blocked result stays at this stage; pause with the exact gap. Keep a
+   generated plan's path as a run-owned file
    for the builder's user-change protection.
 5. **Builder.** Delegate `shipit:implement --defer-handoff` with the plan, explicit
    task-run authorization and run-owned paths (generated plan, verified pending
    file hashes, and archived revision ownership that still matches). Wait; verify its report and actual
-   validation results. Include the generated plan in the report's file manifest
-   when `.sdd` is committed. Write reports/results into the run directory under
+   validation results. Keep generated plans out of the report's delivery manifest;
+   retain non-ignored plan paths in the result's full ownership manifest. The helper
+   validates them locally while excluding them from the delivery tree.
+   Write reports/results into the run directory under
    Git metadata so they cannot become accidental commits. Checkpoint `implement`
    only after executed validation exits 0. No delivery on blocked/incomplete work.
 6. **Delivery.** Before dispatch, verify the branch and validated files have not

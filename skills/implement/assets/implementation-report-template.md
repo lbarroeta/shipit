@@ -41,6 +41,9 @@ the diff already carry those.>
 
 This table is the manifest `handoff` stages from. A path missing here does not get
 committed; a path here that is not in the diff stops the handoff.
+Generated plans stay in the `Plan` section, never in this table, regardless of
+`sdd_tracking`. Coordinated run results separately retain their full ownership
+manifest for validation.
 
 | Path | Action | What |
 | --- | --- | --- |

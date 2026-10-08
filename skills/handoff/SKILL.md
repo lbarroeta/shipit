@@ -1,19 +1,20 @@
 ---
 name: handoff
-description: Use when shipit artifacts must be delivered — branch, commit, push, and the pull request body by default; tracker comments, status transitions, review-thread replies, marking a PR ready, and issue creation only when `handoff.allow` in `.sdd/config.json` opts into them. Runs after `task`, `plan`, `implement`, or `pr-fix`. Do not use to write plans, tickets, or product code.
+description: Use when shipit artifacts must be delivered — branch, commit, push, ready-for-review PRs and tracker review status by default; tracker comments, review-thread replies and issue creation only when `handoff.allow` in `.sdd/config.json` opts into them. Runs after `task`, `plan`, `implement`, or `pr-fix`. Do not use to write plans, tickets, or product code.
 metadata:
   writes_product_code: false
 ---
 
 # shipit handoff
 
-Owns every external side effect, so `task`, `plan`, `implement`, and `pr-fix` own
-none. They produce artifacts; this skill delivers them.
+Owns delivery side effects; `task`, `implement` and `pr-fix` produce artifacts.
+`plan` also owns the startup transition to `In Progress`, including inside `run`.
+This skill delivers their artifacts.
 
 **What it may do is configuration, not judgement.** `handoff.allow` in
 `.sdd/config.json` lists the permitted side effects. Its default is git and the PR
-body; everything that reaches a human — a tracker comment, a status transition, a
-review-thread reply, marking a PR ready — is opt-in. See **Permissions** below
+body, PR readiness and tracker review status. Tracker comments, review-thread
+replies and issue creation are opt-in. See **Permissions** below
 before doing anything.
 
 Four modes: `task` (after a ticket draft is written), `plan` (after a plan is
@@ -26,21 +27,22 @@ report. With `--defer-handoff`, the `run` coordinator delegates it separately.
 `task` invokes it only when `issue_create` is allowed. `pr-fix` never does — the
 user runs `/shipit:handoff` by hand after reviewing the fixes. Being invoked either
 way changes nothing: run the same preflight, and trust the report for **content**
-only — never for whether the side effects already happened. They have not. This
-skill is the only thing that performs them.
+only — never for whether delivery side effects already happened. Check actual
+state before performing them.
 
 ## Permissions
 
 Read `handoff.allow` from `.sdd/config.json`. **Absent → `["branch", "commit",
-"push", "pr_body"]`**, which is also what a repo gets from `/shipit:init`.
+"push", "pr_body", "pr_ready", "tracker_status"]`**, which is also what a repo
+gets from `/shipit:init`. Existing explicit allow-lists remain authoritative.
 
 | Entry | Unlocks |
 | --- | --- |
 | `branch` | creating or switching to the delivery branch |
 | `commit` | staging and committing the manifest |
 | `push` | pushing the branch |
-| `pr_body` | creating a draft PR, and replacing its body |
-| `pr_ready` | marking a PR ready for review |
+| `pr_body` | creating a ready-for-review PR, and replacing its body |
+| `pr_ready` | marking an existing draft PR ready for review |
 | `tracker_comment` | one comment per mode, per `references/tracker-writes.md` |
 | `tracker_status` | the mode's status transition |
 | `thread_replies` | replying to and resolving review threads in `review` mode |
@@ -51,8 +53,8 @@ Rules:
 - **A step whose capability is not listed does not happen.** Report that line as
   `skipped (not in handoff.allow)` — never as `blocked`, never silently.
 - **Read `references/tracker-writes.md` only when `tracker_comment`,
-  `tracker_status` or `issue_create` is listed.** On the default `allow` that file
-  is pure wasted context.
+  `tracker_status` or `issue_create` is listed.** Read its status rules on the
+  default `allow`; skip comment/creation sections unless enabled.
 - An unknown entry is ignored: report the drift and suggest `/shipit:init`. Never
   patch `.sdd/config.json` yourself.
 - `allow` present but empty, or a mode left with no permitted step, → do nothing and
@@ -89,13 +91,20 @@ Rules:
   transition. `tracker-writes.md` lists the terminal states per adapter.
 - **Prose language.** PR title, PR body and review-thread replies follow `language.pr`; tracker comments and created issues follow `language.task`; what this skill prints follows `language.plan` in `.sdd/config.json`. Legacy string `language` → that value for every key but `code`; absent → `en`. Identifiers, commit subjects and branch names always stay English.
 - **Stage by explicit path.** Never `git add -A`, never `git add .`.
+- **Never stage or commit generated plans**, regardless of `sdd_tracking` or
+  `handoff.allow`. Exclude the supplied plan, the report's `Plan` path and any
+  archived run-owned plans from the delivery manifest; keep their local files.
+  Before committing, verify none is staged. If one is already staged, stop and
+  name it without changing the user's index. An empty filtered manifest skips the
+  commit; never make an empty commit to deliver a plan.
 - **`sdd_tracking: local` excludes every `.sdd/*` path from staging**, in every
   mode, even when the report's `Files Changed` lists one. Drop it from the manifest
   and note it in the report as informational — never as an error or a stop
   condition.
-- `plan` mode stages the plan file only. `implementation` and `review` modes use the
-  report's `Files Changed` as the manifest: every staged path must appear there
-  **and** in the current diff. A listed path absent from the diff, or an intended
+- `plan` mode stages nothing. `implementation` and `review` modes use the
+  report's `Files Changed`, minus excluded artifacts, as the manifest: every
+  staged path must appear there **and** in the current diff. A listed path absent
+  from the diff, or an intended
   path in the diff missing from the manifest, stops the handoff.
 - A dirty worktree with unrelated user changes blocks the commit unless the shipit
   artifacts isolate cleanly. Stop and report. Never stash, reset, or checkout over
@@ -117,7 +126,10 @@ rest has nothing to check.
 1. Read `handoff.allow`. Nothing this mode needs is listed → stop here and say so;
    that is not a failure.
 2. `git status`, current branch, remote. `gh auth status` when the host is GitHub.
-3. Read `sdd_tracking` from `.sdd/config.json` (absent → `committed`). Local →
+3. In `plan` and `implementation` modes, verify required tracker status access
+   when `tracker_status` is allowed and an issue is identified. Adapter `none`
+   or no linked issue → status `n/a`.
+   Read `sdd_tracking` from `.sdd/config.json` (absent → `committed`). Local →
    no path under `.sdd/` is ever staged, in any mode; see Hard rules.
 4. Confirm which checkout you are in. The main checkout is the default and is fine.
    Only when the plan names a worktree must you be in it — see
@@ -171,37 +183,46 @@ exists before a branch does.
   branch convention from `.sdd/conventions.md`; otherwise
   `<user>/<issue-id>-<slug>`. Never invent a prefix. Usually `plan` already created
   it with the worktree; verify rather than re-create.
-- **Commit** — the plan file only. `sdd_tracking: local` → nothing to commit
-  (the plan file is untracked by design): report `Commit: skipped (.sdd is
-  local-only per config)`, never an empty commit.
-- **Push** — normally, setting upstream when missing.
-- **PR** — Draft. Title `<ISSUE-ID> Plan: <short title>`. Body states this is
-  planning only and execution belongs to `/shipit:implement`. `sdd_tracking:
-  local` → the body also carries the plan's content verbatim (Goal,
-  Acceptance, Files, Notes) — with no commit to show it, the PR would otherwise
-  arrive empty of everything a reviewer needs.
+- **Commit** — `skipped (generated plan stays local)` in every tracking mode.
+- **Push** — only existing commits on the task branch; no plan or empty commit.
+- **PR** — Ready for review. Create without `--draft`. Title
+  `<ISSUE-ID> Plan: <short title>`. Body states this is
+  planning only and execution belongs to `/shipit:implement`. Always carry the
+  plan's content verbatim (Goal, Acceptance, Files, Notes) in the body.
+  Update an existing PR when available. No commits ahead of the base and no
+  existing PR → skip PR creation and report the local plan path; do not create a
+  dummy commit to open a planning PR.
 - **Tracker comment** — `tracker_comment` only: the plan comment from
   `references/tracker-writes.md`.
-- **Status** — `tracker_status` only: earliest-state to next-state (e.g. `Backlog`
-  → `Todo`). Leave started, completed, cancelled, and duplicate states untouched.
+- **Ready for review** — `pr_ready` only: convert an existing draft and verify
+  readiness, as in implementation mode. Already ready → no write.
+- **Status** — `tracker_status` only: after publishing and verifying a ready PR,
+  move the linked issue to `In Review` per `references/tracker-writes.md`. No PR
+  delivered → skip the transition and preserve the planning status.
 
 ## Mode: implementation
 
-- **Commit** — every path in the report's `Files Changed`.
+- **Commit** — the report's `Files Changed`, excluding generated plans and any
+  other artifacts excluded by the hard rules.
 - **Push** — normally.
 - **PR** — replace the plan PR's body on this branch with the report's
   `PR Preparation` body verbatim. Verbatim means no re-wording, no added preamble,
   and no re-adding a section the template dropped. Create a new PR only when none
-  exists, as a draft.
-- **Ready for review** — `pr_ready` only. Otherwise the PR stays exactly as it is,
-  draft included, and the report says so.
+  exists, ready for review and without `--draft`.
+- **Ready for review** — `pr_ready` only: convert an existing draft with
+  `gh pr ready` (or the PR host equivalent). Already ready → no write. Verify
+  actual readiness before the tracker transition. When withheld, preserve the
+  existing PR state and report the skipped conversion.
 - **Tracker comment** — `tracker_comment` only: the QA steps **copied verbatim**
   and the PR link. Nothing else — no summary, no validation result, no file list.
   The QA steps were written for a non-developer, so they are the one part never
   shortened. **No QA steps in the report → no comment.** Not allowed → the steps
   stay in the report for the user to post.
-- **Status** — `tracker_status` only: move to the review state. Leave QA-ready,
-  completed, cancelled, and duplicate states untouched.
+- **Status** — `tracker_status` only: after the delivered PR is verified ready
+  for review, move the linked issue to `In Review` (or its unambiguous review
+  equivalent) and read it back. Already in review, QA-ready or terminal → preserve
+  the state. A draft PR or failed delivery never advances the card; an unavailable
+  or ambiguous transition is partial delivery, not completion.
 
 ### Coordinated run and retry
 
@@ -224,7 +245,8 @@ than appending to it. Standalone callers retain the append behavior below.
 Input: the `pr-fix` report — item table, `Files Changed`, validation results,
 pushback justifications.
 
-- **Commit** — every path in the report's `Files Changed`. Same manifest rule. An
+- **Commit** — the report's `Files Changed` after artifact exclusions. Same
+  manifest rule. An
   empty `Files Changed` is valid here: a run of `resolved`, `pushback` or `question`
   items touches no code. Then there is nothing to deliver — say so and stop.
 - **Push** — normally, to the PR's existing branch.
@@ -258,8 +280,8 @@ recap of the change — a `completed` line needs no explanation:
 - Issues created — `task` mode, one line per issue: local number, id, url. Plus the
   ones skipped as already present in `## Created`.
 - Branch.
-- Commit hash, and the files staged — plus any `.sdd/*` path excluded because
-  tracking is local.
+- Commit hash, and the files staged — plus generated plans and any `.sdd/*` path
+  excluded because tracking is local.
 - Push.
 - PR url, and whether the body was created or replaced; whether it is still a draft.
 - Review thread replies and resolutions — `review` mode, one line per thread.

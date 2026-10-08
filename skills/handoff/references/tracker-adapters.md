@@ -3,22 +3,21 @@
 Read only the section for `tracker.adapter` in `.sdd/config.json`. The others are
 noise.
 
-`handoff` **never writes to a tracker** — no comment, no status transition, no
-issue created. This reference exists for exactly two questions: what branch name
-does this tracker imply, and how does an issue get referenced from the PR. Anything
-a tracker used to receive is the user's move now.
+This reference covers branch naming and PR issue linking. Tracker writes follow
+`handoff.allow` and `tracker-writes.md`; review status is enabled by default,
+while comments and issue creation are opt-in.
 
 ## Universal rules
 
 - **Never invent a branch prefix.** Either the adapter supplies the name, or
   `.sdd/conventions.md` has the repo's shape, or you ask.
-- **Read, never write.** Fetching an issue to get its branch name or title is fine.
-  Any call that mutates the tracker is out of scope for `handoff`, whatever the
-  adapter's MCP server or CLI happens to offer.
+- **Separate reads from writes.** Fetching an issue for branch naming or linking
+  is read-only. Use `tracker-writes.md` for each allowed tracker mutation.
 - **Name the missing capability, not the tool.** "Linear MCP not connected" is
   actionable; "tracker unavailable" is not. A tracker you cannot read costs you a
   branch name — fall back to `.sdd/conventions.md` and say so. It is not a blocked
-  handoff.
+  branch lookup. This fallback does not waive access required for an enabled
+  review-status transition.
 
 ## `linear`
 

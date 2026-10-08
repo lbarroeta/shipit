@@ -112,11 +112,10 @@ two happened in the report.
   contradiction. `.git/info/exclude` lives under `.git/`, is never committed, and
   the decision stays exactly as private as intended, in every collaborator's own
   checkout.
-- **`handoff.allow` is written, never asked.** The template's four defaults —
-  `branch`, `commit`, `push`, `pr_body` — go in as-is. Widening it is a decision
-  about who gets pinged, and the answer is worthless from someone who has not run
-  the cycle yet. Name it in the report so it is discoverable; let them edit the
-  file.
+- **`handoff.allow` is written, never asked.** The template's six defaults —
+  `branch`, `commit`, `push`, `pr_body`, `pr_ready`, `tracker_status` — go in as-is
+  on first init. Preserve existing explicit allow-lists on refresh/upgrade. Name
+  it in the report so additional opt-ins are discoverable.
 - **`run.models` is configuration, not detection.** First init writes `{}` to use
   the plugin's pinned stage routes. Refresh/upgrade preserves existing overrides.
 - No product code. No branch, commit, PR, or tracker write.
@@ -255,9 +254,9 @@ job — say so in the report if they look stale.
   `gh auth refresh -s project` as the fix. Option values that will not map are
   named here, not discovered at create time.
 - **`handoff.allow`, and the one line that it can be widened.** Written as
-  `["branch", "commit", "push", "pr_body"]`: `handoff` touches git and the PR body
-  and nothing that reaches a human. `pr_ready`, `tracker_comment`,
-  `tracker_status`, `thread_replies` and `issue_create` are added by hand — see
+  `["branch", "commit", "push", "pr_body", "pr_ready", "tracker_status"]`:
+  `handoff` delivers a ready PR and advances its card to `In Review`.
+  `tracker_comment`, `thread_replies` and `issue_create` are added by hand — see
   `references/config-schema.md § handoff.allow`.
 - Companion tiers, in `doctor`'s format.
 - Any place an agent doc contradicted the repo.

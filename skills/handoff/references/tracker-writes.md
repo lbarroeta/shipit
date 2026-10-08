@@ -1,9 +1,8 @@
-# Tracker Writes — opt-in only
+# Tracker Writes — status by default, comments and creation opt-in
 
 **Do not read this file unless `handoff.allow` in `.sdd/config.json` enables a
-tracker write.** The default `allow` is `["branch", "commit", "push", "pr_body"]`,
-and on that default nothing here applies: `handoff` touches no tracker, and loading
-this reference is wasted context.
+tracker write.** The default includes `tracker_status`: read the transition
+rules and the configured adapter. Comments and issue creation remain opt-in.
 
 Which capability unlocks which section:
 
@@ -18,6 +17,14 @@ live in `tracker-adapters.md`. Read only the section for `tracker.adapter`; the
 other adapters are noise.
 
 ## Universal rules
+
+For `plan` and `implementation` status writes, first verify the published PR is
+ready for review. Resolve the linked issue to the configured repository/project;
+no issue or adapter `none` → `n/a`. Enumerate its own workflow and match `In Review`
+or an unambiguous review equivalent, then update and read back. Already at review
+or later → no write. Missing/ambiguous target, unavailable access or failed
+read-back → `partial`, preserving completed commit/push/PR effects for retry.
+A missing or draft PR never advances the card.
 
 - **Read the current status before writing a transition.** A blind "move to review"
   can drag a finished issue backwards.
@@ -66,7 +73,7 @@ Comment, `plan` mode:
 
 ```text
 Plan: `<plan path>` — execute with /shipit:implement.
-PR: <draft-pr-url>
+PR: <pr-url>
 QA: UI verification required for <named flows>
 ```
 
@@ -75,10 +82,11 @@ No UI work → `QA: Backend only. UI verification not applicable.`
 Comment, `implementation` mode: the QA steps verbatim, then the PR link. No
 comment in `review` mode.
 
-Transitions: `Backlog` → `Todo` in plan mode. → the review state in implementation
-mode. None in review mode.
+Transitions: `plan` and `implementation` modes → `In Review` (or the team's
+unambiguous review equivalent), only after a ready PR is delivered. None in
+review mode.
 
-Terminal / do not downgrade: `In Progress`, `Code Review`, `Ready for QA`,
+Already at review / do not downgrade: `In Review`, `Code Review`, `Ready for QA`,
 `Accepted`, `Deployed`, `Canceled`, `Duplicate`, or that workspace's equivalents.
 
 ### Create
@@ -240,9 +248,9 @@ Enumerate the states of the story's workflow and match by name — never by id, 
 differs per workspace. Shortcut also types each state as `unstarted`, `started` or
 `done`; use the type when the name does not match.
 
-- `plan` mode → the first `unstarted` state past the backlog one, e.g. `Ready for
-  Development`.
-- `implementation` mode → the review state, e.g. `Ready for Review`.
+- `plan` and `implementation` modes → `In Review` or the unambiguous review
+  state, e.g. `Ready for Review`, after a ready PR is delivered. The `started`
+  type alone does not identify review; never select an arbitrary started state.
 - `review` mode → none.
 
 Terminal / do not downgrade: any state typed `done`, plus anything already `started`

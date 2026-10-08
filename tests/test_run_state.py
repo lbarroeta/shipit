@@ -337,6 +337,47 @@ class RunStateTests(unittest.TestCase):
         self.git(self.repo, "commit", "-m", "Exact delivery fixture")
         self.owned(state, "verify")
 
+    def test_delivery_keeps_current_and_archived_plans_local(self):
+        first = self.repo / ".sdd/plans/first plan.md"
+        first.parent.mkdir(parents=True)
+        first.write_text("Previously committed plan\n")
+        self.git(self.repo, "add", ".sdd/plans/first plan.md")
+        self.git(self.repo, "commit", "-m", "Existing plan fixture")
+        self.git(self.repo, "push")
+        state = self.begin()
+        first.write_text("Revised local plan\n")
+        state = self.checkpoint(state, "plan", self.result(state, "plan", artifact=str(first)))
+        state = self.owned(state, "replan", "--reason", "Correct the plan fixture")
+        current = first.with_name("next-plan.md")
+        current.write_text("Replacement local plan\n")
+        state = self.checkpoint(state, "plan", self.result(state, "plan", artifact=str(current)))
+        (self.repo / "product.txt").write_text("updated\n")
+        result = self.result(state, "implement",
+                             files=["product.txt", ".sdd/plans/first plan.md", ".sdd/plans/next-plan.md"],
+                             validation=[{"command": "git diff --check", "exit_code": 0}])
+        state = self.checkpoint(state, "implement", result)
+        self.assertEqual(state["delivery_files"], ["product.txt"])
+        self.owned(state, "verify")
+        first.write_text("Unvalidated archived plan edit\n")
+        self.assertIn("Validated file changed", self.owned(state, "verify", success=False)["reason"])
+        first.write_text("Revised local plan\n")
+        self.git(self.repo, "add", ".sdd/plans/next-plan.md")
+        staged_before = self.git(self.repo, "diff", "--cached", "--binary")
+        self.assertIn("paths are staged", self.owned(state, "verify", success=False)["reason"])
+        self.assertEqual(self.git(self.repo, "diff", "--cached", "--binary"), staged_before)
+        self.git(self.repo, "restore", "--staged", "--", ".sdd/plans/next-plan.md")
+        self.git(self.repo, "add", "product.txt")
+        self.git(self.repo, "commit", "-m", "Deliver product only")
+        self.owned(state, "verify")
+        self.assertEqual(self.git(self.repo, "show", "HEAD:.sdd/plans/first plan.md"),
+                         "Previously committed plan")
+        self.assertNotIn(".sdd/plans/next-plan.md", self.git(self.repo, "ls-tree", "-r", "--name-only", "HEAD"))
+        self.assertEqual(first.read_text(), "Revised local plan\n")
+        self.assertEqual(current.read_text(), "Replacement local plan\n")
+        self.git(self.repo, "add", ".sdd/plans/next-plan.md")
+        self.git(self.repo, "commit", "-m", "Incorrectly commit a generated plan")
+        self.assertIn("Committed tree differs", self.owned(state, "verify", success=False)["reason"])
+
     def test_verify_rejects_broken_symlink_target_drift(self):
         state = self.begin()
         state = self.checkpoint(state, "plan", self.result(state, "plan"))
