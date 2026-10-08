@@ -62,7 +62,7 @@ section.>
 - Never claim a command passed that was not run.
 - Never describe behaviour the diff does not contain.
 - No preamble, no closing summary, no "this PR" throat-clearing, no emoji headers.
-- Draft PRs stay draft. Marking one ready for review is the user's move — no
-  skill does it, and it is not this template's business either.
+- `handoff` creates PRs ready for review and converts existing drafts when
+  `pr_ready` is allowed. Readiness does not mean human QA has passed.
 - Screenshots for any visible change. A reviewer should not have to run the branch
   to see what it looks like.

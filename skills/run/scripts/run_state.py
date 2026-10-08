@@ -205,7 +205,7 @@ def begin(repo, args):
         else:
             config = config_at(repo)
             if "branch" not in config.get("handoff", {}).get(
-                "allow", ["branch", "commit", "push", "pr_body"]
+                "allow", ["branch", "commit", "push", "pr_body", "pr_ready", "tracker_status"]
             ):
                 raise Blocked("Preparing a task branch requires branch in handoff.allow.")
             if not args.branch or args.branch == "main":
@@ -239,7 +239,7 @@ def begin(repo, args):
             write_json(path, state)
         config = config_at(repo)
         if "branch" not in config.get("handoff", {}).get(
-            "allow", ["branch", "commit", "push", "pr_body"]
+            "allow", ["branch", "commit", "push", "pr_body", "pr_ready", "tracker_status"]
         ):
             raise Blocked("Updated contract withholds branch in handoff.allow.")
         state["routes"] = routes(repo, args.provider)["routes"]

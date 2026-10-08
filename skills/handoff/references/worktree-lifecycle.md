@@ -13,7 +13,7 @@ worktree's own branch. The PR base is `repo.default_branch`, set explicitly rath
 than inferred:
 
 ```bash
-gh pr create --base "<repo.default_branch>" --head "<branch>" --draft ...
+gh pr create --base "<repo.default_branch>" --head "<branch>" ...
 ```
 
 **Shared paths are not yours.** A worktree may hold symlinks created at setup:

@@ -3,7 +3,7 @@
   "generated_at": "YYYY-MM-DD",
   "sdd_tracking": "committed",
   "handoff": {
-    "allow": ["branch", "commit", "push", "pr_body"]
+    "allow": ["branch", "commit", "push", "pr_body", "pr_ready", "tracker_status"]
   },
   "run": {
     "models": {}

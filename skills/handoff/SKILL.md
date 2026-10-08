@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Use when shipit artifacts must be delivered — branch, commit, push, and the pull request body by default; tracker comments, status transitions, review-thread replies, marking a PR ready, and issue creation only when `handoff.allow` in `.sdd/config.json` opts into them. Runs after `task`, `plan`, `implement`, or `pr-fix`. Do not use to write plans, tickets, or product code.
+description: Use when shipit artifacts must be delivered — branch, commit, push, ready-for-review PRs and tracker review status by default; tracker comments, review-thread replies and issue creation only when `handoff.allow` in `.sdd/config.json` opts into them. Runs after `task`, `plan`, `implement`, or `pr-fix`. Do not use to write plans, tickets, or product code.
 metadata:
   writes_product_code: false
 ---
@@ -13,8 +13,8 @@ This skill delivers their artifacts.
 
 **What it may do is configuration, not judgement.** `handoff.allow` in
 `.sdd/config.json` lists the permitted side effects. Its default is git and the PR
-body; everything that reaches a human — a tracker comment, a status transition, a
-review-thread reply, marking a PR ready — is opt-in. See **Permissions** below
+body, PR readiness and tracker review status. Tracker comments, review-thread
+replies and issue creation are opt-in. See **Permissions** below
 before doing anything.
 
 Four modes: `task` (after a ticket draft is written), `plan` (after a plan is
@@ -33,15 +33,16 @@ state before performing them.
 ## Permissions
 
 Read `handoff.allow` from `.sdd/config.json`. **Absent → `["branch", "commit",
-"push", "pr_body"]`**, which is also what a repo gets from `/shipit:init`.
+"push", "pr_body", "pr_ready", "tracker_status"]`**, which is also what a repo
+gets from `/shipit:init`. Existing explicit allow-lists remain authoritative.
 
 | Entry | Unlocks |
 | --- | --- |
 | `branch` | creating or switching to the delivery branch |
 | `commit` | staging and committing the manifest |
 | `push` | pushing the branch |
-| `pr_body` | creating a draft PR, and replacing its body |
-| `pr_ready` | marking a PR ready for review |
+| `pr_body` | creating a ready-for-review PR, and replacing its body |
+| `pr_ready` | marking an existing draft PR ready for review |
 | `tracker_comment` | one comment per mode, per `references/tracker-writes.md` |
 | `tracker_status` | the mode's status transition |
 | `thread_replies` | replying to and resolving review threads in `review` mode |
@@ -52,8 +53,8 @@ Rules:
 - **A step whose capability is not listed does not happen.** Report that line as
   `skipped (not in handoff.allow)` — never as `blocked`, never silently.
 - **Read `references/tracker-writes.md` only when `tracker_comment`,
-  `tracker_status` or `issue_create` is listed.** On the default `allow` that file
-  is pure wasted context.
+  `tracker_status` or `issue_create` is listed.** Read its status rules on the
+  default `allow`; skip comment/creation sections unless enabled.
 - An unknown entry is ignored: report the drift and suggest `/shipit:init`. Never
   patch `.sdd/config.json` yourself.
 - `allow` present but empty, or a mode left with no permitted step, → do nothing and
@@ -125,7 +126,10 @@ rest has nothing to check.
 1. Read `handoff.allow`. Nothing this mode needs is listed → stop here and say so;
    that is not a failure.
 2. `git status`, current branch, remote. `gh auth status` when the host is GitHub.
-3. Read `sdd_tracking` from `.sdd/config.json` (absent → `committed`). Local →
+3. In `plan` and `implementation` modes, verify required tracker status access
+   when `tracker_status` is allowed and an issue is identified. Adapter `none`
+   or no linked issue → status `n/a`.
+   Read `sdd_tracking` from `.sdd/config.json` (absent → `committed`). Local →
    no path under `.sdd/` is ever staged, in any mode; see Hard rules.
 4. Confirm which checkout you are in. The main checkout is the default and is fine.
    Only when the plan names a worktree must you be in it — see
@@ -181,7 +185,8 @@ exists before a branch does.
   it with the worktree; verify rather than re-create.
 - **Commit** — `skipped (generated plan stays local)` in every tracking mode.
 - **Push** — only existing commits on the task branch; no plan or empty commit.
-- **PR** — Draft. Title `<ISSUE-ID> Plan: <short title>`. Body states this is
+- **PR** — Ready for review. Create without `--draft`. Title
+  `<ISSUE-ID> Plan: <short title>`. Body states this is
   planning only and execution belongs to `/shipit:implement`. Always carry the
   plan's content verbatim (Goal, Acceptance, Files, Notes) in the body.
   Update an existing PR when available. No commits ahead of the base and no
@@ -189,8 +194,11 @@ exists before a branch does.
   dummy commit to open a planning PR.
 - **Tracker comment** — `tracker_comment` only: the plan comment from
   `references/tracker-writes.md`.
-- **Status** — `tracker_status` only: earliest-state to next-state (e.g. `Backlog`
-  → `Todo`). Leave started, completed, cancelled, and duplicate states untouched.
+- **Ready for review** — `pr_ready` only: convert an existing draft and verify
+  readiness, as in implementation mode. Already ready → no write.
+- **Status** — `tracker_status` only: after publishing and verifying a ready PR,
+  move the linked issue to `In Review` per `references/tracker-writes.md`. No PR
+  delivered → skip the transition and preserve the planning status.
 
 ## Mode: implementation
 
@@ -200,16 +208,21 @@ exists before a branch does.
 - **PR** — replace the plan PR's body on this branch with the report's
   `PR Preparation` body verbatim. Verbatim means no re-wording, no added preamble,
   and no re-adding a section the template dropped. Create a new PR only when none
-  exists, as a draft.
-- **Ready for review** — `pr_ready` only. Otherwise the PR stays exactly as it is,
-  draft included, and the report says so.
+  exists, ready for review and without `--draft`.
+- **Ready for review** — `pr_ready` only: convert an existing draft with
+  `gh pr ready` (or the PR host equivalent). Already ready → no write. Verify
+  actual readiness before the tracker transition. When withheld, preserve the
+  existing PR state and report the skipped conversion.
 - **Tracker comment** — `tracker_comment` only: the QA steps **copied verbatim**
   and the PR link. Nothing else — no summary, no validation result, no file list.
   The QA steps were written for a non-developer, so they are the one part never
   shortened. **No QA steps in the report → no comment.** Not allowed → the steps
   stay in the report for the user to post.
-- **Status** — `tracker_status` only: move to the review state. Leave QA-ready,
-  completed, cancelled, and duplicate states untouched.
+- **Status** — `tracker_status` only: after the delivered PR is verified ready
+  for review, move the linked issue to `In Review` (or its unambiguous review
+  equivalent) and read it back. Already in review, QA-ready or terminal → preserve
+  the state. A draft PR or failed delivery never advances the card; an unavailable
+  or ambiguous transition is partial delivery, not completion.
 
 ### Coordinated run and retry
 

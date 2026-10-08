@@ -309,20 +309,22 @@ PR command. Only `handoff` does — and what `handoff` may do is a config list, 
 judgement call:
 
 ```json
-"handoff": { "allow": ["branch", "commit", "push", "pr_body"] }
+"handoff": { "allow": ["branch", "commit", "push", "pr_body", "pr_ready", "tracker_status"] }
 ```
 
-That is the default `/shipit:init` writes. On it, **handoff performs no tracker or
-notification writes**: no tracker comment, no status transition, no review-thread reply, no marking a PR ready
-for review, no issue created. Add `tracker_comment`, `tracker_status`,
-`thread_replies`, `pr_ready` or `issue_create` when you want that back — per repo,
-by hand. A capability that is not listed is not performed, and the run says
+That is the default `/shipit:init` writes. `handoff` creates a ready-for-review
+PR, converts an existing draft when needed, and moves the linked card to
+`In Review` after verifying PR readiness. It verifies the card update and preserves
+review/QA/terminal states. No card or adapter `none` → the tracker step is `n/a`.
+Tracker comments, review-thread replies and issue creation remain opt-in: add
+`tracker_comment`, `thread_replies` or `issue_create` per repo. Existing explicit
+allow-lists are preserved on init refresh/upgrade. A capability that is not listed is not performed, and the run says
 `skipped (not in handoff.allow)` rather than doing it anyway.
 The `plan` startup transition to `In Progress` is separate and applies whenever
 planning an existing issue with a configured tracker, including inside `run`.
 
-The opt-in prose lives in a reference `handoff` loads only when the flag is on, so
-the default costs nothing in context.
+The tracker reference is read only for enabled capabilities: status rules by
+default, and comment/creation sections only when opted in.
 
 ## The `.sdd/` contract
 

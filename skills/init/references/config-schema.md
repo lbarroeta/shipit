@@ -21,7 +21,7 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `shipit_version` | string | Plugin version that wrote the file |
 | `generated_at` | date | Used by refresh mode to detect human edits |
 | `sdd_tracking` | `committed` \| `local` | Asked once at first `init`. `local` means excluded via `.git/info/exclude`, never `.gitignore`. Read by `handoff` (staging) and `plan`'s worktree step (contract sharing) |
-| `handoff.allow` | string[] | Side effects `handoff` may perform. Absent → `["branch", "commit", "push", "pr_body"]`. See below |
+| `handoff.allow` | string[] | Side effects `handoff` may perform. Absent → `["branch", "commit", "push", "pr_body", "pr_ready", "tracker_status"]`. See below |
 | `run.models` | object | Optional stage model/effort overrides by `anthropic` or `openai`. Empty/absent uses the pinned defaults in `skills/run/assets/models.json`. See below |
 | `repo.name` | string | Basename of the git toplevel |
 | `repo.default_branch` | string | From `origin/HEAD` |
@@ -122,7 +122,7 @@ alternative is `worktree.setup`, which regenerates what the worktree needs.
 ## `handoff.allow`
 
 The permission list for delivery side effects in `handoff`. Every entry is opt-in
-except the four defaults, and a capability that is absent is simply not performed —
+except the six defaults, and a capability that is absent is simply not performed —
 reported as `skipped (not in handoff.allow)`, never as an error.
 
 | Entry | Grants |
@@ -130,19 +130,22 @@ reported as `skipped (not in handoff.allow)`, never as an error.
 | `branch` | creating or switching to the delivery branch |
 | `commit` | staging and committing the manifest |
 | `push` | pushing the branch |
-| `pr_body` | creating a draft PR, and replacing its body |
-| `pr_ready` | marking a PR ready for review |
+| `pr_body` | creating a ready-for-review PR, and replacing its body |
+| `pr_ready` | marking an existing draft PR ready for review |
 | `tracker_comment` | one comment per mode — QA steps and the PR link |
-| `tracker_status` | the mode's status transition |
+| `tracker_status` | the review transition after a ready PR is delivered |
 | `thread_replies` | replying to and resolving review threads after `pr-fix` |
 | `issue_create` | `handoff`'s `task` mode: creating the issues a draft describes |
 
-Defaults to the first four. `init` writes them explicitly so the file says what it
-allows rather than relying on a default nobody remembers. Granting a capability
+Defaults to `branch`, `commit`, `push`, `pr_body`, `pr_ready` and `tracker_status`.
+`init` writes them explicitly so the file says what it allows rather than relying
+on a default nobody remembers. Granting a capability
 never creates one: `tracker_comment` with adapter `none` is still `n/a`.
 
-Unknown entries are ignored and reported as drift. An empty list means `handoff`
-does nothing and says which capability the run needed.
+Existing explicit allow-lists remain authoritative; init refresh/upgrade never
+adds permissions to them automatically. Unknown entries are ignored and reported
+as drift. An empty list means `handoff` does nothing and says which capability the
+run needed.
 The startup transition to `In Progress` belongs to `plan` (also inside `run`)
 and is independent of this list.
 
@@ -171,8 +174,9 @@ Absent `run` is backward-compatible; no migration is needed to try the defaults.
 - A `tracker.create` block that is absent means the config predates the field.
   Treat it as `supported: false` — `task` writes a draft and reports the drift.
   Never patch the config to add it; that is a re-run of `init`.
-- An absent `handoff.allow` is the default four, not "everything". A config written
-  before the field existed gets git and the PR body, nothing that reaches a human.
+- An absent `handoff.allow` is the default six, not "everything". A config written
+  before the field existed uses that same default; an existing explicit list
+  continues to limit delivery to its listed capabilities.
 - Never write to this file outside `init`. A skill that wants to change the
   contract reports the drift and lets the user re-run `init`.
 - A command that fails *because it does not exist* means the contract has drifted.
