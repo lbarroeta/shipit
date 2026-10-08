@@ -5,7 +5,7 @@ more rubrics in `graders/`.
 
 ```bash
 claude plugin eval shipit                      # all cases, with a no-plugin baseline arm
-claude plugin eval shipit --case init-*        # filter
+claude plugin eval shipit --case 'init-*'      # filter
 claude plugin eval shipit --report report.html # scored HTML report
 ```
 
@@ -31,6 +31,7 @@ plugin disabled, so the number reported is a delta, not an absolute.
 | `task-no-tracker` | Creating an issue somewhere the repo did not configure, and calling `none` a gap |
 | `run-dirty-main` | Switching main or adopting uncommitted user changes before an orchestrated task |
 | `run-resume-qa` | Restarting from main, duplicating delivery, or calling automated checks human QA approval |
+| `code-review-no-side-effects` | Posting to a PR because the user said "leave comments"; reporting a crash the caller already guards |
 | `run-model-unavailable` | Role-playing subagents or silently substituting unavailable stage models |
 
 Every case targets a rule that, when broken, produces confidently wrong output

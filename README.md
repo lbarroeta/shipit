@@ -23,10 +23,10 @@ codex plugin marketplace add KodimTech/shipit
 codex plugin add shipit@shipit
 ```
 
-Start a new session and the nine skills are available. Codex matches them by
+Start a new session and the ten skills are available. Codex matches them by
 description, and the same names work as slash commands — `/shipit:task`,
 `/shipit:plan`, `/shipit:init`, `/shipit:implement`, `/shipit:handoff`,
-`/shipit:pr-fix`, `/shipit:status`, `/shipit:doctor`, `/shipit:run` — exactly as in Claude Code. Same `skills/`
+`/shipit:pr-fix`, `/shipit:code-review`, `/shipit:status`, `/shipit:doctor`, `/shipit:run` — exactly as in Claude Code. Same `skills/`
 directory and the same `.sdd/` contract, so a repo initialized in one runtime
 works in the others.
 
@@ -42,7 +42,7 @@ ROOT=~/.config/opencode/plugins/shipit
 "$ROOT"/scripts/install-opencode.sh
 ```
 
-The installer links the eight commands and verifies OpenCode resolves them. It
+The installer links the nine commands and verifies OpenCode resolves them. It
 never uses sudo, never installs a package, and never edits `opencode.json`. The
 same three lines are also the update — see below.
 
@@ -185,6 +185,13 @@ The individual cycle remains available:
         │
 /shipit:pr-fix      review comments + red CI             as needed
                     `--comments` / `--ci` to scope
+```
+
+Plus one to review someone else's PR before it merges:
+
+```
+/shipit:code-review pass/flag/block verdict + drafted comments  read-only
+                    bugs, .sdd/rules, tests, security
 ```
 
 Plus two for visibility:
@@ -468,6 +475,7 @@ extracted from:
 | `plan` | ~110 | ~1.8k | −28% on invoke (was ~2.5k) |
 | `implement` | ~90 | ~2.6k | −16% on invoke (was ~3.1k) |
 | `pr-fix` | ~90 | ~1.9k | +6% |
+| `code-review` | not yet measured | not yet measured | new |
 | `handoff` | ~90 | ~1.5k | −21% |
 | `init` | ~90 | ~1.7k | new |
 | `doctor` | ~90 | ~1.4k | new |
@@ -500,7 +508,7 @@ replaced by a scoped subgraph. Measure that with
 | `sdd-implementation` | `/shipit:implement` |
 | `sdd-pr-fix` | `/shipit:pr-fix` |
 | `sdd-handoff` | `/shipit:handoff` |
-| — | `/shipit:init`, `/shipit:task`, `/shipit:doctor`, `/shipit:status` |
+| — | `/shipit:init`, `/shipit:task`, `/shipit:code-review`, `/shipit:doctor`, `/shipit:status` |
 | Conventions hardcoded in the skill | `.sdd/`, generated from your repo |
 | `.claude/plans/` | `<paths.plans>`, default `.sdd/plans/` |
 

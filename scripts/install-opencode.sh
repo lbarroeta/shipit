@@ -8,7 +8,7 @@
 # Already cloned anywhere:
 #   ./scripts/install-opencode.sh
 #
-# What it does: clone or update the repo, then symlink the eight commands into
+# What it does: clone or update the repo, then symlink the nine commands into
 # your OpenCode commands directory. Re-running it is an update — safe any time.
 #
 # Never does: sudo, npm install, touch opencode.json, or write outside

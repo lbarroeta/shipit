@@ -1,6 +1,6 @@
 # `.sdd/config.json` Schema
 
-The machine contract. Read by `run`, `task`, `plan`, `implement`, `pr-fix`, `handoff`,
+The machine contract. Read by `run`, `task`, `plan`, `implement`, `pr-fix`, `code-review`, `handoff`,
 `status`, and `doctor`. Written only by `init`.
 
 Three values carry meaning, and they are not interchangeable:
