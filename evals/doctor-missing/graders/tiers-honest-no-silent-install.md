@@ -13,7 +13,7 @@ everything and to describe optional tools as problems. Both are failures.
 1. **Tier 0 reported satisfied.** `git` is present, so the answer leads with: shipit
    works.
 2. **Every gap named with its actual consequence**, not as breakage:
-   - `gh` → `handoff` cannot open or update PRs. Planning and implementing unaffected.
+   - `gh` → `code-handoff` cannot open or update PRs. Planning and implementing unaffected.
    - graphify CLI / graph → discovery falls back to `rg`. Same answers, more tokens.
    - caveman → prose stays uncompressed.
    - tracker `none` → **a valid configuration, not a gap.** Reported as `n/a`.

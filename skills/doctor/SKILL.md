@@ -76,7 +76,7 @@ contract
 
 `tracker fields` prints each key on its own: a name for a detected field, `none
 (<reason>)` for `null`, and `unverified` for `"unknown"` — never `none`, since
-`handoff` may still map it.
+`code-handoff` may still map it.
 
 Rules for the last line: state what still works before what is missing. A user
 reading this should know whether they can proceed, in one line.
@@ -86,16 +86,16 @@ reading this should know whether they can proceed, in one line.
 | Gap | Consequence |
 | --- | --- |
 | `git` | shipit cannot run. Only real blocker. |
-| `gh` | `handoff` cannot open or update PRs. Planning and implementing are unaffected. |
+| `gh` | `code-handoff` cannot open or update PRs. Planning and implementing are unaffected. |
 | tracker `none` | Branch names come from `.sdd/conventions.md` instead. Everything else works. |
-| `handoff.allow` at its default | `handoff` does git and the PR body only. Tracker comments, status moves, thread replies and marking a PR ready are yours. Not a gap — a setting. |
-| `tracker.create.fields` key `null` | Verified absent. The draft still sets `Priority` and `Size`; a created issue does not carry that one in the tracker's own fields, and `handoff` reports it unmapped. Adapter `none` → `n/a`. |
-| `tracker.create.fields` key `"unknown"` | Not detected, so nothing is known yet. `handoff` tries the adapter's default field name, which may well work — report it as unverified, never as unmapped. |
-| `tracker.create.supported` false | The draft carries no paste target. `task-create` drafts either way — publishing requires authorized `handoff` with `issue_create` — and with adapter `none` this is the expected state, not a gap. |
+| `handoff.allow` at its default | `code-handoff` does git and the PR body only. Tracker comments, status moves, thread replies and marking a PR ready are yours. Not a gap — a setting. |
+| `tracker.create.fields` key `null` | Verified absent. The draft still sets `Priority` and `Size`; a created issue does not carry that one in the tracker's own fields, and `code-handoff` reports it unmapped. Adapter `none` → `n/a`. |
+| `tracker.create.fields` key `"unknown"` | Not detected, so nothing is known yet. `code-handoff` tries the adapter's default field name, which may well work — report it as unverified, never as unmapped. |
+| `tracker.create.supported` false | The draft carries no paste target. `task-create` drafts either way — publishing requires authorized `code-handoff` with `issue_create` — and with adapter `none` this is the expected state, not a gap. |
 | graphify CLI | Discovery falls back to `rg`/`git grep`. Same answers, more tokens. |
 | graphify graph | Same as above — having the CLI without a graph changes nothing. |
 | caveman | Chat prose and reports stay long. Note that shipit keeps PR bodies and reports short on its own, and exempts non-developer QA steps from compression either way. |
-| `.sdd/` absent | `plan` and `implement` refuse to run. Fix: `/shipit:init`. |
+| `.sdd/` absent | `code-plan` and `code-implement` refuse to run. Fix: `/shipit:init`. |
 | pointer absent | shipit skills still read `.sdd/` by path, but every other agent working in this repo ignores it and codes to its own priors. Fix: `/shipit:init` (refresh). |
 | `unknown[]` non-empty | Those verification steps do not exist. Named in every implement report. |
 | `ponytail` **present** | Its persistent mode contradicts spec-driven tests and truncates reports. Fix: `stop ponytail`. |

@@ -1,6 +1,6 @@
 # Lean Ladder
 
-Scope gate and review vocabulary. Loaded by `plan`, `implement`, and `pr-fix`.
+Scope gate and review vocabulary. Loaded by `code-plan`, `code-implement`, and `pr-fix`.
 
 > Adapted from **ponytail** v4.7.0 — https://github.com/DietrichGebert/ponytail
 > Copyright (c) 2026 DietrichGebert, MIT License. See `NOTICE` at the plugin
@@ -28,8 +28,8 @@ cases. Lean means writing less code, not picking the flimsier algorithm.
 
 | Skill | Application |
 | --- | --- |
-| `plan` | Gate before the `Files` table is final. Every `Create` row passes rungs 1–4 or does not ship. What the gate rejects goes to `Out of scope` as `skipped: <X>, add when <Y>`. |
-| `implement` | Stance during "smallest correct change". A deliberate shortcut leaves a debt marker. |
+| `code-plan` | Gate before the `Files` table is final. Every `Create` row passes rungs 1–4 or does not ship. What the gate rejects goes to `Out of scope` as `skipped: <X>, add when <Y>`. |
+| `code-implement` | Stance during "smallest correct change". A deliberate shortcut leaves a debt marker. |
 | `pr-fix` | Tag vocabulary for `pushback` justifications. One tagged line beats a paragraph. |
 
 ## Review tags
@@ -60,7 +60,7 @@ The marker prefix comes from `markers.debt` in `.sdd/config.json` (default
 `ponytail:`, which keeps the upstream `/ponytail-debt` skill able to harvest
 them). A marker with no upgrade trigger is the kind that rots — do not write one.
 
-`implement` collects every marker it wrote into `Known Risks or Follow-ups`, so a
+`code-implement` collects every marker it wrote into `Known Risks or Follow-ups`, so a
 deferral cannot quietly become permanent even without the upstream plugin.
 
 ## Never simplify away
@@ -85,7 +85,7 @@ framework, its own spec kinds, its own coverage gate. Writing a bare `assert` in
 a repo with a real suite leaves the coverage gate red and the change unshippable.
 
 **Report length.** Upstream says code first, at most three short lines. The
-reports from `implement` and `pr-fix` are requested output, not defensive prose —
+reports from `code-implement` and `pr-fix` are requested output, not defensive prose —
 upstream's own carve-out ("explanation the user explicitly asked for is not
 debt") is what applies. Their length is capped by their own templates, which cap
 each section and drop the ones that would be filler — not by the three-line rule.

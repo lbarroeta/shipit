@@ -10,8 +10,8 @@ metadata:
 # shipit design-system
 
 Agents building UI with no design contract invent one per screen. This skill
-records one — from the user's answers and the repo's evidence — so `plan` and
-`implement` stop guessing colors, components and states.
+records one — from the user's answers and the repo's evidence — so `code-plan` and
+`code-implement` stop guessing colors, components and states.
 
 | Path | For | Content |
 | --- | --- | --- |
@@ -20,7 +20,7 @@ records one — from the user's answers and the repo's evidence — so `plan` an
 | `<!-- shipit:design -->` block | discovery | In each UI layer rule, and in `AGENTS.md` (and a real-file `CLAUDE.md`) |
 
 It ends at those files. Applying the design to the product — new tokens in CSS, a
-refactored button — is a later `/shipit:task-create` or `/shipit:plan`.
+refactored button — is a later `/shipit:task-create` or `/shipit:code-plan`.
 
 ## Context budget
 
@@ -147,7 +147,7 @@ template stands for `paths.rules`: write the configured value.
 - Decisions by source: `user`, `delegated` (with scope), `existing` kept.
 - Inconsistencies found, and which the user resolved.
 - Preview location, when one was made.
-- No product code changed. Next: `/shipit:task-create` or `/shipit:plan` to implement
+- No product code changed. Next: `/shipit:task-create` or `/shipit:code-plan` to implement
   what is marked `to implement`.
 - `sdd_tracking: committed` → the files are ready for the user to commit;
-  `handoff` has no mode for them. `local` → they stay in this checkout.
+  `code-handoff` has no mode for them. `local` → they stay in this checkout.

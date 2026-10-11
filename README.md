@@ -25,7 +25,7 @@ codex plugin add shipit@shipit
 
 Start a new session and the ten skills are available. Codex matches them by
 description, and the same names work as slash commands — `/shipit:task-create`, `/shipit:task-next`,
-`/shipit:plan`, `/shipit:init`, `/shipit:design-system`, `/shipit:implement`, `/shipit:handoff`,
+`/shipit:code-plan`, `/shipit:init`, `/shipit:design-system`, `/shipit:code-implement`, `/shipit:code-handoff`,
 `/shipit:pr-fix`, `/shipit:status`, `/shipit:doctor`, `/shipit:run` — exactly as in Claude Code. Same `skills/`
 directory and the same `.sdd/` contract, so a repo initialized in one runtime
 works in the others.
@@ -42,7 +42,7 @@ ROOT=~/.config/opencode/plugins/shipit
 "$ROOT"/scripts/install-opencode.sh
 ```
 
-The installer links the nine commands and verifies OpenCode resolves them. It
+The installer links the shipped commands and verifies OpenCode resolves them. It
 never uses sudo, never installs a package, and never edits `opencode.json`. The
 same three lines are also the update — see below.
 
@@ -53,12 +53,18 @@ Already have a checkout somewhere else? Skip the clone and run its
 `scripts/install-opencode.sh` directly — the installer uses whatever checkout it
 lives in.
 
-Commands are flat here: `/shipit-plan`, not `/shipit:plan`. Same skills, same
+Commands are flat here: `/shipit-code-plan`, not `/shipit:code-plan`. Same skills, same
 `.sdd/` contract, so a repo initialized in one runtime works in the others.
 
 Installing somewhere other than the default? Set `SHIPIT_ROOT` before running,
 and keep it exported — the commands read it to find the skills. Uninstall:
 `rm ~/.config/opencode/commands/shipit-*.md`.
+
+The code workflow skills are `shipit:code-plan`, `shipit:code-implement`, and
+`shipit:code-handoff` (OpenCode uses `shipit-code-*`). Existing `language.plan`,
+`paths.plans`, `handoff.allow`, run route/checkpoint keys `plan`/`implement`/`handoff`
+and delivery modes keep their names. Re-run the OpenCode installer to retire its
+old command symlinks; user-authored legacy command files are preserved.
 
 ### Then, once per repository
 
@@ -115,6 +121,11 @@ ran it. Export `SHIPIT_ROOT` first if your checkout is not in the default place.
 The new command has to resolve. `/shipit:design-system` in Claude Code and Codex,
 `/shipit-design-system` in OpenCode, where `opencode debug config` lists all nine.
 
+The planning skill is now `shipit:code-plan` (OpenCode: `shipit-code-plan`).
+Existing `language.plan`, `paths.plans`, `run.models.*.plan` and handoff `plan`
+mode keep their names. Re-run the OpenCode installer to retire its old command
+symlink; user-authored legacy command files are preserved.
+
 ### Then, once per repository
 
 ```
@@ -147,8 +158,8 @@ blocked criteria or failed validation stop the pipeline. Pending user changes ar
 never stashed or discarded. Your repo must already have `.sdd/` configured, Python
 3.10+, a clean checkout and `main` tracking a remote `main`.
 
-At the start of `plan`, the issue moves to `In Progress` or the tracker's equivalent
-and is read back to verify success. This applies to standalone `/shipit:plan` and
+At the start of `code-plan`, the issue moves to `In Progress` or the tracker's equivalent
+and is read back to verify success. This applies to standalone `/shipit:code-plan` and
 the planner inside `run`, independently of `handoff.allow`. A missing status
 mapping or tracker write access blocks planning. Plans without an issue, or with
 adapter `none`, stay local. Issues already in progress, review or a terminal state
@@ -168,8 +179,8 @@ stage; unavailable effective-model metadata is disclosed rather than guessed.
 
 The explicit request to run the issue authorizes execution within its criteria,
 after the coordinator checks the generated plan. Scope/security/data blockers
-still go to the user. `implement --defer-handoff` lets the builder return control
-before the separate delivery agent runs; standalone `implement` is unchanged.
+still go to the user. `code-implement --defer-handoff` lets the builder return control
+before the separate delivery agent runs; standalone `code-implement` is unchanged.
 
 State and issue/checkout locks live under the Git common directory, outside the
 diff. Repeating an issue resumes its saved branch and checkpoints without pulling
@@ -177,7 +188,7 @@ main again or duplicating delivery. Give QA feedback in the same chat: failures
 return to the builder on that branch. Ready for QA includes where to test, setup
 and complete plain-language steps. Missing test environment is reported as QA
 blocked; a PR or green tests never means human QA passed. This first pipeline uses
-one existing checkout; use individual `plan --worktree` for independent worktrees.
+one existing checkout; use individual `code-plan --worktree` for independent worktrees.
 
 The individual cycle remains available:
 
@@ -188,11 +199,11 @@ The individual cycle remains available:
         │
 /shipit:task-create a need becomes a ticket, or an epic  when there is no ticket yet
         │
-/shipit:plan        plan contract in the current checkout once per task
+/shipit:code-plan        plan contract in the current checkout once per task
         │
-/shipit:implement   red/green + validation scoped to the change
+/shipit:code-implement   red/green + validation scoped to the change
         │
-/shipit:handoff     branch, commit, push, PR body           delivery side effects
+/shipit:code-handoff     branch, commit, push, PR body           delivery side effects
                     tracker + threads only if allowed
         │
 /shipit:pr-fix      review comments + red CI             as needed
@@ -202,7 +213,7 @@ The individual cycle remains available:
 Use `/shipit:task-next` to recommend the next executable issue from the live
 configured tracker. It considers current Goal/project relevance, priority, explicit
 order and verified dependencies, then explains its choice, alternatives and
-blockers. It is read-only and never marks work started. `plan` repeats the Goal and
+blockers. It is read-only and never marks work started. `code-plan` repeats the Goal and
 prerequisite checks before its startup status transition.
 
 Plus two for visibility:
@@ -266,7 +277,7 @@ behaviour needs a decision before publishing or planning; shipit does not invent
 business rules to complete the template.
 
 By default the draft is the deliverable. With `issue_create` in `handoff.allow`,
-`handoff` publishes the reviewed draft after authorization. It uses the configured
+`code-handoff` publishes the reviewed draft after authorization. It uses the configured
 provider's available capabilities for parent and blocking relations. Unsupported
 relations stay explicit in issue prose and are reported as requiring manual
 linking; a text reference is never claimed as a native relation.
@@ -304,15 +315,15 @@ tracker → `create.supported` goes `false`, `task-create` still writes the draf
 issue types are always enumerated from your workspace and matched by name; an id
 copied from someone else's workspace writes to the wrong place, silently.
 
-`task-create`, `task-next`, `plan`, `implement`, and `pr-fix` never run `git commit`, `git push`, or a
-PR command. Only `handoff` does — and what `handoff` may do is a config list, not a
+`task-create`, `task-next`, `code-plan`, `code-implement`, and `pr-fix` never run `git commit`, `git push`, or a
+PR command. Only `code-handoff` does — and what `code-handoff` may do is a config list, not a
 judgement call:
 
 ```json
 "handoff": { "allow": ["branch", "commit", "push", "pr_body", "pr_ready", "tracker_status"] }
 ```
 
-That is the default `/shipit:init` writes. `handoff` creates a ready-for-review
+That is the default `/shipit:init` writes. `code-handoff` creates a ready-for-review
 PR, converts an existing draft when needed, and moves the linked card to
 `In Review` after verifying PR readiness. It verifies the card update and preserves
 review/QA/terminal states. No card or adapter `none` → the tracker step is `n/a`.
@@ -320,7 +331,7 @@ Tracker comments, review-thread replies and issue creation remain opt-in: add
 `tracker_comment`, `thread_replies` or `issue_create` per repo. Existing explicit
 allow-lists are preserved on init refresh/upgrade. A capability that is not listed is not performed, and the run says
 `skipped (not in handoff.allow)` rather than doing it anyway.
-The `plan` startup transition to `In Progress` is separate and applies whenever
+The `code-plan` startup transition to `In Progress` is separate and applies whenever
 planning an existing issue with a configured tracker, including inside `run`.
 
 The tracker reference is read only for enabled capabilities: status rules by
@@ -341,7 +352,7 @@ default, and comment/creation sections only when opted in.
 
 Plus `.sdd/tasks/`, where `/shipit:task-create` writes ticket drafts. It is scratch, not
 contract: excluded from git in both tracking modes.
-Generated plans also stay local: `handoff` excludes them from commits in every
+Generated plans also stay local: `code-handoff` excludes them from commits in every
 tracking mode, including inside `run`. Planning handoff carries the plan in a PR
 body when a PR exists or the branch has commits ahead of its base; otherwise the
 local plan is the deliverable, with no empty commit to create a PR.
@@ -360,7 +371,7 @@ untouched.
 
 Three rules make it trustworthy:
 
-- **No evidence, no claim.** Without an exemplar, the value is `unknown` — and `plan`
+- **No evidence, no claim.** Without an exemplar, the value is `unknown` — and `code-plan`
   asks instead of guessing.
 - **Commands come from CI, and are run before being written.** A command that only
   appears in a README is a candidate to verify, never a source. One that fails
@@ -447,10 +458,10 @@ Existing UI is the starting point: its identity is kept unless you choose
 otherwise, and inconsistencies are listed with their split, never turned into
 rules. Values already in your CSS or theme stay there — the contract points at
 them. It changes no product code; implementing what it marks `to implement` is a
-normal `/shipit:task-create` or `/shipit:plan`.
+normal `/shipit:task-create` or `/shipit:code-plan`.
 
-`plan` reads the design rules only when the task touches UI and records the
-pattern, components and states in a `Design` section; `implement` follows them and
+`code-plan` reads the design rules only when the task touches UI and records the
+pattern, components and states in a `Design` section; `code-implement` follows them and
 reports each verification check. Backend-only work never loads them. Re-running it
 updates the same files: approved decisions and your hand edits are kept, and only
 pending or contradicted ones are asked again.
@@ -490,8 +501,8 @@ the one `init` wrote; it does not replace it.
 
    With `sdd_tracking: local` they stay in your checkout like the rest of `.sdd/`.
 5. **Plans already in flight keep working.** A plan written before the contract
-   has no `Design` section; `implement` applies the design rules directly and
-   says so under *Known Risks or Follow-ups*. Re-run `/shipit:plan` on it if you
+   has no `Design` section; `code-implement` applies the design rules directly and
+   says so under *Known Risks or Follow-ups*. Re-run `/shipit:code-plan` on it if you
    want the components and states recorded up front.
 6. **Implement what is marked `to implement`** — new tokens, a missing focus
    style, a component the contract proposes — as ordinary work:
@@ -500,7 +511,7 @@ the one `init` wrote; it does not replace it.
    /shipit:task-create "Apply the design tokens from .sdd/design-system.md"
    ```
 
-   then `/shipit:plan` and `/shipit:implement` as usual. Nothing changes in the
+   then `/shipit:code-plan` and `/shipit:code-implement` as usual. Nothing changes in the
    product until that work ships.
 
 Later, re-run `/shipit:design-system` whenever identity changes or pending
@@ -512,7 +523,7 @@ created a layer keyed `design` already has its rule at `.sdd/rules/design.md` �
 
 ## Parallel worktrees — opt-in
 
-**Off by default.** `plan` writes into your current checkout, like every other tool.
+**Off by default.** `code-plan` writes into your current checkout, like every other tool.
 A fresh worktree does not inherit untracked local config — `.env`, credentials,
 build caches — so enabling it before you know what your repo needs to boot from a
 clean checkout buys friction, not parallelism.
@@ -524,12 +535,12 @@ Turn it on in `.sdd/config.json` when you actually want several tasks in flight:
 ```
 
 Per-invocation override, no config edit needed — a flag in the request wins either
-way: `/shipit:plan --worktree <request>` forces one, `--no-worktree` forces none.
+way: `/shipit:code-plan --worktree <request>` forces one, `--no-worktree` forces none.
 
-Then `/shipit:plan` creates a worktree per task at `../worktrees/<repo>/<slug>` and
+Then `/shipit:code-plan` creates a worktree per task at `../worktrees/<repo>/<slug>` and
 writes the plan inside it. Three things make that safe:
 
-- **Collision detection.** Before finalizing its file list, `plan` reads the `Files`
+- **Collision detection.** Before finalizing its file list, `code-plan` reads the `Files`
   table of every active worktree's plan and intersects paths. Overlap is reported with
   the worktree that claims it, and the decision — sequence, narrow, or proceed — is
   recorded in the plan.
@@ -551,7 +562,7 @@ Run `/shipit:doctor` for your machine's actual state.
 | Tier | What | Without it |
 | --- | --- | --- |
 | **0 — required** | `git` | shipit does not run. That is the whole tier. |
-| **1 — recommended** | `gh` authenticated; a tracker MCP if you use one | `handoff` cannot push or open a PR; without a tracker MCP it falls back on your branch convention. `task-create` still drafts, `plan` and `implement` are unaffected. |
+| **1 — recommended** | `gh` authenticated; a tracker MCP if you use one | `code-handoff` cannot push or open a PR; without a tracker MCP it falls back on your branch convention. `task-create` still drafts, `code-plan` and `code-implement` are unaffected. |
 | **2 — accelerators** | graphify CLI + graph; caveman | Discovery falls back to `rg`. Same answers, more tokens. |
 | **3 — do not enable during a cycle** | the ponytail plugin | Nothing. The useful part is already vendored here. |
 
@@ -562,7 +573,7 @@ confirmation, and never builds a graph — that costs tokens, so it stays your c
 
 shipit vendors the useful part of [ponytail](https://github.com/DietrichGebert/ponytail)
 (MIT) into `references/lean-ladder.md`: the laziness ladder, the five review tags, and
-the debt-marker convention. `plan` runs the ladder as a scope gate, `implement` uses it
+the debt-marker convention. `code-plan` runs the ladder as a scope gate, `code-implement` uses it
 as a coding stance, `pr-fix` uses its tags to justify pushback.
 
 **Do not run the ponytail plugin during an SDD cycle.** Three reasons, from its own
@@ -591,9 +602,16 @@ first:
 | graphify | Grep dumps and whole-file reads, replaced by a scoped subgraph. |
 | caveman | Prose. Non-developer QA steps stay exempt from compression; everything else, PR bodies included, is short by default. |
 
-Plans are capped by **uncertainty**, not task size: ≤40 lines when the change follows
-an analogue, ≤150 as a hard cap for novel architecture. Over budget means the plan is
-restating the repo, so it gets cut rather than the cap raised.
+Plans scale with behavioral complexity and uncertainty; there is no arbitrary line
+cap. They record the repo baseline, verified relationships, essential decisions,
+and source acceptance → change → validation links. Discovery stops when those
+claims are supported, not after a fixed number of searches. Reuse and local
+patterns guide choices; unresolved essential business or external-contract
+decisions block instead of becoming guesses. Equivalent plans can differ in prose
+and minor choices across models. Remove repetition, never required coverage.
+
+Reproducible planning fixtures and a behavioral comparison protocol live in
+[`evals/plan-consistency/`](evals/plan-consistency/README.md).
 
 ### Measured footprint
 
@@ -602,10 +620,10 @@ extracted from:
 
 | Skill | always-on | on-invoke | vs. original |
 | --- | --- | --- | --- |
-| `plan` | ~110 | ~1.8k | −28% on invoke (was ~2.5k) |
-| `implement` | ~90 | ~2.6k | −16% on invoke (was ~3.1k) |
+| `code-plan` | ~110 | ~1.8k | −28% on invoke (was ~2.5k) |
+| `code-implement` | ~90 | ~2.6k | −16% on invoke (was ~3.1k) |
 | `pr-fix` | ~90 | ~1.9k | +6% |
-| `handoff` | ~90 | ~1.5k | −21% |
+| `code-handoff` | ~90 | ~1.5k | −21% |
 | `init` | ~90 | ~1.7k | new |
 | `doctor` | ~90 | ~1.4k | new |
 | `status` | ~70 | ~1.2k | new |
@@ -634,10 +652,10 @@ replaced by a scoped subgraph. Measure that with
 
 | Was | Now |
 | --- | --- |
-| `sdd-planner` | `/shipit:plan` |
-| `sdd-implementation` | `/shipit:implement` |
+| `sdd-planner` | `/shipit:code-plan` |
+| `sdd-implementation` | `/shipit:code-implement` |
 | `sdd-pr-fix` | `/shipit:pr-fix` |
-| `sdd-handoff` | `/shipit:handoff` |
+| `sdd-handoff` | `/shipit:code-handoff` |
 | — | `/shipit:init`, `/shipit:design-system`, `/shipit:task-create`, `/shipit:task-next`, `/shipit:doctor`, `/shipit:status` |
 | Conventions hardcoded in the skill | `.sdd/`, generated from your repo |
 | `.claude/plans/` | `<paths.plans>`, default `.sdd/plans/` |

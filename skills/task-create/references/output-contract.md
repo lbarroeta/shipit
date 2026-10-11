@@ -1,7 +1,7 @@
 # Task draft contract
 
 A ticket lets a reader understand, triage and validate work. It says what and why;
-`plan` owns files, implementation decisions and engineering verification commands.
+`code-plan` owns files, implementation decisions and engineering verification commands.
 
 ## Required content
 

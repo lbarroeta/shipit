@@ -11,6 +11,6 @@ Load the shipit `design-system` skill and run it.
 - The interview happens in this chat: ask, then end your turn and wait for the
   answer. Never answer a question on the user's behalf.
 - Command names are flat here: `/shipit:design-system` in the docs is
-  `/shipit-design-system`. Same for `init`, `plan`, `implement`.
+  `/shipit-design-system`. Same for `init`, `code-plan`, `code-implement`.
 
 Request: $ARGUMENTS

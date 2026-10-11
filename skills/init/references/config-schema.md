@@ -1,6 +1,6 @@
 # `.sdd/config.json` Schema
 
-The machine contract. Read by `run`, `task-create`, `task-next`, `plan`, `implement`, `pr-fix`, `handoff`,
+The machine contract. Read by `run`, `task-create`, `task-next`, `code-plan`, `code-implement`, `pr-fix`, `code-handoff`,
 `status`, and `doctor`. Written only by `init`.
 
 Three values carry meaning, and they are not interchangeable:
@@ -20,8 +20,8 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | --- | --- | --- |
 | `shipit_version` | string | Plugin version that wrote the file |
 | `generated_at` | date | Used by refresh mode to detect human edits |
-| `sdd_tracking` | `committed` \| `local` | Asked once at first `init`. `local` means excluded via `.git/info/exclude`, never `.gitignore`. Read by `handoff` (staging) and `plan`'s worktree step (contract sharing) |
-| `handoff.allow` | string[] | Side effects `handoff` may perform. Absent → `["branch", "commit", "push", "pr_body", "pr_ready", "tracker_status"]`. See below |
+| `sdd_tracking` | `committed` \| `local` | Asked once at first `init`. `local` means excluded via `.git/info/exclude`, never `.gitignore`. Read by `code-handoff` (staging) and `code-plan`'s worktree step (contract sharing) |
+| `handoff.allow` | string[] | Side effects `code-handoff` may perform. Absent → `["branch", "commit", "push", "pr_body", "pr_ready", "tracker_status"]`. See below |
 | `run.models` | object | Optional stage model/effort overrides by `anthropic` or `openai`. Empty/absent uses the pinned defaults in `skills/run/assets/models.json`. See below |
 | `repo.name` | string | Basename of the git toplevel |
 | `repo.default_branch` | string | From `origin/HEAD` |
@@ -57,12 +57,12 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `tracker.create.initial_state` | string \| null | State name a new issue lands in. Matched by name, never by id |
 | `tracker.create.default_labels` | string[] | Labels a new issue should carry. Only labels the tracker already has |
 | `tracker.create.epic_kind` | string \| null | How this workspace models a parent: `parent-issue`, `epic`, `project`, `task-list` |
-| `tracker.create.fields.priority` | string \| null \| `"unknown"` | Name of the tracker field a draft's `Priority` (`P0`–`P3`) is written to, as the tracker spells it — `priority` in Linear and Jira, `Priority` on a GitHub Project or a Shortcut custom field. `null`: verified absent, priority stays in the draft. `"unknown"`: not determined, `handoff` tries the adapter's default name |
+| `tracker.create.fields.priority` | string \| null \| `"unknown"` | Name of the tracker field a draft's `Priority` (`P0`–`P3`) is written to, as the tracker spells it — `priority` in Linear and Jira, `Priority` on a GitHub Project or a Shortcut custom field. `null`: verified absent, priority stays in the draft. `"unknown"`: not determined, `code-handoff` tries the adapter's default name |
 | `tracker.create.fields.size` | string \| null \| `"unknown"` | Same, for `Size` (`XS`–`XL`). Only a T-shirt field counts — `estimate` in Linear when the team's scale is T-shirt, a `Size` single-select on a GitHub Project, a `Size` field in Jira or Shortcut. A points scale is `null`: a size is never converted to points |
 | `graph` | object \| null | `{tool, out, query, path, explain, update}`. Null unless CLI **and** graph exist |
 | `markers.debt` | string | Default `ponytail:` |
 | `companions.*` | `present` \| `absent` | `ponytail`, `graphify_cli`, `graphify_graph`, `caveman` |
-| `worktree.enabled` | boolean | **Default `false`.** Opt-in: `plan` works in the current checkout unless the user turns this on |
+| `worktree.enabled` | boolean | **Default `false`.** Opt-in: `code-plan` works in the current checkout unless the user turns this on |
 | `worktree.root` | string | Default `../worktrees/<repo.name>` |
 | `worktree.base` | string | Branch new worktrees fork from |
 | `worktree.link[]` | string[] | **Empty at init.** Opt-in only. See warning below |
@@ -84,7 +84,7 @@ Substituted at call time. Never bake the value in.
 | `{node}` | One file, symbol, or concept name | `graph.explain` |
 | `{a}`, `{b}` | Two node names, in order | `graph.path` |
 
-A `test_one` without `{path}` is malformed: `implement` cannot target a single
+A `test_one` without `{path}` is malformed: `code-implement` cannot target a single
 test, and the whole red-green loop degrades to running the full suite.
 
 ## Scope of `language`
@@ -121,7 +121,7 @@ alternative is `worktree.setup`, which regenerates what the worktree needs.
 
 ## `handoff.allow`
 
-The permission list for delivery side effects in `handoff`. Every entry is opt-in
+The permission list for delivery side effects in `code-handoff`. Every entry is opt-in
 except the six defaults, and a capability that is absent is simply not performed —
 reported as `skipped (not in handoff.allow)`, never as an error.
 
@@ -135,7 +135,7 @@ reported as `skipped (not in handoff.allow)`, never as an error.
 | `tracker_comment` | one comment per mode — QA steps and the PR link |
 | `tracker_status` | the review transition after a ready PR is delivered |
 | `thread_replies` | replying to and resolving review threads after `pr-fix` |
-| `issue_create` | `handoff`'s `task` mode: creating the issues a draft describes |
+| `issue_create` | `code-handoff`'s `task` mode: creating the issues a draft describes |
 
 Defaults to `branch`, `commit`, `push`, `pr_body`, `pr_ready` and `tracker_status`.
 `init` writes them explicitly so the file says what it allows rather than relying
@@ -144,9 +144,9 @@ never creates one: `tracker_comment` with adapter `none` is still `n/a`.
 
 Existing explicit allow-lists remain authoritative; init refresh/upgrade never
 adds permissions to them automatically. Unknown entries are ignored and reported
-as drift. An empty list means `handoff` does nothing and says which capability the
+as drift. An empty list means `code-handoff` does nothing and says which capability the
 run needed.
-The startup transition to `In Progress` belongs to `plan` (also inside `run`)
+The startup transition to `In Progress` belongs to `code-plan` (also inside `run`)
 and is independent of this list.
 
 ## `run.models`
@@ -169,7 +169,7 @@ Absent `run` is backward-compatible; no migration is needed to try the defaults.
   lack fields; treat absent as `null` — except `sdd_tracking`, whose absence means
   the config predates this field and defaults to `committed`, the original
   behaviour.
-- An absent `tracker.create.fields` reads as `"unknown"` for both keys: `handoff`
+- An absent `tracker.create.fields` reads as `"unknown"` for both keys: `code-handoff`
   tries the adapter's default field names, exactly as before the field existed.
 - A `tracker.create` block that is absent means the config predates the field.
   Treat it as `supported: false` — `task-create` writes a draft and reports the drift.

@@ -42,5 +42,5 @@ copy.
 
 ## Undetermined
 
-<What the exemplar does not settle. Written as `unknown` so `plan` asks instead of
+<What the exemplar does not settle. Written as `unknown` so `code-plan` asks instead of
 guessing. Delete this section if nothing is undetermined.>

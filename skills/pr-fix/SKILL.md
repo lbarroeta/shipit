@@ -1,6 +1,6 @@
 ---
 name: pr-fix
-description: Use when an open pull request has review comments to resolve or red CI. Scope with `--comments` or `--ci`. Minimal fix per item; scope-change requests become pushback, not code. Do not use to plan, and not to commit or push — the user runs `handoff` for that.
+description: Use when an open pull request has review comments to resolve or red CI. Scope with `--comments` or `--ci`. Minimal fix per item; scope-change requests become pushback, not code. Do not use to plan, and not to commit or push — the user runs `code-handoff` for that.
 metadata:
   input: open-pr-feedback
   output: fix-change
@@ -11,7 +11,7 @@ metadata:
 
 Resolve review comments and red CI on an open PR. One minimal fix per item. No
 scope expansion. This skill never delivers: it leaves the fixes in the working tree
-and a report on screen. Commit, push and the thread replies are `/shipit:handoff` in
+and a report on screen. Commit, push and the thread replies are `/shipit:code-handoff` in
 `review` mode — run by the user, and each step only as far as `handoff.allow`
 permits. With `thread_replies` withheld, the replies stay text in the report for the
 user to post.
@@ -90,7 +90,7 @@ it" on a thread, or "skip this one" on a failure.
   coverage, never with an exclusion.
 - No fake validation. "Passed" only when the command ran and exited 0.
 - No more than 3 attempts on the same failure without new evidence.
-- Never run `git commit`, `git push`, or a PR command — the user runs `handoff`
+- Never run `git commit`, `git push`, or a PR command — the user runs `code-handoff`
   for that. Never post a thread reply, resolve a thread, or write to the tracker
   from here, whatever `handoff.allow` permits: this skill has no side effects at
   all. Replies live in the report as text.
@@ -107,13 +107,13 @@ it" on a thread, or "skip this one" on a failure.
    red → minimal fix → targeted test green → next item. One item at a time;
    batching fixes makes it impossible to say which change resolved which thread.
 4. **Validate.** The full chain from
-   `../implement/references/validation-standards.md`, relative to this skill
+   `../code-implement/references/validation-standards.md`, relative to this skill
    directory — same order, same reporting, same contract-drift rule. Exact
    commands and exit codes.
 5. **Report.** The item table with a resolution per row, pushback justifications
    verbatim, a `Files Changed` manifest, and validation results.
-6. **Hand back.** Never invoke `handoff`, and never commit or push. End with the
-   report and one line naming what is left for the user: run `/shipit:handoff` in
+6. **Hand back.** Never invoke `code-handoff`, and never commit or push. End with the
+   report and one line naming what is left for the user: run `/shipit:code-handoff` in
    `review` mode to commit and push — and to post the replies too, if
    `handoff.allow` lists `thread_replies`; otherwise those are theirs to post.
 7. **Graph sync.** `graph` set, product code changed, and you are in the **main

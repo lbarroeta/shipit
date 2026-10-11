@@ -1,6 +1,6 @@
 ---
 name: init
-description: Use to bootstrap or refresh the `.sdd/` contract for a repo — detects stack, verified commands, layers, test patterns, tracker, and companions from evidence, then points `AGENTS.md` at it so any agent loads it. Run once per repo before `plan` or `implement`. Do not use to plan or write product code.
+description: Use to bootstrap or refresh the `.sdd/` contract for a repo — detects stack, verified commands, layers, test patterns, tracker, and companions from evidence, then points `AGENTS.md` at it so any agent loads it. Run once per repo before `code-plan` or `code-implement`. Do not use to plan or write product code.
 metadata:
   writes_product_code: false
   output: sdd-contract
@@ -70,7 +70,7 @@ two happened in the report.
 ## Hard rules
 
 - **No evidence, no claim.** Every line in `.sdd/*.md` carries a `path:line` or
-  the exact command output that proved it. No exemplar → write `unknown`. `plan`
+  the exact command output that proved it. No exemplar → write `unknown`. `code-plan`
   then asks instead of guessing.
 - **A command is written only after it ran here and exited 0** (or its
   `--version`/dry-run equivalent did). One that fails is written `null` and its
@@ -129,7 +129,7 @@ two happened in the report.
    whether `.sdd/` should be committed (default — a team contract visible to CI,
    teammates, and any other agent) or stay local (nobody else sees it; each
    collaborator runs `init` themselves; a task's plan file won't travel as a
-   PR diff either — `handoff` pastes it into the PR body instead). Write the
+   PR diff either — `code-handoff` pastes it into the PR body instead). Write the
    answer to `sdd_tracking`. Local → check `git check-ignore -q .sdd` first, and
    append a `.sdd/` entry to `.git/info/exclude` only if nothing already covers
    it — never to `.gitignore`.
@@ -255,11 +255,11 @@ job — say so in the report if they look stale.
   named here, not discovered at create time.
 - **`handoff.allow`, and the one line that it can be widened.** Written as
   `["branch", "commit", "push", "pr_body", "pr_ready", "tracker_status"]`:
-  `handoff` delivers a ready PR and advances its card to `In Review`.
+  `code-handoff` delivers a ready PR and advances its card to `In Review`.
   `tracker_comment`, `thread_replies` and `issue_create` are added by hand — see
   `references/config-schema.md § handoff.allow`.
 - Companion tiers, in `doctor`'s format.
 - Any place an agent doc contradicted the repo.
-- Next step: `/shipit:task-create` for a need with no ticket yet, `/shipit:plan` for one
+- Next step: `/shipit:task-create` for a need with no ticket yet, `/shipit:code-plan` for one
   that has. UI layers found and no `.sdd/design-system.md` → also
   `/shipit:design-system`, once.

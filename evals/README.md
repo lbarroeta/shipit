@@ -1,5 +1,11 @@
 # Evals
 
+For reproducible cross-model planning checks, use
+[`plan-consistency/README.md`](plan-consistency/README.md). Its stdlib scaffold
+stages real repositories, freezes plugin/input hashes and documents behavioral
+grading across repeated GPT-6.1-sol / Claude Opus runs. It does not use the CLI
+layout below and does not claim model runs have been executed.
+
 Cases for `claude plugin eval`. Each directory is one case: a `prompt.md` and one or
 more rubrics in `graders/`.
 
@@ -44,7 +50,7 @@ plugin disabled, so the number reported is a delta, not an absolute.
 | `plan-collision` | Two parallel worktrees silently planning the same files |
 | `doctor-missing` | Reporting an optional tool as a failure, or installing without consent |
 | `init-ambiguous-tracker` | Guessing a tracker from a branch pattern two adapters share, or writing `none` in a way nothing downstream can distinguish from a real absence |
-| `task-epic-split` | A chain of tickets where only the last one is worth merging; a ticket that does `plan`'s job |
+| `task-epic-split` | A chain of tickets where only the last one is worth merging; a ticket that does `code-plan`'s job |
 | `task-no-tracker` | Creating an issue somewhere the repo did not configure, and calling `none` a gap |
 | `task-next-blocked` | Selecting the first/highest-priority blocked issue, conflating hierarchy with dependencies, or mutating tracker state |
 | `task-defined-blocked` | Rejecting a defined dependency-blocked task or inventing business rules to fill essential gaps |

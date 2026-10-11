@@ -2,7 +2,7 @@
 max_turns: 20
 ---
 
-Use shipit:plan BILL-21.
+Use shipit:code-plan BILL-21.
 
 Config selects Linear Billing/Payments, issue BILL-21 is Backlog. Its Goal is to
 release customer refunds under the approved policy from BILL-24. Live native
