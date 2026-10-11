@@ -1,19 +1,21 @@
 name: release
 
-# Tags and releases the plugin whenever the version in plugin.json reaches
-# main without a matching tag, so the latest release always names the
-# version users actually install.
-
+# Publish runtime changes merged into main. Version follows public entrypoint
+# changes and Conventional Commit messages since latest release tag.
 on:
   push:
     branches: [main]
-    paths:
-      - .claude-plugin/plugin.json
-      - .codex-plugin/plugin.json
   workflow_dispatch:
+
+concurrency:
+  group: shipit-release
+  cancel-in-progress: false
 
 permissions:
   contents: write
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
 
 jobs:
   release:
@@ -23,24 +25,36 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Read version
-        id: version
+      - name: Use latest main
         run: |
-          claude=$(jq -r .version .claude-plugin/plugin.json)
-          codex=$(jq -r .version .codex-plugin/plugin.json)
-          if [ "$claude" != "$codex" ]; then
-            echo "::error::Version mismatch: .claude-plugin=$claude .codex-plugin=$codex"
-            exit 1
-          fi
-          echo "tag=v$claude" >> "$GITHUB_OUTPUT"
+          git fetch origin main --tags
+          git checkout -B main origin/main
 
-      - name: Create tag and release
+      - name: Check versioning rules
+        run: python3 -m unittest discover -s tests -p 'test_release_version.py'
+
+      - name: Calculate and write version
+        id: version
+        run: python3 scripts/release_version.py --write --github-output "$GITHUB_OUTPUT"
+
+      - name: Commit version
+        if: steps.version.outputs.release == 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git add .claude-plugin/plugin.json .codex-plugin/plugin.json skills/init/assets/config-template.json
+          if ! git diff --cached --quiet; then
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -m "chore(release): v$VERSION"
+            git push origin HEAD:main
+          fi
+
+      - name: Ensure GitHub release exists
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-            echo "$TAG already exists; nothing to release."
-            exit 0
+          if ! gh release view "v$VERSION" >/dev/null 2>&1; then
+            gh release create "v$VERSION" --target "$(git rev-parse HEAD)" \
+              --title "v$VERSION" --generate-notes --latest
           fi
-          gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --generate-notes --latest

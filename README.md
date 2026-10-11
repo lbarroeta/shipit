@@ -77,7 +77,9 @@ old command symlinks; user-authored legacy command files are preserved.
 One command per runtime: every runtime reads the same `skills/` directory, and a
 `.sdd/` contract written by an older version keeps working. Then one command per
 repo to adopt what the new version adds — see *Then, once per repository* below.
-This release adds `/shipit:design-system` in every runtime.
+Version 0.12.0 renames `plan`, `implement`, and `handoff` to `code-plan`,
+`code-implement`, and `code-handoff`. Every runtime change merged into `main`
+gets a release automatically; see [Release versioning](#release-versioning).
 
 ### Claude Code
 
@@ -86,8 +88,9 @@ This release adds `/shipit:design-system` in every runtime.
 /plugin update shipit@shipit
 ```
 
-The first refreshes the marketplace from GitHub; the second installs what it
-found. Restart the session to load it.
+The first refreshes the marketplace from GitHub; the second installs the new
+version. Confirm `claude plugin details shipit@shipit` lists `code-plan`,
+`code-implement`, and `code-handoff`, then restart the session to load them.
 
 ### Codex
 
@@ -118,13 +121,36 @@ ran it. Export `SHIPIT_ROOT` first if your checkout is not in the default place.
 
 ### Did it land?
 
-The new command has to resolve. `/shipit:design-system` in Claude Code and Codex,
-`/shipit-design-system` in OpenCode, where `opencode debug config` lists all nine.
+The renamed commands have to resolve: `/shipit:code-plan`,
+`/shipit:code-implement`, and `/shipit:code-handoff` in Claude Code and Codex;
+`/shipit-code-plan`, `/shipit-code-implement`, and `/shipit-code-handoff` in
+OpenCode. `opencode debug config` lists the OpenCode commands.
 
 The planning skill is now `shipit:code-plan` (OpenCode: `shipit-code-plan`).
 Existing `language.plan`, `paths.plans`, `run.models.*.plan` and handoff `plan`
 mode keep their names. Re-run the OpenCode installer to retire its old command
 symlink; user-authored legacy command files are preserved.
+
+### Release versioning
+
+The release workflow runs after every push to `main`. It compares distributed
+files with the latest `vMAJOR.MINOR.PATCH` tag, computes a version, writes it to
+both plugin manifests and the `init` config template, then creates the tag and
+GitHub release. No release is made for changes outside the distributed plugin.
+
+For changed plugin files, Conventional Commit messages choose the bump:
+
+| Change | Bump |
+| --- | --- |
+| `fix:` or `perf:`, or an untyped plugin change | Patch |
+| `feat:` or a new skill, agent, or OpenCode command | Minor |
+| `!` or `BREAKING CHANGE:`, or removal/rename of a public command | Major; minor while version is `0.x` |
+
+Highest level since the latest release wins. Use a Conventional Commit title
+when modifying existing skill behavior so the workflow can distinguish fixes
+from features. Version numbers are owned by the release workflow; do not bump
+them in feature branches. For local testing before a release, load this checkout
+with `claude --plugin-dir /absolute/path/to/shipit`.
 
 ### Then, once per repository
 
@@ -474,7 +500,7 @@ the one `init` wrote; it does not replace it.
 1. **Update the plugin** in your runtime — see [*Update*](#update) — and start a
    new session. `/shipit:design-system` (or `/shipit-design-system` in OpenCode)
    has to resolve.
-2. **Bring the config to 0.11.0:**
+2. **Bring the config to the installed version:**
 
    ```
    /shipit:init --upgrade
