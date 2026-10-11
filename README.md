@@ -193,9 +193,9 @@ are never moved backwards; `run` resumes at later stages do not repeat the trans
 
 | Stage | Claude Code | Codex |
 | --- | --- | --- |
-| Plan | Opus 5.5 / high | Sol 6.1 / high |
-| Implement | Sonnet 5.5 / high | Luna 6 / xhigh |
-| Handoff | Sonnet 5.5 / high | Luna 6 / xhigh |
+| Plan | Opus 5.5 / high | Astra 6 / high |
+| Implement | Sonnet 5.5 / high | Sol 6.1 / high |
+| Handoff | Haiku 5.5 / high | Luna 6 / high |
 
 These are pinned IDs, not moving aliases. Optional per-repo overrides live under
 `run.models.<anthropic|openai>.<stage>` as complete `{model, effort}` pairs;

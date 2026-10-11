@@ -227,7 +227,7 @@ class RunStateTests(unittest.TestCase):
         (self.repo / ".sdd/config.json").write_text(json.dumps(other_config))
         self.git(self.repo, "commit", "-am", "Other branch routes")
         resumed = self.begin()
-        self.assertEqual(resumed["routes"]["plan"]["model"], "gpt-6.1-sol")
+        self.assertEqual(resumed["routes"]["plan"]["model"], "gpt-6-astra")
         self.assertEqual(resumed["routes"], self.call("routes", "--provider", "openai")["routes"])
 
     def test_owner_token_is_required_for_mutation(self):
@@ -489,11 +489,21 @@ class RunStateTests(unittest.TestCase):
 
     def test_default_routes_and_complete_override(self):
         default = self.call("routes", "--provider", "openai")["routes"]
-        self.assertEqual(default["plan"], {"model": "gpt-6.1-sol", "effort": "high"})
-        self.assertEqual(default["handoff"], {"model": "gpt-6-luna", "effort": "xhigh"})
+        self.assertEqual(default, {
+            "plan": {"model": "gpt-6-astra", "effort": "high"},
+            "implement": {"model": "gpt-6.1-sol", "effort": "high"},
+            "handoff": {"model": "gpt-6-luna", "effort": "high"},
+        })
+        self.assertEqual(self.call("routes", "--provider", "anthropic")["routes"], {
+            "plan": {"model": "claude-opus-5-5", "effort": "high"},
+            "implement": {"model": "claude-sonnet-5-5", "effort": "high"},
+            "handoff": {"model": "claude-haiku-5-5", "effort": "high"},
+        })
         self.config["run"] = {"models": {"openai": {"plan": {"model": "custom", "effort": "high"}}}}
         (self.repo / ".sdd/config.json").write_text(json.dumps(self.config))
-        self.assertEqual(self.call("routes", "--provider", "openai")["routes"]["plan"]["model"], "custom")
+        self.assertEqual(self.call("routes", "--provider", "openai")["routes"], {
+            **default, "plan": {"model": "custom", "effort": "high"},
+        })
         self.config["run"]["models"]["openai"]["plan"] = {"model": "custom"}
         (self.repo / ".sdd/config.json").write_text(json.dumps(self.config))
         self.assertIn("Invalid model/effort", self.call("routes", "--provider", "openai", success=False)["reason"])
