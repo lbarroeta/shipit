@@ -6,8 +6,11 @@ carry.
 
 ## The chain
 
-Run in order. Stop at the first failure, fix, then resume from that step — not from
-the top.
+Run in order after all planned code, test and doc edits. Stop at the first failure,
+fix, then resume from the earliest check affected by the fix. Reuse earlier results
+only when their inputs and dependencies are unchanged. This includes changes made
+by formatters, lint fixes or later documentation edits. Before handoff, confirm
+the results still apply to the final files; rerun affected checks after any drift.
 
 | Step | Key | Skip when |
 | --- | --- | --- |
@@ -16,28 +19,64 @@ the top.
 | 3 | `test_all` | **by default — see below** |
 | 4 | `lint` | null |
 | 5 | `typecheck` | null |
-| 6 | `security` | null |
-| 7 | `coverage_gate` | null |
+| 6 | `build` | null, or no relevant build impact — see below |
+| 7 | `security` | null |
+| 8 | `coverage_gate` | null |
 
-A `null` key is skipped **silently** — the repo does not have that step, and saying
-"skipped" for every absent key is noise. A key present in `unknown[]` is different:
-report it once, because the contract could not determine it and coverage of that
-dimension is genuinely missing.
+A `null` key unrelated to required validation is skipped **silently**. A key
+present in `unknown[]` is undetermined, not verified absent: report it once with
+its effect on this change. A missing or unknown command needed to prove the plan
+is a required validation gap, handled below; never treat it as an optional skip.
+
+## Acceptance evidence
+
+Use the plan's AC links, `Tests` and `Manual QA`, including already-met criteria,
+affected consumers and regressions. Preserve their observable expected results.
+The plan supplies validation intent; this skill selects and executes configured
+commands. In the existing report sections, attach AC IDs to test evidence or
+manual/external scenarios rather than duplicating the plan in another matrix.
+
+- Required automated checks need actual execution. If no configured command can
+  run them (including when both `test_one` and `test_all` are unavailable), stop
+  with `Implementation Blocked` or `Implementation Incomplete` as applicable.
+  Name the affected AC/check and the missing command or evidence. Request the
+  needed clarification or `/shipit:init` refresh; never invent a command or
+  replace planned tests with manual QA to get green.
+- Human/external QA planned for review may remain pending through handoff. Keep
+  its scenario, AC, executor, prerequisites and expected result in the report and
+  PR; state whether it is ready to run or blocked. A check the plan requires before
+  delivery must be completed before handoff. Missing timing that determines
+  delivery readiness is a plan gap, returned to the planner for correction.
+- No planned automated tests is valid when the plan's acceptance has another
+  suitable verification path. Report what was actually checked and what remains
+  pending; zero available commands alone is never evidence of acceptance.
+  Coordinated runs must also satisfy their executed-command checkpoint; if no
+  configured check can satisfy it, return the gap without fabricating evidence.
+
+## Build
+
+Run configured `build` when the change affects compiled output, bundling,
+packaging, or their inputs/configuration, including UI changes on that build path,
+or when the plan's validation intent requires it. Tests, lint and typechecking do
+not establish build success. No relevant build impact → skip with a brief reason
+when the command is configured. Required build verification with no usable command
+is a validation gap under Acceptance evidence.
 
 ## The full suite belongs to CI
 
-Step 3 does not run by default. Steps 1 and 2 are the gate: the tests written this
-run, plus the test files covering every file in the report's `Files Changed`. That
-is the blast radius a local run can actually reason about. The whole suite is CI's
-job, and re-running it here buys minutes of wall clock to re-prove code this change
-never touched.
+Step 3 does not run by default. Where automated coverage applies, steps 1 and 2
+cover tests written this run and affected behavior, including the plan's consumers
+and regressions. Use `Files Changed` to check the final scope. The whole suite is
+CI's job unless one of the conditions below requires it locally.
 
 Run `test_all` only when one of these is true, and say which one:
 
-- `test_one` is null or has no `{path}` — the scoped loop is unavailable, so the
-  suite is the only way to run anything. Report the loop as degraded.
-- The plan explicitly asks for it (a shared-fixture change, a global config or
-  initializer edit, a rename that crosses the whole suite).
+- Automated tests are required and `test_one` is null or has no `{path}` — the
+  scoped loop is unavailable. Use configured `test_all` and report the loop as
+  degraded; if it is unavailable too, report the validation gap.
+- The plan's validation intent requires suite-wide regression coverage (a
+  shared-fixture change, a global config or initializer edit, a rename that crosses
+  the whole suite). The plan need not name the command.
 - Step 1 or 2 turned up a failure whose cause is plausibly repo-wide.
 
 Not covered by any of those → the report line is
@@ -73,6 +112,12 @@ Rules:
 - Exit code, always. Not "passed".
 - Non-zero → include the relevant failure output, not the whole log.
 - A command you did not run does not get a line claiming it passed.
+- Distinguish expected TDD red and repaired failures from final results. Keep
+  their actual exits; link the successful rerun instead of rewriting history.
+- Preserve manual/external checks, including backend checks: AC, expected and
+  observed result/evidence, or pending executor/prerequisite. Developer-only steps
+  belong here; non-developer steps belong in QA. Missing required verification
+  remains a blocker, not a follow-up hidden under risks.
 
 ## Contract drift
 
@@ -119,10 +164,16 @@ true → treat `coverage_gate` as mandatory, not advisory.
 
 All of:
 
-- Every non-null command in the chain ran, except `test_all` when it was correctly
-  skipped per the rule above.
-- Every one exited 0.
+- Every applicable non-null command in the chain ran, except `test_all` and
+  `build` when correctly skipped under their rules above.
+- Every required command's final execution exited 0 and still covers the final
+  files; expected TDD red and repaired failures are not final failures.
+- Each AC and planned regression retains its executed evidence or explicitly
+  pending review QA. No required automated or pre-delivery verification is missing.
+- Required manual pre-delivery checks passed, and no known acceptance or
+  regression failure remains, including failures found during review QA.
 - No test was deleted, skipped, or weakened to get there.
 - No exclusion was added to a lint, security, or coverage config.
 
 Anything less is not green, and `code-handoff` is not invoked. Report and stop.
+Green permits handoff for review; it does not mean pending human/external QA passed.

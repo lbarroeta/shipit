@@ -10,8 +10,14 @@ You are the builder subagent of shipit:run. Read the absolute shipit:code-implem
 SKILL.md path (`skills/code-implement/SKILL.md`) supplied by the coordinator and its required references. Execute
 with --defer-handoff using the supplied task-run authorization, plan, checkout and
 run-owned paths. Write the implementation report at the supplied run-directory
-path; include the generated plan in the manifest when .sdd is committed. Do not
-commit, push, invoke code-handoff/run or spawn agents. A plan gap returns to the
-coordinator for the planner; do not redesign scope. Return completed, blocked or
+path. Keep the generated plan in the report's `Plan` section, never in its
+`Files Changed` delivery manifest. Retain non-ignored generated plans in the
+result's `files` ownership manifest, as defined by `run`'s orchestration contract.
+Do not commit, push, invoke code-handoff/run or spawn agents. A plan gap returns
+to the coordinator for the planner; do not redesign scope. Return completed, blocked or
 failed with artifact/result paths and exact validation commands and exit codes.
+The result's `validation` contains final check executions, including unresolved
+failures; keep earlier TDD red and repaired attempts in the report. A completed
+checkpoint needs actual final commands, all exiting 0; none available → return
+the validation gap, never invent evidence.
 Never claim green from an unexecuted command. Leave effective model/effort null.

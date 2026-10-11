@@ -8,7 +8,13 @@ Log in as: `<role, and how to get an account with it>`
 Setup data needed: `<what must exist before testing, or "none">`
 
 <If backend only: `Backend only. Manual UI QA not applicable.` plus one line on
-what developer validation covered instead. Then delete the next section.>
+what developer validation covered. Preserve any planned manual/external checks:
+non-developer checks below, technical checks in Validation. Delete the next
+section only when there are no non-developer checks.>
+
+QA status: <pending, passed or failed, from actual evidence. Pending: executor,
+and ready to run or blocked with the missing environment/account/data. Human QA
+passes only on explicit human results. Omit when no manual/external QA applies.>
 
 ## QA Steps For Non-Developer
 
@@ -17,7 +23,10 @@ what developer validation covered instead. Then delete the next section.>
 No framework names. No class, file, or function names. No terminal commands. If a
 step cannot be described without one of those, it belongs in Validation instead.
 
-1. <action a person takes in the browser>
+Preserve the plan's scenarios and AC IDs, including backend checks in external
+services. Pending steps describe expected results, never results already observed.
+
+1. <AC ID: action a person takes in the browser or external service>
    - Expected: <what they should see>
 2. <action>
    - Expected: <what they should see>
@@ -53,19 +62,27 @@ manifest for validation.
 
 | Test | Rule | Proves |
 | --- | --- | --- |
-| `<path>` | `.sdd/rules/tests/<kind>.md` | <behaviour> |
+| `<path>` | `.sdd/rules/tests/<kind>.md` | <AC IDs/regression and behaviour> |
 
 ## Validation Commands Run
 
-Exact commands, placeholders substituted, with exit codes.
+Exact commands, placeholders substituted, with exit codes. Tie results to the
+plan's ACs/regressions, including tests of already-met behavior. Distinguish TDD
+red or repaired failures from final reruns; final evidence must cover final files.
 
 ```
 <command> → exit 0
 <command> → exit 0
 ```
 
-Steps skipped because the contract has no such command: <keys, or "none">
-Steps unverifiable because the contract lists them as unknown: <keys, or "none">
+<Record configured test_all/build skips with reasons. Omit unrelated null keys.>
+<Unknown verification keys, when present: key, effect on this change, and next
+action if required. Missing required validation blocks handoff.>
+
+<For each developer-only manual/external check: AC, executor, prerequisites,
+steps, expected result, and observed evidence or pending status. Preserve backend
+checks. Pending review QA may follow handoff; required pre-delivery checks may not.
+Non-developer scenarios live in QA above; reference them rather than repeat them.>
 
 Design checks: <each `<paths.rules>/design.md` § Verify item — met, not met, or not
 checked, and how it was seen. Delete for backend-only work or with no design

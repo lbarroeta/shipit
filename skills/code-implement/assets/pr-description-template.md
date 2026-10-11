@@ -34,7 +34,10 @@ a self-explanatory diff needs no How.>
 
 ## Validation
 
-<Commands and exit codes, copied from the report. A code block, no prose around it.>
+<Commands and exit codes, copied from the report, in a code block. Identify final
+reruns after TDD red or repaired failures. Preserve relevant verification gaps and
+developer-only manual/external checks with evidence or pending executor and
+prerequisites; do not omit them for backend changes.>
 
 ## Risk
 
@@ -43,12 +46,14 @@ when true.>
 
 ## QA
 
-<UI changes: paste the non-developer QA steps verbatim. Written for someone who
+<Non-developer QA, including backend checks in external services: paste the steps
+and their pending/completed status verbatim. Written for someone who
 does not read code — trimming them for brevity destroys their purpose, and this is
 the one section that is never cut.>
 
 <Backend-only: `Backend only. Manual UI QA not applicable.` plus one line on what
-developer validation covered.>
+developer validation covered. Keep applicable manual/external QA above and
+developer-only checks in Validation; this sentence does not replace them.>
 
 ## Out of scope
 

@@ -26,7 +26,7 @@ The plugin ships native definitions under its root `agents/`:
 | --- | --- | --- | --- |
 | plan | `shipit:run-planner` | `claude-opus-5-5` | `high` |
 | implement | `shipit:run-builder` | `claude-sonnet-5-5` | `high` |
-| handoff | `shipit:run-delivery` | `claude-sonnet-5-5` | `high` |
+| handoff | `shipit:run-delivery` | `claude-haiku-5-5` | `high` |
 
 Use the native Agent tool with the corresponding scoped subagent type. Give it
 the absolute checkout, skill path and message contract; each definition instructs
@@ -43,6 +43,12 @@ exposed (Claude Code `/tasks` displays it); environment/organization overrides m
 substitute or cap values. Do not ask the model to certify its own identity.
 
 ## Local Codex (app, CLI, IDE)
+
+| Stage | Default model | Effort |
+| --- | --- | --- |
+| plan | `gpt-6-astra` | `high` |
+| implement | `gpt-6.1-sol` | `high` |
+| handoff | `gpt-6-luna` | `high` |
 
 Use the exposed native spawn, message/follow-up and wait controls. Depending on
 the host these are `spawn_agent` / `send_message` / `wait` or the collaboration

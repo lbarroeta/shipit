@@ -22,7 +22,10 @@ and verified with commands that are known to run in this repo.
 - Required only when the plan touches UI and `<paths.rules>/design.md` exists:
   that file, and the `.sdd/design-system.md` sections the plan's `Design` names.
   Backend-only → never.
-- Optional, only if touched: `references/security-standards.md`.
+- Required when the change creates or modifies entry points (routes, handlers,
+  jobs, webhooks), authorization, scoped data access, trust-boundary input, secret
+  handling, or query/shell construction: `references/security-standards.md`.
+  Apply these triggers to support changes discovered during implementation too.
 - Never bulk-load every rule file or every agent doc. Resolve symlinked docs once.
 - If a rule was skipped, do not claim compliance with it.
 
@@ -82,11 +85,14 @@ and verified with commands that are known to run in this repo.
    affected consumers/regressions. Missing new section names or explicit AC links
    in a legacy plan alone is not a blocker; unresolved essential behavior,
    uncovered acceptance, or conflicting evidence is.
-3. **Test first.** Where practical: write the failing test → run it with
-   `commands.test_one` → confirm the expected red → minimal code → re-run → next
-   layer. An **unexpected** red is investigated before any production change.
+3. **Test first.** For planned automated tests, where practical: write the failing
+   test → run it with `commands.test_one` → confirm the expected red → minimal
+   code → re-run → next layer. An **unexpected** red is investigated before any
+   production change.
    `commands.test_one` null or missing `{path}` → say the loop is degraded and run
-   `test_all` instead. Do not silently skip the loop.
+   the configured `test_all` instead. Neither is runnable → report the required
+   validation gap under `validation-standards.md`; never silently skip the loop.
+   A plan requiring no automated tests does not need an artificial red/green loop.
 4. **Implement.** The smallest correct change. Repo patterns over new structure —
    including their comment density. Apply the ladder as stance, not as licence to
    deviate from the plan. A deliberate shortcut leaves a debt marker with its
@@ -96,21 +102,27 @@ and verified with commands that are known to run in this repo.
    A plan with no `Design` section dated before the contract's `Status` date gets
    the rules applied directly and a line under `Known Risks or Follow-ups`. Dated
    after it → the contract gate fails: `Design` is missing.
-5. **Validate.** `references/validation-standards.md`. Scoped to what changed —
-   the tests written plus the tests covering the changed files. The full suite is
-   CI's job and is not run here without a reason named in that reference. Report
-   exact commands and exit codes. UI changed with a design contract → each
-   `rules/design.md` § Verify check, as met, not met, or not checked.
-6. **Docs sync.** The plan has a `Docs impact` section → apply each listed edit,
+5. **Docs sync.** The plan has a `Docs impact` section → apply each listed edit,
    scoped to the named sections, and list the docs in `Files Changed`. No doc
    rewrites. If the implementation drifted in a way that hits a docs trigger the
    plan missed, update the doc and note it under `Known Risks or Follow-ups`.
-7. **QA guide.** UI changed → convert the plan's `Manual QA` into plain-language
-   browser steps: URL and environment, which role to log in as, setup data,
-   numbered actions, expected results, screenshots needed, pass/fail notes. No
-   framework names, no class names, no terminal commands. Backend only → say
-   `Backend only. Manual UI QA not applicable.` and state what developer
-   validation covered instead.
+6. **Validate.** `references/validation-standards.md`, against the final code,
+   tests and docs. Cover each AC and planned regression with executed evidence or
+   explicitly pending human/external QA; preserve the plan's validation intent.
+   Run scoped tests and applicable configured checks, including build when needed.
+   The full suite needs a reason named in that reference. Report exact commands
+   and exit codes; later edits invalidate affected results. UI changed with a
+   design contract → each `rules/design.md` § Verify check, as met, not met, or
+   not checked, with evidence or the missing prerequisite.
+7. **QA guide.** Preserve every planned manual/external scenario, including
+   backend checks, with its AC, prerequisites, expected result and actual status.
+   Non-developer checks become plain-language actions in the browser or external
+   service: URL/environment, role, setup data, numbered steps, expected results,
+   screenshots needed and pass/fail notes. No framework names, class names or
+   terminal commands there; technical checks belong in Validation with their
+   executor and evidence or next step. Backend only → say
+   `Backend only. Manual UI QA not applicable.` and state developer coverage;
+   this does not remove backend manual/external checks. Pending QA is never passed.
 8. **PR text.** Compose the title and body from
    `assets/pr-description-template.md` into the report. Write it; do not post it.
    Every section there earns its place or is dropped — an empty heading costs a
@@ -122,7 +134,8 @@ and verified with commands that are known to run in this repo.
    `implementation` mode and pass it the report. Its report is appended to yours
    verbatim, never summarized into a claim it did not make. Do not invoke it when
    the run ended `# Implementation Blocked` or `# Implementation Incomplete`, or
-   when any validation command failed.
+   when required final validation remains failed or unverified. A recorded TDD
+   red or repaired failure does not block once affected checks pass on final files.
 10. **Graph sync.** `graph` set, product code changed, and **you are in the main
     checkout** → run `<graph.update>`. Inside a worktree, skip it and say so: the
     graph is shared, and updating it from a branch writes branch-local state into
