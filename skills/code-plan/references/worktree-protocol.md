@@ -20,7 +20,7 @@ BASE=<worktree.base>
 WT="<worktree.root>/<slug>"                           # root is relative to MAIN
 ```
 
-`git rev-parse --git-common-dir` is what makes this correct when `plan` is invoked
+`git rev-parse --git-common-dir` is what makes this correct when `code-plan` is invoked
 from inside an existing worktree. `--show-toplevel` alone would return the
 worktree and nest worktrees inside worktrees.
 
@@ -73,7 +73,7 @@ this.
 ## Share the `.sdd` contract
 
 `sdd_tracking: local` means `.sdd/` is never committed — a fresh worktree has
-none, and `plan`/`implement` refuse to run without it. Unlike the graph, this is
+none, and `code-plan`/`implement` refuse to run without it. Unlike the graph, this is
 not optional: there is no alternative that keeps them working.
 
 ```bash

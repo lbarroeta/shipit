@@ -1,0 +1,129 @@
+{
+  "shipit_version": "0.11.0",
+  "generated_at": "2026-10-10",
+  "sdd_tracking": "committed",
+  "handoff": {
+    "allow": []
+  },
+  "run": {
+    "models": {}
+  },
+  "repo": {
+    "name": "planning-fixture",
+    "default_branch": "main",
+    "remote": "origin"
+  },
+  "language": {
+    "plan": "en",
+    "task": "en",
+    "pr": "en",
+    "code": "en"
+  },
+  "docs": {
+    "agent_docs": [],
+    "owned_by_shipit": [
+      ".sdd/"
+    ]
+  },
+  "stack": {
+    "languages": [
+      "python"
+    ],
+    "frameworks": [],
+    "package_manager": null
+  },
+  "commands": {
+    "setup": null,
+    "test_all": "python3 -m unittest discover -s tests",
+    "test_one": "python3 -m unittest {path}",
+    "lint": null,
+    "lint_fix": null,
+    "typecheck": null,
+    "security": null,
+    "coverage_gate": null,
+    "build": null
+  },
+  "commands_verified": {
+    "test_all": {
+      "exit": 0,
+      "at": "2026-10-10",
+      "proof": "real"
+    },
+    "test_one": {
+      "exit": 0,
+      "at": "2026-10-10",
+      "proof": "real"
+    }
+  },
+  "paths": {
+    "plans": ".sdd/plans",
+    "tasks": ".sdd/tasks",
+    "rules": ".sdd/rules",
+    "src": [
+      "app"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "tests": {
+    "framework": "unittest",
+    "location": "mirrored",
+    "naming": "test_*.py",
+    "kinds": [
+      "unit"
+    ],
+    "coverage_gates_merge": false
+  },
+  "layers": [
+    {
+      "key": "app",
+      "dirs": [
+        "app/"
+      ],
+      "test_kind": "unit",
+      "rule": ".sdd/rules/app.md",
+      "exemplar": "app/policy.py"
+    }
+  ],
+  "tracker": {
+    "adapter": "none",
+    "issue_pattern": null,
+    "branch_from_tracker": false,
+    "create": {
+      "supported": false,
+      "team": null,
+      "project": null,
+      "initial_state": null,
+      "default_labels": [],
+      "epic_kind": null,
+      "fields": {
+        "priority": null,
+        "size": null
+      }
+    }
+  },
+  "graph": null,
+  "markers": {
+    "debt": "ponytail:"
+  },
+  "companions": {
+    "ponytail": "absent",
+    "graphify_cli": "absent",
+    "graphify_graph": "absent",
+    "caveman": "absent"
+  },
+  "worktree": {
+    "enabled": false,
+    "root": "../worktrees/<repo.name>",
+    "base": "main",
+    "link": [],
+    "share_graph": false,
+    "setup": null
+  },
+  "ci": {
+    "config": null,
+    "required_jobs": []
+  },
+  "unknown": []
+}

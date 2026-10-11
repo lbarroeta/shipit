@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Use when shipit artifacts must be delivered — branch, commit, push, ready-for-review PRs and tracker review status by default; tracker comments, review-thread replies and issue creation only when `handoff.allow` in `.sdd/config.json` opts into them. Runs after `task-create`, `plan`, `implement`, or `pr-fix`. Do not use to write plans, tickets, or product code.
+description: Use when shipit artifacts must be delivered — branch, commit, push, ready-for-review PRs and tracker review status by default; tracker comments, review-thread replies and issue creation only when `handoff.allow` in `.sdd/config.json` opts into them. Runs after `task-create`, `code-plan`, `implement`, or `pr-fix`. Do not use to write plans, tickets, or product code.
 metadata:
   writes_product_code: false
 ---
@@ -8,7 +8,7 @@ metadata:
 # shipit handoff
 
 Owns delivery side effects; `task-create`, `implement` and `pr-fix` produce artifacts.
-`plan` also owns the startup transition to `In Progress`, including inside `run`.
+`code-plan` also owns the startup transition to `In Progress`, including inside `run`.
 This skill delivers their artifacts.
 
 **What it may do is configuration, not judgement.** `handoff.allow` in
@@ -204,14 +204,15 @@ exists before a branch does.
 
 - **Branch** — from the tracker adapter when it supplies one; otherwise the repo's
   branch convention from `.sdd/conventions.md`; otherwise
-  `<user>/<issue-id>-<slug>`. Never invent a prefix. Usually `plan` already created
+  `<user>/<issue-id>-<slug>`. Never invent a prefix. Usually `code-plan` already created
   it with the worktree; verify rather than re-create.
 - **Commit** — `skipped (generated plan stays local)` in every tracking mode.
 - **Push** — only existing commits on the task branch; no plan or empty commit.
 - **PR** — Ready for review. Create without `--draft`. Title
   `<ISSUE-ID> Plan: <short title>`. Body states this is
   planning only and execution belongs to `/shipit:implement`. Always carry the
-  plan's content verbatim (Goal, Acceptance, Files, Notes) in the body.
+  plan's complete content verbatim in the body, including evidence, baseline,
+  decisions and validation coverage when present; do not extract only Files/Notes.
   Update an existing PR when available. No commits ahead of the base and no
   existing PR → skip PR creation and report the local plan path; do not create a
   dummy commit to open a planning PR.

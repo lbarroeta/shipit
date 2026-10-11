@@ -64,14 +64,24 @@ and verified with commands that are known to run in this repo.
    wrong branch. No such section → the current checkout is correct; do not create a
    worktree and do not go looking for one. Check
    `git status` and detect changes you did not make. Inspect only the files the
-   plan names. Search for more only when the plan lacks detail; a graph query
+   plan names. If it has `Baseline`, compare the recorded revision and relevant
+   dirty state with the current checkout; inspect relevant drift before trusting
+   its evidence. A new HEAD alone is not a blocker if affected contracts still
+   hold. Follow `Evidence`, AC links and real `Sequence` dependencies when present.
+   Legacy plans may omit these sections: verify equivalent behavior/coverage during
+   preflight rather than rejecting their format. Search for more when the plan
+   lacks detail or relevant drift needs checking; a graph query
    before `rg` when `graph` is set and its output is present.
 2. **Contract gate.** The plan must have a goal, acceptance criteria, a `Files`
    table with analogues, tests mapped to rule files, `Manual QA` when UI is
    touched, and no unresolved blockers. Missing → stop with
    `# Implementation Blocked`. Plans are deliberately terse: verification commands,
    red/green sequencing, and repo conventions are owned by this skill and by
-   `.sdd/*`, not by the plan. Their absence is correct, not a gap.
+   `.sdd/*`, not by the plan. Their absence is correct, not a gap. Verify each AC
+   has a change or already-met behavior and observable validation, including
+   affected consumers/regressions. Missing new section names or explicit AC links
+   in a legacy plan alone is not a blocker; unresolved essential behavior,
+   uncovered acceptance, or conflicting evidence is.
 3. **Test first.** Where practical: write the failing test → run it with
    `commands.test_one` → confirm the expected red → minimal code → re-run → next
    layer. An **unexpected** red is investigated before any production change.

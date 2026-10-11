@@ -91,7 +91,7 @@ same way.
 
 | Check | Meaning |
 | --- | --- |
-| `.sdd/` present | Absent → `plan` and `implement` refuse. Fix: `/shipit:init` |
+| `.sdd/` present | Absent → `code-plan` and `implement` refuse. Fix: `/shipit:init` |
 | `config.json` parses | Corrupt → re-run `/shipit:init` |
 | `unknown[]` empty | Non-empty → those verification steps do not exist. Named in every report |
 | `test_one` has `{path}` | Missing → the red-green loop degrades to running the whole suite |

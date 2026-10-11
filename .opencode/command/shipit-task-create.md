@@ -10,6 +10,6 @@ Load the shipit `task-create` skill and run it.
   `<root>/skills/task-create/references/`. Do not read the other skills, except an explicitly required
   cross-skill reference `SKILL.md` names by path.
 - Command names are flat here: `/shipit:task-create` in the docs is `/shipit-task-create`.
-  Same for `init`, `plan`, `implement`, `handoff`, `pr-fix`, `status`, `doctor`.
+  Same for `init`, `code-plan`, `implement`, `handoff`, `pr-fix`, `status`, `doctor`.
 
 Request: $ARGUMENTS

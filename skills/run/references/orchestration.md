@@ -50,7 +50,7 @@ of snapshots, result files and journals.
 
 ## Planning status
 
-`../../plan/SKILL.md § Planning status` owns the shared transition rule. The
+`../../code-plan/SKILL.md § Planning status` owns the shared transition rule. The
 planner applies it at preflight, before worktree setup or discovery, after the
 coordinator has prepared Git and verified all stage routes. The coordinator does
 not perform a second write. Verify the planner's reported transition or preserved

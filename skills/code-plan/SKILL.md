@@ -1,5 +1,5 @@
 ---
-name: plan
+name: code-plan
 description: Use when planning, scoping, estimating, or breaking down a ticket, issue, bug, or feature request into an implementable contract. Works in the current checkout by default; isolated worktrees are opt-in via `worktree.enabled` or a `--worktree` flag. Do not use for implementation, and not for git or PR delivery — that is `handoff`.
 metadata:
   input: request
@@ -7,15 +7,16 @@ metadata:
   writes_product_code: false
 ---
 
-# shipit plan
+# shipit code-plan
 
 Turn a request into a plan the implementer can execute without re-deciding
-anything. The plan is a contract, not a tutorial.
+essential behavior. Consistency means the same verified requirements and essential
+decisions across models, not identical prose or incidental choices.
 
 Write as a mid-senior dev handing work to a peer who already knows this repo. The
 implementer loads `.sdd/` itself. The plan carries only what it cannot derive from
-the repo: the decisions, the exact files, the analogues, the guess-prone
-specifics. Everything else is noise that costs tokens on every read.
+the repo: the verified evidence, decisions, exact files, analogues, and AC-to-validation
+links. Reference repo rules rather than restating them.
 
 This skill ends when the plan file is written. Branch, commit, push, PR —
 `handoff`.
@@ -29,7 +30,9 @@ Read narrow. Bulk-loading is the single biggest token sink in this flow.
   prerequisites; apply it before any Planning status transition.
 - Required: the `.sdd/rules/<layer>.md` for each layer touched, and the
   `.sdd/rules/tests/<kind>.md` for each test planned. Only those.
-- Required: `references/output-contract.md`. It owns sections, size budget, and
+- Required: `references/input-baseline.md` for explicit inputs and repo state.
+- Required: `references/ambiguity-policy.md` for decision precedence and blockers.
+- Required: `references/output-contract.md`. It owns sections, detail budget, and
   prohibited output; this file does not restate it.
 - Required: `../../references/lean-ladder.md`, relative to this skill directory,
   for the scope gate.
@@ -40,8 +43,7 @@ Read narrow. Bulk-loading is the single biggest token sink in this flow.
   file, then the `.sdd/design-system.md` sections it points to for the surface and
   components involved. A layer rule's `shipit:design` block is the cue. Backend-only
   → never; not even a glance.
-- Optional, only if touched: `references/ambiguity-policy.md`, and
-  `references/worktree-protocol.md` **only when `worktree.enabled` is true**.
+- Optional: `references/worktree-protocol.md` **only when `worktree.enabled` is true**.
   Default is false — do not read it otherwise.
 - Never: every rule file at once, every agent doc, a whole graph report.
 - No `.sdd/` at all → stop and say: run `/shipit:init` first. Do not detect the
@@ -58,7 +60,7 @@ Read narrow. Bulk-loading is the single biggest token sink in this flow.
   rule when no test rule exists.
 - Every new file cites an analogue with `path:line`, or documents why none exists.
 - If `.sdd/*` or an agent doc already states it, the plan references it and moves
-  on. Restating is how a 40-line plan becomes 300.
+  on. Keep decision-bearing references and evidence.
 - **Verify before asserting.** Confirm an unfamiliar path, script, or command
   exists before naming it. `.sdd/config.json` records verified commands — use
   those, and never invent a sibling.
@@ -67,12 +69,14 @@ Read narrow. Bulk-loading is the single biggest token sink in this flow.
 - Tracker issue id present → preserve it in the slug: `<issue-id>-<slug>`.
 - UI touched → the plan includes `Manual QA`. With a design contract present it
   also carries `Design`: the pattern, the existing components by path, the states
-  that apply, and any exception. A `Pending` design decision the work needs is an
-  assumption labelled `pending design decision`, never decided here.
-- Ambiguity that blocks architecture, security, or data → stop with `Blockers`.
-  Everything else → `Assumptions`, with the default already taken.
+  that apply, and any exception. A `Pending` design decision is never presented
+  as approved: essential unresolved behavior blocks dependent planning; only a
+  bounded nonessential choice may be an assumption labelled `pending design decision`.
+- Unresolved essential business, security, data, architecture or external-contract
+  decisions → ask and stop dependent planning with `Blockers`. Only bounded
+  nonessential choices become `Assumptions`; use the ambiguity policy.
 - The only external side effect is the startup transition in **Planning status**,
-  authorized by requesting `plan`, independently of `handoff.allow`.
+  authorized by requesting `code-plan`, independently of `handoff.allow`.
   `git worktree add` is local and allowed when worktrees are enabled; commit,
   push, PR writes, tracker comments and issue creation are not.
 - Never create a worktree unless asked: `worktree.enabled` true, or `--worktree` in
@@ -124,6 +128,8 @@ planner owns this same transition and returns a blocked result to the coordinato
    scope boundaries; do not invent business rules. A defined dependency-blocked
    task is valid backlog work, but is not ready for planning. Only then apply
    **Planning status**. Preserve the original AC IDs and QA scenario coverage.
+   Follow `input-baseline.md`: identify accepted decisions and inspect the actual
+   checkout revision, relevant dirty state and applicable rules for discovery.
 2. **Worktree — skip unless opted in.** A `--worktree` / `--no-worktree` flag in the
    request wins over the config; otherwise read `worktree.enabled`. Off (the
    default), key absent, or not a git repo → plan in the current checkout, skip step
@@ -138,14 +144,17 @@ planner owns this same transition and returns a blocked result to the coordinato
    `config.json` → run its `query` / `explain` / `path` strings verbatim *before*
    any `rg`; `rg` is the fallback, not the default. `graph: null` but a graphify
    graph on disk → stale config, protocol § 0 covers it. Find one analogue per new
-   file. Stop when found.
-5. **Spec contract.** User story, testable acceptance criteria, business rules,
-   failure conditions, authorization and scoping rules, UI states when frontend.
+   file, verify affected consumers/effects/tests, and resolve essential unknowns.
+   Stop when the evidence criteria are met, not after a fixed number of searches.
+5. **Spec contract.** Connect each source AC to verified behavior, exact proposed
+   files/symbols and observable validation. Preserve business rules, failure
+   conditions, authorization/scoping and UI states when frontend. Resolve essential
+   choices using the decision precedence; record real dependency ordering only.
 6. **Scope gate.** Run the ladder over the `Files` table. Every `Create` row
    passes rungs 1–4 or it does not ship. What the gate rejects goes to
    `Out of scope` as `skipped: <X>, add when <Y>`.
-7. **Ambiguity.** `references/ambiguity-policy.md`. Blocking → stop. Otherwise →
-   `Assumptions` with the default taken.
+7. **Ambiguity.** `references/ambiguity-policy.md`. Essential gap → blocked
+   artifact and precise question. Nonessential bounded gap → evidenced assumption.
 8. **Gates.** UI touched → `Manual QA` filled, UI states in `Notes`, and `Design`
    filled when `<paths.rules>/design.md` exists. Docs made
    stale → `Docs impact` with exact paths and sections. Neither → delete the
@@ -154,7 +163,7 @@ planner owns this same transition and returns a blocked result to the coordinato
    not line count.
 10. **Write.** `<paths.plans>/<slug>.md` from `assets/plan-template.md`, in the
     current checkout — or inside the worktree when step 2 created one.
-11. **Self-check.** Run `output-contract.md`'s checks as checks. Never emit the
+11. **Self-check.** Recheck the baseline and run `output-contract.md`'s checks. Never emit the
     checklist into the plan. Fix before reporting done.
 
 ## Final report

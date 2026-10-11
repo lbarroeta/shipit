@@ -44,7 +44,7 @@ conventions go here.
 ## Not conventions
 
 Patterns that looked like conventions and are not. Recorded so nobody enforces a
-coin flip, and so `plan` knows to ask rather than assume.
+coin flip, and so `code-plan` knows to ask rather than assume.
 
 | Pattern | Split | Verdict |
 | --- | --- | --- |

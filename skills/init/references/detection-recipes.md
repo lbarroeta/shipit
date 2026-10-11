@@ -108,7 +108,7 @@ No fixed vocabulary. Derive them:
 3. For each kept directory pick **one exemplar**: the file closest to the median
    size, so it shows the shape rather than the extreme.
 4. Map the layer to a test kind from recipe 5 when one matches.
-5. No directory qualifies → `layers: []`. `plan` falls back to per-file
+5. No directory qualifies → `layers: []`. `code-plan` falls back to per-file
    discovery. That is a valid outcome, not a failure.
 
 Then write `.sdd/rules/<layer>.md` from `assets/layer-rule-template.md`, stating
@@ -273,7 +273,7 @@ CLI + graph → fill `graph` with
 ```
 
 Read-only commands only. `graphify` has flags beyond these (`--dfs`, `--budget`,
-rebuild modes); they do not go in the config — `plan` needs the three read
+rebuild modes); they do not go in the config — `code-plan` needs the three read
 commands, not the tool's whole surface.
 CLI only → `graph: null`, and note in the report that `graphify .` would build one
 (state the cost; do not run it).

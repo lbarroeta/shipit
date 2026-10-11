@@ -1,6 +1,6 @@
 # Worktree Lifecycle
 
-`plan` creates worktrees. `handoff` delivers from them. `/shipit:status --prune`
+`code-plan` creates worktrees. `handoff` delivers from them. `/shipit:status --prune`
 removes them. No other skill touches the set.
 
 ## Delivering from a worktree

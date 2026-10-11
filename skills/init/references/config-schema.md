@@ -1,6 +1,6 @@
 # `.sdd/config.json` Schema
 
-The machine contract. Read by `run`, `task-create`, `task-next`, `plan`, `implement`, `pr-fix`, `handoff`,
+The machine contract. Read by `run`, `task-create`, `task-next`, `code-plan`, `implement`, `pr-fix`, `handoff`,
 `status`, and `doctor`. Written only by `init`.
 
 Three values carry meaning, and they are not interchangeable:
@@ -20,7 +20,7 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | --- | --- | --- |
 | `shipit_version` | string | Plugin version that wrote the file |
 | `generated_at` | date | Used by refresh mode to detect human edits |
-| `sdd_tracking` | `committed` \| `local` | Asked once at first `init`. `local` means excluded via `.git/info/exclude`, never `.gitignore`. Read by `handoff` (staging) and `plan`'s worktree step (contract sharing) |
+| `sdd_tracking` | `committed` \| `local` | Asked once at first `init`. `local` means excluded via `.git/info/exclude`, never `.gitignore`. Read by `handoff` (staging) and `code-plan`'s worktree step (contract sharing) |
 | `handoff.allow` | string[] | Side effects `handoff` may perform. Absent → `["branch", "commit", "push", "pr_body", "pr_ready", "tracker_status"]`. See below |
 | `run.models` | object | Optional stage model/effort overrides by `anthropic` or `openai`. Empty/absent uses the pinned defaults in `skills/run/assets/models.json`. See below |
 | `repo.name` | string | Basename of the git toplevel |
@@ -62,7 +62,7 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `graph` | object \| null | `{tool, out, query, path, explain, update}`. Null unless CLI **and** graph exist |
 | `markers.debt` | string | Default `ponytail:` |
 | `companions.*` | `present` \| `absent` | `ponytail`, `graphify_cli`, `graphify_graph`, `caveman` |
-| `worktree.enabled` | boolean | **Default `false`.** Opt-in: `plan` works in the current checkout unless the user turns this on |
+| `worktree.enabled` | boolean | **Default `false`.** Opt-in: `code-plan` works in the current checkout unless the user turns this on |
 | `worktree.root` | string | Default `../worktrees/<repo.name>` |
 | `worktree.base` | string | Branch new worktrees fork from |
 | `worktree.link[]` | string[] | **Empty at init.** Opt-in only. See warning below |
@@ -146,7 +146,7 @@ Existing explicit allow-lists remain authoritative; init refresh/upgrade never
 adds permissions to them automatically. Unknown entries are ignored and reported
 as drift. An empty list means `handoff` does nothing and says which capability the
 run needed.
-The startup transition to `In Progress` belongs to `plan` (also inside `run`)
+The startup transition to `In Progress` belongs to `code-plan` (also inside `run`)
 and is independent of this list.
 
 ## `run.models`

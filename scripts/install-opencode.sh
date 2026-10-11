@@ -49,12 +49,14 @@ src="$ROOT/.opencode/command"
 [ -d "$src" ] || die "no commands at $src — wrong SHIPIT_ROOT?"
 
 mkdir -p "$COMMANDS" || die "cannot create $COMMANDS"
-# Retire only the old installer-owned command link after the task-create rename.
+# Retire only installer-owned links for renamed commands.
 # Preserve user-authored command files and unrelated symlinks.
-legacy_task="$COMMANDS/shipit-task.md"
-if [ -L "$legacy_task" ] && [ "$(readlink "$legacy_task")" = "$src/shipit-task.md" ]; then
-  rm "$legacy_task" || die "cannot retire old shipit-task command link"
-fi
+for legacy_name in task plan; do
+  legacy_command="$COMMANDS/shipit-$legacy_name.md"
+  if [ -L "$legacy_command" ] && [ "$(readlink "$legacy_command")" = "$src/shipit-$legacy_name.md" ]; then
+    rm "$legacy_command" || die "cannot retire old shipit-$legacy_name command link"
+  fi
+done
 n=0
 for f in "$src"/*.md; do
   [ -e "$f" ] || break
@@ -82,7 +84,7 @@ else
   info "opencode not on PATH — install it, then verify with: opencode debug config"
 fi
 
-printf '\nDone. In any repo: \033[1m/shipit-init\033[0m, then \033[1m/shipit-plan\033[0m.\n'
+printf '\nDone. In any repo: \033[1m/shipit-init\033[0m, then \033[1m/shipit-code-plan\033[0m.\n'
 [ "$ROOT" != "${SHIPIT_ROOT:-$CONFIG/plugins/shipit}" ] &&
   printf 'Non-default location — add to your shell profile: export SHIPIT_ROOT=%s\n' "$ROOT"
 exit 0

@@ -1,6 +1,6 @@
 ---
 name: task-create
-description: Use when a need, bug, feature or chore must become a clear tracker ticket or an epic with independently understandable children. Draft what and why against the repo contract; plan owns how. Publishing uses handoff only when issue_create is allowed and the finished draft is authorized.
+description: Use when a need, bug, feature or chore must become a clear tracker ticket or an epic with independently understandable children. Draft what and why against the repo contract; code-plan owns how. Publishing uses handoff only when issue_create is allowed and the finished draft is authorized.
 metadata:
   input: request
   output: sdd-task-draft
@@ -11,7 +11,7 @@ metadata:
 
 Turn a need into work another person can pick up without reconstructing the
 conversation. `task-create` defines what and why, `task-next` recommends executable
-work, `plan` decides how, and `implement` executes it.
+work, `code-plan` decides how, and `implement` executes it.
 
 The deliverable is a local draft. `handoff` in `task` mode owns tracker publishing,
 only when `handoff.allow` lists `issue_create`. Adapter `none` is a valid local
@@ -23,7 +23,7 @@ workflow, not a blocker.
   `references/output-contract.md`, and `assets/task-template.md`.
 - Required in epic mode only: `references/split-policy.md`.
 - Optional when uncertainty needs classification:
-  `../plan/references/ambiguity-policy.md`.
+  `../code-plan/references/ambiguity-policy.md`.
 - Ground narrowly: one graph query or two `rg` passes, at most three relevant
   files initially. Read a specific additional source when needed to settle a
   material scope or business-rule question; stop before implementation discovery.
@@ -98,8 +98,8 @@ workflow, not a blocker.
    with the path; only handoff reports what reached the tracker. Respect provider
    capabilities and preserve unsupported relations in prose with an honest report.
 9. **Optional plan.** `--plan` selects one executable task after readiness checks.
-   Published work → `/shipit:task-next` scoped to these created IDs, then plan the
-   recommendation. Local draft → apply the same readiness policy from
+   Published work → `/shipit:task-next` scoped to these created IDs, then invoke
+   `/shipit:code-plan` on the recommendation. Local draft → apply the same readiness policy from
    `../task-next/references/readiness-policy.md` to the complete task/children;
    verify referenced live prerequisites and rank eligible children by explicit
    priority/order. Never select the first row blindly. Unknown or unmet conditions
@@ -111,7 +111,7 @@ workflow, not a blocker.
 - `--priority <P0|P1|P2|P3>` / `--size <XS|S|M|L|XL>` — parent values in epic mode;
   children are rated individually. User values win; report conflicts with scope.
 - `--dry-run` — draft only, no publishing question or planning.
-- `--plan` — recommend/select one ready task, then plan it; no automatic epic plan.
+- `--plan` — recommend/select one ready task, then invoke `shipit:code-plan`; no automatic epic plan.
 
 ## Final report
 
@@ -122,6 +122,6 @@ workflow, not a blocker.
 - Dependencies and exact unblock conditions; unresolved questions or assumptions.
 - Handoff report verbatim when invoked, including unsupported/pending relations.
 - For `--plan`, selected ID/local child, rationale and plan path, or why none is
-  executable. Otherwise next: publish the draft, then `task-next` or `plan <ID>`.
+  executable. Otherwise next: publish the draft, then `task-next` or `code-plan <ID>`.
 
 Never claim creation unless handoff verified it.

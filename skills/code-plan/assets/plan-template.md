@@ -14,6 +14,13 @@ when `worktree.enabled` is true and one was created or reused.>
 <1-2 sentences. Current intended result and why it still matters; preserve the
 task Goal and boundaries after checking relevance and live prerequisites.>
 
+## Baseline
+
+<Checkout/root, branch and exact HEAD (or non-Git limitation). Relevant staged/
+unstaged/untracked changes and what the plan relies on; unrelated dirty work
+excluded. Request/accepted-decision sources and applicable rule paths. Rechecked
+before finalizing; description is not permission to overwrite dirty work.>
+
 ## Out of scope
 
 - <work explicitly not done here>
@@ -33,10 +40,17 @@ body. Required when planning a tracker issue or a draft with dependencies.>
 
 <S | M | L> — <the single biggest driver of uncertainty>
 
+## Evidence
+
+<Current behavior and scope-bearing relationships, verified at `path:line` and
+symbols. State graph-assisted/source-only discovery and material freshness or
+coverage gaps. Keep only findings needed to justify this plan.>
+
 ## Decisions
 
-<Only decisions NOT derivable from `.sdd/*` or an agent doc. If a repo rule
-already dictates it, omit it. Delete this section when nothing was decided.>
+<Essential choices with accepted source/evidence. Reference controlling repo
+rules rather than restating them. Explain required exceptions to reuse or local
+patterns. Delete when no additional decision needs recording.>
 
 - <decision>: <why>. Rejected: <alternative + why not>.
 
@@ -44,8 +58,14 @@ already dictates it, omit it. Delete this section when nothing was decided.>
 
 | Path | Action | What | Analogue |
 | --- | --- | --- | --- |
-| `<path>` | Create | <purpose> | `<path:line>` |
-| `<path>` | Edit | <change> | — |
+| `<path>` | Create | <symbol, expected behavior, AC IDs> | `<path:line>` |
+| `<path>` | Edit | <symbol/section, behavior change, AC IDs> | — |
+
+## Sequence
+
+<Only actual dependencies between named file/symbol groups and why that order is
+required. Delete for independent edits; test command/red-green loops belong to
+implement.>
 
 ## Notes
 
@@ -73,7 +93,10 @@ States: <the `<paths.rules>/design.md` § 4 states this change renders>
 
 | Test | Rule | Proves |
 | --- | --- | --- |
-| `<path>` | `.sdd/rules/tests/<kind>.md` | <behaviour> |
+| `<path>` + <scenario> | `.sdd/rules/tests/<kind>.md` | <AC IDs/regression and observable expected result> |
+
+<Each AC links through Files (or Evidence for already-met behavior) to Tests or
+Manual QA. Include affected consumers and negative paths when relevant.>
 
 ## Docs impact
 
@@ -84,15 +107,18 @@ section when none.>
 
 ## Manual QA
 
-<Required only for UI changes: the browser path in plain language, no framework
-names, no terminal commands. Delete this section for backend-only work.>
+<Required for UI: browser path, role/setup, actions and expected results with AC
+IDs, no framework names or terminal commands. Also use for required backend
+manual/external checks, with limitations. Delete when not applicable.>
 
 ## Assumptions
 
-<Only real ones, with the default taken. Delete this section if empty.>
+<Only bounded nonessential defaults: evidence, impact and revisit condition.
+Delete this section if empty.>
 
 ## Blockers
 
-<Only when the plan cannot proceed. A blocker carries a recommendation. Delete
-this section when there are none — and when it is present, nothing below the
-`Files` table is expected to be complete.>
+<Only when the plan cannot proceed: exact missing decision/evidence, affected AC,
+question/options and supported recommendation or next evidence needed. Mark the
+artifact blocked; dependent Files/Tests/Sequence may remain incomplete. Delete
+when there are none.>

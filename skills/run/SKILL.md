@@ -39,7 +39,7 @@ references itself. Missing contract → `/shipit:init` first. Missing native
 delegation, stage model/effort, Python 3.10+
 or required tracker access → stop with the exact gap. Never install a runtime or
 fall back to another model silently. Workflows requiring independent worktrees
-remain `/shipit:plan --worktree`; this first `run` flow owns one existing checkout
+remain `/shipit:code-plan --worktree`; this first `run` flow owns one existing checkout
 and passes `--no-worktree` to its planner.
 
 ## Workflow
@@ -75,9 +75,10 @@ and passes `--no-worktree` to its planner.
    it switches to the saved branch only when clean. Resolve and verify availability
    of all three returned model/effort pairs before any child runs. Retain owner
    token and state path.
-4. **Planner.** Delegate `shipit:plan --no-worktree` with the issue snapshot,
-   checkout and authorized scope. Wait for completion. Verify the plan exists,
-   meets `plan`'s output contract and has no blockers, including its startup
+4. **Planner.** Delegate `shipit:code-plan --no-worktree` with the issue snapshot,
+   checkout and authorized scope. Pass the absolute plugin path to
+   `skills/code-plan/SKILL.md`. Wait for completion. Verify the plan exists,
+   meets `code-plan`'s output contract and has no blockers, including its startup
    tracker transition (`orchestration.md § Planning status`); checkpoint `plan`.
    A blocked result stays at this stage; pause with the exact gap. Keep a
    generated plan's path as a run-owned file

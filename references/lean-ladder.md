@@ -1,6 +1,6 @@
 # Lean Ladder
 
-Scope gate and review vocabulary. Loaded by `plan`, `implement`, and `pr-fix`.
+Scope gate and review vocabulary. Loaded by `code-plan`, `implement`, and `pr-fix`.
 
 > Adapted from **ponytail** v4.7.0 — https://github.com/DietrichGebert/ponytail
 > Copyright (c) 2026 DietrichGebert, MIT License. See `NOTICE` at the plugin
@@ -28,7 +28,7 @@ cases. Lean means writing less code, not picking the flimsier algorithm.
 
 | Skill | Application |
 | --- | --- |
-| `plan` | Gate before the `Files` table is final. Every `Create` row passes rungs 1–4 or does not ship. What the gate rejects goes to `Out of scope` as `skipped: <X>, add when <Y>`. |
+| `code-plan` | Gate before the `Files` table is final. Every `Create` row passes rungs 1–4 or does not ship. What the gate rejects goes to `Out of scope` as `skipped: <X>, add when <Y>`. |
 | `implement` | Stance during "smallest correct change". A deliberate shortcut leaves a debt marker. |
 | `pr-fix` | Tag vocabulary for `pushback` justifications. One tagged line beats a paragraph. |
 

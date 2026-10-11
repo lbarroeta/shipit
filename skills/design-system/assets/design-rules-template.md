@@ -6,9 +6,10 @@
 For any change a person can see. Backend-only work skips this file.
 
 Values live in `.sdd/design-system.md` and the token location it names; this file
-says how to use them. Contract status: <draft | approved>. Draft → anything the
-work needs from *Pending* is an assumption labelled `pending design decision`,
-never presented as approved.
+says how to use them. Contract status: <draft | approved>. A *Pending* decision
+is never presented as approved. Essential unresolved behavior blocks dependent
+planning; only a bounded nonessential choice may be an assumption labelled
+`pending design decision`, under `code-plan`'s ambiguity policy.
 
 § 3–8 start as a baseline and are part of the proposal the user confirms. A rule
 changed or added for this product cites its decision: `(D<n>)`.

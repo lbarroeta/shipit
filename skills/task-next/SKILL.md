@@ -23,7 +23,7 @@ This is a recommendation, not a status change, assignment or execution request.
   relations, parent/children, and referenced prerequisites. Page scoped queries
   until enough candidates are evaluated; disclose truncation or inaccessible data.
 - No product code, draft/plan file, config edit, tracker/git write, status
-  transition, assignment, comment or automatic invocation of `plan`/`run`.
+  transition, assignment, comment or automatic invocation of `code-plan`/`run`.
 - No `.sdd/` → suggest `/shipit:init`; adapter `none` → report no live tracker
   recommendation. Do not substitute local drafts or another available provider.
 - Reports follow `language.plan` (legacy string applies; absent → `en`). Issue
@@ -58,7 +58,7 @@ This is a recommendation, not a status change, assignment or execution request.
    alternatives with reasons they rank lower, and significant blocked candidates
    with exact unblock conditions. If none is executable, say so and identify the
    prerequisite or clarification that would change the result. Report scope,
-   evidence freshness and retrieval limits. Next command: `plan <ID>` or
+   evidence freshness and retrieval limits. Next command: `code-plan <ID>` or
    `run <ID>`; do not invoke either automatically.
 
 A high-priority blocked task can explain urgency, but cannot become the next

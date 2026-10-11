@@ -1,6 +1,6 @@
 ---
 name: init
-description: Use to bootstrap or refresh the `.sdd/` contract for a repo — detects stack, verified commands, layers, test patterns, tracker, and companions from evidence, then points `AGENTS.md` at it so any agent loads it. Run once per repo before `plan` or `implement`. Do not use to plan or write product code.
+description: Use to bootstrap or refresh the `.sdd/` contract for a repo — detects stack, verified commands, layers, test patterns, tracker, and companions from evidence, then points `AGENTS.md` at it so any agent loads it. Run once per repo before `code-plan` or `implement`. Do not use to plan or write product code.
 metadata:
   writes_product_code: false
   output: sdd-contract
@@ -70,7 +70,7 @@ two happened in the report.
 ## Hard rules
 
 - **No evidence, no claim.** Every line in `.sdd/*.md` carries a `path:line` or
-  the exact command output that proved it. No exemplar → write `unknown`. `plan`
+  the exact command output that proved it. No exemplar → write `unknown`. `code-plan`
   then asks instead of guessing.
 - **A command is written only after it ran here and exited 0** (or its
   `--version`/dry-run equivalent did). One that fails is written `null` and its
@@ -260,6 +260,6 @@ job — say so in the report if they look stale.
   `references/config-schema.md § handoff.allow`.
 - Companion tiers, in `doctor`'s format.
 - Any place an agent doc contradicted the repo.
-- Next step: `/shipit:task-create` for a need with no ticket yet, `/shipit:plan` for one
+- Next step: `/shipit:task-create` for a need with no ticket yet, `/shipit:code-plan` for one
   that has. UI layers found and no `.sdd/design-system.md` → also
   `/shipit:design-system`, once.

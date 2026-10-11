@@ -59,7 +59,7 @@ path claimed by more than one:
 overlap: app/models/order.rb — kod-204, kod-211
 ```
 
-`plan` warns about this at creation time; `status` catches the case where two plans
+`code-plan` warns about this at creation time; `status` catches the case where two plans
 grew into each other afterwards. Report it; do not resolve it. Sequencing branches is
 a human decision.
 
