@@ -93,7 +93,7 @@ There is no CLI fallback; do not construct API calls by hand.
 Comment, `plan` mode:
 
 ```text
-Plan: `<plan path>` — execute with /shipit:implement.
+Plan: `<plan path>` — execute with /shipit:code-implement.
 PR: <pr-url>
 QA: UI verification required for <named flows>
 ```
@@ -157,7 +157,7 @@ No comment in `review` mode.
 
 Transitions: GitHub issues have open/closed and optionally a Project field.
 
-- Never close an issue from `handoff`. Merging does that, or a human does.
+- Never close an issue from `code-handoff`. Merging does that, or a human does.
 - A Project status field exists → advance it the same way as Linear, via
   `gh project item-edit`.
 - No Project → labels only if the repo already uses them for state. Do not

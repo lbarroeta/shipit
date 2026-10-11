@@ -39,7 +39,7 @@ the diff already carry those.>
 
 ## Files Changed
 
-This table is the manifest `handoff` stages from. A path missing here does not get
+This table is the manifest `code-handoff` stages from. A path missing here does not get
 committed; a path here that is not in the diff stops the handoff.
 Generated plans stay in the `Plan` section, never in this table, regardless of
 `sdd_tracking`. Coordinated run results separately retain their full ownership
@@ -85,7 +85,7 @@ Valid after checking, not by default.>
 
 ## Handoff
 
-<Appended verbatim by `handoff` after it runs. Leave empty until then. Never
+<Appended verbatim by `code-handoff` after it runs. Leave empty until then. Never
 summarize what handoff did; paste what it reported.>
 
 ## Known Risks or Follow-ups
@@ -107,4 +107,4 @@ the comment now.>
 ## PR Preparation
 
 <Title and body from `assets/pr-description-template.md`, including its section
-drops. Written here, put on the PR by `handoff` — never posted from this skill.>
+drops. Written here, put on the PR by `code-handoff` — never posted from this skill.>

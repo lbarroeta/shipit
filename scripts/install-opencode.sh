@@ -51,7 +51,7 @@ src="$ROOT/.opencode/command"
 mkdir -p "$COMMANDS" || die "cannot create $COMMANDS"
 # Retire only installer-owned links for renamed commands.
 # Preserve user-authored command files and unrelated symlinks.
-for legacy_name in task plan; do
+for legacy_name in task plan implement handoff; do
   legacy_command="$COMMANDS/shipit-$legacy_name.md"
   if [ -L "$legacy_command" ] && [ "$(readlink "$legacy_command")" = "$src/shipit-$legacy_name.md" ]; then
     rm "$legacy_command" || die "cannot retire old shipit-$legacy_name command link"

@@ -1,5 +1,5 @@
 Use the supplied shipit:code-plan skill to plan this request. Write the plan locally;
-do not implement it, run handoff, or contact a tracker. Use only this fixture repo
+do not implement it, run code-handoff, or contact a tracker. Use only this fixture repo
 and the supplied plugin snapshot. Planning language: English.
 
 Goal: fix document downloads so tenant boundaries are enforced at the server.

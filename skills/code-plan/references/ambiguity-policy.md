@@ -76,7 +76,7 @@ evidence.
 `unknown` records missing evidence, not permission to import another project's
 convention.
 
-- Command → do not rely on that verification step; note the gap for `implement`.
+- Command → do not rely on that verification step; note the gap for `code-implement`.
 - Test kind or layer shape → use a verified local analogue if it settles the
   issue; otherwise classify the actual impact using the policy above.
 - Tracker → treat as `none`, never guess an adapter. A referenced issue or

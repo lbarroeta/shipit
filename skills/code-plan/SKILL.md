@@ -1,6 +1,6 @@
 ---
 name: code-plan
-description: Use when planning, scoping, estimating, or breaking down a ticket, issue, bug, or feature request into an implementable contract. Works in the current checkout by default; isolated worktrees are opt-in via `worktree.enabled` or a `--worktree` flag. Do not use for implementation, and not for git or PR delivery — that is `handoff`.
+description: Use when planning, scoping, estimating, or breaking down a ticket, issue, bug, or feature request into an implementable contract. Works in the current checkout by default; isolated worktrees are opt-in via `worktree.enabled` or a `--worktree` flag. Do not use for implementation, and not for git or PR delivery — that is `code-handoff`.
 metadata:
   input: request
   output: sdd-plan
@@ -19,7 +19,7 @@ the repo: the verified evidence, decisions, exact files, analogues, and AC-to-va
 links. Reference repo rules rather than restating them.
 
 This skill ends when the plan file is written. Branch, commit, push, PR —
-`handoff`.
+`code-handoff`.
 
 ## Context budget
 
@@ -64,7 +64,7 @@ Read narrow. Bulk-loading is the single biggest token sink in this flow.
 - **Verify before asserting.** Confirm an unfamiliar path, script, or command
   exists before naming it. `.sdd/config.json` records verified commands — use
   those, and never invent a sibling.
-- No verification commands and no red/green sequencing in the plan. `implement`
+- No verification commands and no red/green sequencing in the plan. `code-implement`
   owns both.
 - Tracker issue id present → preserve it in the slug: `<issue-id>-<slug>`.
 - UI touched → the plan includes `Manual QA`. With a design contract present it
@@ -171,8 +171,8 @@ planner owns this same transition and returns a blocked result to the coordinato
 - Plan path. Name the worktree only if one was used.
 - Discovery source: graph, or the rg-only warning from `discovery-protocol.md` § 0
   when no graphify output is in the project. One line, never omitted.
-- Generated plan stays local in every tracking mode; `handoff` never commits it.
-  When a PR can be created or updated, `handoff` carries the plan in its body.
+- Generated plan stays local in every tracking mode; `code-handoff` never commits it.
+  When a PR can be created or updated, `code-handoff` carries the plan in its body.
 - Whether a tracker issue id was detected, and the slug produced.
 - Goal/relevance and prerequisite evidence: verified ready, or exact blockers.
 - Tracker status: verified transition, preserved current state, or skipped (no
@@ -180,7 +180,7 @@ planner owns this same transition and returns a blocked result to the coordinato
 - Collisions found with in-flight worktrees, when there were any to check.
 - Blockers, or assumptions taken.
 - Estimate.
-- Next: `/shipit:handoff` in `plan` mode to deliver it, or `/shipit:implement` to
+- Next: `/shipit:code-handoff` in `plan` mode to deliver it, or `/shipit:code-implement` to
   execute it locally.
 
 Do not claim implementation done. Do not claim anything was delivered. This skill

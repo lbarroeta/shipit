@@ -1,6 +1,6 @@
 # Worktree Lifecycle
 
-`code-plan` creates worktrees. `handoff` delivers from them. `/shipit:status --prune`
+`code-plan` creates worktrees. `code-handoff` delivers from them. `/shipit:status --prune`
 removes them. No other skill touches the set.
 
 ## Delivering from a worktree
@@ -41,7 +41,7 @@ failure: something is being delivered from the wrong branch.
 
 ## After the merge
 
-`handoff` never merges and never prunes. Once a PR is merged, the worktree and its
+`code-handoff` never merges and never prunes. Once a PR is merged, the worktree and its
 branch are finished, and the cleanup belongs to `/shipit:status --prune`:
 
 ```bash

@@ -1,6 +1,6 @@
 ---
 name: task-create
-description: Use when a need, bug, feature or chore must become a clear tracker ticket or an epic with independently understandable children. Draft what and why against the repo contract; code-plan owns how. Publishing uses handoff only when issue_create is allowed and the finished draft is authorized.
+description: Use when a need, bug, feature or chore must become a clear tracker ticket or an epic with independently understandable children. Draft what and why against the repo contract; code-plan owns how. Publishing uses code-handoff only when issue_create is allowed and the finished draft is authorized.
 metadata:
   input: request
   output: sdd-task-draft
@@ -11,9 +11,9 @@ metadata:
 
 Turn a need into work another person can pick up without reconstructing the
 conversation. `task-create` defines what and why, `task-next` recommends executable
-work, `code-plan` decides how, and `implement` executes it.
+work, `code-plan` decides how, and `code-implement` executes it.
 
-The deliverable is a local draft. `handoff` in `task` mode owns tracker publishing,
+The deliverable is a local draft. `code-handoff` in `task` mode owns tracker publishing,
 only when `handoff.allow` lists `issue_create`. Adapter `none` is a valid local
 workflow, not a blocker.
 
@@ -35,7 +35,7 @@ workflow, not a blocker.
 ## Hard rules
 
 - **No product code, file plan, commands, git or tracker writes.** The skill drafts;
-  `handoff` publishes. Grounding citations may name existing `path:line` evidence,
+  `code-handoff` publishes. Grounding citations may name existing `path:line` evidence,
   never prescribe files to change.
 - **Prose language.** Drafts use `language.task`, reports use `language.plan`.
   Legacy string `language` applies to both; absent → `en`. Identifiers stay English.
@@ -94,7 +94,7 @@ workflow, not a blocker.
 8. **Show and deliver.** Show the finished draft/path. `--dry-run`, withheld
    `issue_create`, adapter `none`, or unresolved ambiguity → stop at the draft.
    Otherwise obtain authorization for this concrete draft; explicit authorization
-   already given for publishing it is sufficient. Invoke `handoff` in `task` mode
+   already given for publishing it is sufficient. Invoke `code-handoff` in `task` mode
    with the path; only handoff reports what reached the tracker. Respect provider
    capabilities and preserve unsupported relations in prose with an honest report.
 9. **Optional plan.** `--plan` selects one executable task after readiness checks.

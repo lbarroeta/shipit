@@ -1,13 +1,13 @@
 ---
-name: implement
-description: Use when an approved shipit plan must be executed, verified, and prepared for QA. Runs the repo's own verified commands from `.sdd/config.json`. Do not use to redesign scope, and not for git or PR delivery — that is `handoff`.
+name: code-implement
+description: Use when an approved shipit plan must be executed, verified, and prepared for QA. Runs the repo's own verified commands from `.sdd/config.json`. Do not use to redesign scope, and not for git or PR delivery — that is `code-handoff`.
 metadata:
   input: sdd-plan
   output: implemented-change
   writes_product_code: true
 ---
 
-# shipit implement
+# shipit code-implement
 
 Execute the approved plan. The plan is the contract. The code is minimal, scoped,
 and verified with commands that are known to run in this repo.
@@ -44,7 +44,7 @@ and verified with commands that are known to run in this repo.
 - No more than 3 attempts on the same failing test, lint, or check without new
   evidence. After that, stop and report.
 - Never run `git commit`, `git push`, or a PR command. Delivery happens only by
-  invoking `handoff`, and what it then does is `handoff.allow`'s call — with
+  invoking `code-handoff`, and what it then does is `handoff.allow`'s call — with
   `tracker_comment` withheld, the QA steps stay in the report for the user to post.
 - **Comment only what the code cannot say.** Match the file's existing comment
   density — neighbouring functions carry none, yours carries none. No comment
@@ -116,9 +116,9 @@ and verified with commands that are known to run in this repo.
    Every section there earns its place or is dropped — an empty heading costs a
    reviewer more than it gives.
 9. **Deliver.** `--defer-handoff` → return the report and validation results to
-   the caller without invoking `handoff`. Used by `shipit:run` so its delivery
+   the caller without invoking `code-handoff`. Used by `shipit:run` so its delivery
    subagent gets the configured model. Otherwise, validation green and the report
-   written → invoke `handoff` in
+   written → invoke `code-handoff` in
    `implementation` mode and pass it the report. Its report is appended to yours
    verbatim, never summarized into a claim it did not make. Do not invoke it when
    the run ended `# Implementation Blocked` or `# Implementation Incomplete`, or
@@ -196,4 +196,4 @@ PR Preparation.
 ## Flag
 
 `--defer-handoff`: validation and report only; no delivery agent or external side
-effects. The default standalone workflow still invokes `handoff` automatically.
+effects. The default standalone workflow still invokes `code-handoff` automatically.

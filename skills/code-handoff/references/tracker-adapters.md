@@ -41,7 +41,7 @@ Branch: no tracker-supplied name. Use `.sdd/conventions.md`, else
 
 PR link: reference the issue from the PR body — `Closes #<n>` when the merge should
 close it, a bare `#<n>` reference when it should not. Getting this wrong closes an
-issue that still has work left. Never close an issue from `handoff`; merging does
+issue that still has work left. Never close an issue from `code-handoff`; merging does
 that, or a human does.
 
 ## `jira`

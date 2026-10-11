@@ -1,5 +1,5 @@
 Use the supplied shipit:code-plan skill to plan this request. Write a blocked artifact
-if an essential decision is missing; do not implement, run handoff, or contact a
+if an essential decision is missing; do not implement, run code-handoff, or contact a
 tracker. Use only this fixture repo and the supplied plugin snapshot. Planning
 language: English.
 

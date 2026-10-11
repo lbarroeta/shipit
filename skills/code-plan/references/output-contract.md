@@ -16,7 +16,7 @@ hit a length target.
 Reference `.sdd/` and agent rules rather than restating their content. The plan
 does not contain verification commands, red/green/refactor instructions, test
 framework conventions, token values, or generic implementation checklists.
-`implement` owns command selection and execution; the plan owns what must be
+`code-implement` owns command selection and execution; the plan owns what must be
 validated and any real dependency ordering.
 
 ## Required sections
@@ -101,6 +101,6 @@ Apply these checks privately; do not emit the checklist:
 - Conditional UI/design/docs/worktree sections are present when required.
 - No product code, verification command recipes, repetition, or empty sections.
 
-`implement` can also consume legacy plans without the new Baseline/Evidence/AC
+`code-implement` can also consume legacy plans without the new Baseline/Evidence/AC
 links. Their absence alone is not a blocker: verify the underlying behavior and
 coverage in preflight, and stop only for a substantive gap or conflict.

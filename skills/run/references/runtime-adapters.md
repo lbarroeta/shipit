@@ -8,9 +8,11 @@ The default route pairs are in `../assets/models.json`. The helper's `routes`
 command applies `.sdd/config.json` overrides at
 `run.models.<anthropic|openai>.<plan|implement|handoff>`, each a complete
 `{"model": "...", "effort": "..."}` pair. Do not modify global session settings.
-The `plan` route/stage invokes `shipit:code-plan` from `skills/code-plan/SKILL.md`;
-the route key, checkpoint name and `run-planner` agent name remain `plan`/planner
-for saved-run compatibility. The skill name is not a stage key.
+Route and checkpoint keys remain `plan`, `implement`, and `handoff` for saved-run
+compatibility. They invoke `shipit:code-plan`, `shipit:code-implement`, and
+`shipit:code-handoff` from their corresponding `skills/code-*/SKILL.md` paths.
+Native agent names remain `run-planner`, `run-builder`, and `run-delivery`.
+Public skill names are not stage keys.
 Check availability and restrictions through the runtime's exposed capabilities;
 if access cannot be proven until spawn, the spawn failure is a blocker, not
 permission to switch model. Recheck returned routes after Git preparation because

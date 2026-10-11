@@ -1,13 +1,13 @@
 ---
-name: handoff
-description: Use when shipit artifacts must be delivered — branch, commit, push, ready-for-review PRs and tracker review status by default; tracker comments, review-thread replies and issue creation only when `handoff.allow` in `.sdd/config.json` opts into them. Runs after `task-create`, `code-plan`, `implement`, or `pr-fix`. Do not use to write plans, tickets, or product code.
+name: code-handoff
+description: Use when shipit artifacts must be delivered — branch, commit, push, ready-for-review PRs and tracker review status by default; tracker comments, review-thread replies and issue creation only when `handoff.allow` in `.sdd/config.json` opts into them. Runs after `task-create`, `code-plan`, `code-implement`, or `pr-fix`. Do not use to write plans, tickets, or product code.
 metadata:
   writes_product_code: false
 ---
 
-# shipit handoff
+# shipit code-handoff
 
-Owns delivery side effects; `task-create`, `implement` and `pr-fix` produce artifacts.
+Owns delivery side effects; `task-create`, `code-implement` and `pr-fix` produce artifacts.
 `code-plan` also owns the startup transition to `In Progress`, including inside `run`.
 This skill delivers their artifacts.
 
@@ -22,10 +22,10 @@ written), `implementation` (after a change is verified), `review` (after PR feed
 is resolved). Ask which one when it is not given and the branch does not make it
 obvious.
 
-By default, `implement` invokes this skill once validation is green, passing its
+By default, `code-implement` invokes this skill once validation is green, passing its
 report. With `--defer-handoff`, the `run` coordinator delegates it separately.
 `task-create` invokes it only when `issue_create` is allowed. `pr-fix` never does — the
-user runs `/shipit:handoff` by hand after reviewing the fixes. Being invoked either
+user runs `/shipit:code-handoff` by hand after reviewing the fixes. Being invoked either
 way changes nothing: run the same preflight, and trust the report for **content**
 only — never for whether delivery side effects already happened. Check actual
 state before performing them.
@@ -210,7 +210,7 @@ exists before a branch does.
 - **Push** — only existing commits on the task branch; no plan or empty commit.
 - **PR** — Ready for review. Create without `--draft`. Title
   `<ISSUE-ID> Plan: <short title>`. Body states this is
-  planning only and execution belongs to `/shipit:implement`. Always carry the
+  planning only and execution belongs to `/shipit:code-implement`. Always carry the
   plan's complete content verbatim in the body, including evidence, baseline,
   decisions and validation coverage when present; do not extract only Files/Notes.
   Update an existing PR when available. No commits ahead of the base and no

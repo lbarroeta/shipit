@@ -83,8 +83,9 @@ and passes `--no-worktree` to its planner.
    A blocked result stays at this stage; pause with the exact gap. Keep a
    generated plan's path as a run-owned file
    for the builder's user-change protection.
-5. **Builder.** Delegate `shipit:implement --defer-handoff` with the plan, explicit
-   task-run authorization and run-owned paths (generated plan, verified pending
+5. **Builder.** Delegate `shipit:code-implement --defer-handoff` with the plan, explicit
+   task-run authorization and the absolute plugin path to
+   `skills/code-implement/SKILL.md`. Include run-owned paths (generated plan, verified pending
    file hashes, and archived revision ownership that still matches). Wait; verify its report and actual
    validation results. Keep generated plans out of the report's delivery manifest;
    retain non-ignored plan paths in the result's full ownership manifest. The helper
@@ -93,8 +94,9 @@ and passes `--no-worktree` to its planner.
    Git metadata so they cannot become accidental commits. Checkpoint `implement`
    only after executed validation exits 0. No delivery on blocked/incomplete work.
 6. **Delivery.** Before dispatch, verify the branch and validated files have not
-   changed since the builder returned. Delegate `shipit:handoff` in `implementation`
-   mode with the immutable report, current allow-list and durable delivery journal.
+   changed since the builder returned. Delegate `shipit:code-handoff` in `implementation`
+   mode with the absolute plugin path to `skills/code-handoff/SKILL.md`, the
+   immutable report, current allow-list and durable delivery journal.
    Wait and verify actual commit/push/PR outcomes; checkpoint `handoff` only when
    permitted steps finished or were deliberately skipped. Partial delivery stays
    at `handoff`: reconcile existing effects before retrying, never duplicate them.

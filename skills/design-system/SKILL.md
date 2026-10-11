@@ -11,7 +11,7 @@ metadata:
 
 Agents building UI with no design contract invent one per screen. This skill
 records one — from the user's answers and the repo's evidence — so `code-plan` and
-`implement` stop guessing colors, components and states.
+`code-implement` stop guessing colors, components and states.
 
 | Path | For | Content |
 | --- | --- | --- |
@@ -150,4 +150,4 @@ template stands for `paths.rules`: write the configured value.
 - No product code changed. Next: `/shipit:task-create` or `/shipit:code-plan` to implement
   what is marked `to implement`.
 - `sdd_tracking: committed` → the files are ready for the user to commit;
-  `handoff` has no mode for them. `local` → they stay in this checkout.
+  `code-handoff` has no mode for them. `local` → they stay in this checkout.

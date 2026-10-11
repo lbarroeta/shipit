@@ -4,7 +4,7 @@
 usual path is to plan in the current checkout and never open this file.
 
 One worktree per task, so several tasks run in parallel without fighting over one
-checkout. The plan is written **inside** the worktree, so `implement` and `handoff`
+checkout. The plan is written **inside** the worktree, so `code-implement` and `code-handoff`
 operate there too.
 
 Runs before discovery. A worktree failure is reported and downgraded to "work in
@@ -67,13 +67,13 @@ but one.
 
 Read-only use only: `query`, `path`, `explain`. **Never run the graph's update
 command from a worktree** — it would write branch-local state into the shared
-graph. Updating happens in the main checkout after the merge; `implement` enforces
+graph. Updating happens in the main checkout after the merge; `code-implement` enforces
 this.
 
 ## Share the `.sdd` contract
 
 `sdd_tracking: local` means `.sdd/` is never committed — a fresh worktree has
-none, and `code-plan`/`implement` refuse to run without it. Unlike the graph, this is
+none, and `code-plan`/`code-implement` refuse to run without it. Unlike the graph, this is
 not optional: there is no alternative that keeps them working.
 
 ```bash

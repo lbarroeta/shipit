@@ -146,7 +146,7 @@ next delivery agent reads the journal before doing anything.
 
 In a coordinated run, save the handoff report separately in the run directory;
 do not append to the checkpointed builder artifact. Link both reports in final
-delivery. Standalone `implement` retains its existing append behavior.
+delivery. Standalone `code-implement` retains its existing append behavior.
 
 ## Human QA
 

@@ -163,7 +163,7 @@ for a repo with no tracker at all. One question is cheaper than either failure.
 
 Only when recipe 7 landed on something other than `none`, **and** that adapter's
 mechanism is reachable in this session (see
-`../../handoff/references/tracker-adapters.md` for which mechanism each one uses).
+`../../code-handoff/references/tracker-adapters.md` for which mechanism each one uses).
 Not reachable → write `create.supported: false` and move on. Ask nothing: a
 question about a tracker nobody can reach wastes the user's turn.
 
@@ -223,7 +223,7 @@ and Project numbers are only unique per owner. Several → ask once, listing
 `<title> (<owner-login>/<number>)`, with "none" as an option. None → `null`. A token without the `read:project` scope
 fails the call: `create.project` and both `create.fields` keys become `"unknown"`,
 appended to `unknown[]`, and the report names `gh auth refresh -s project` as the
-fix — the same scope `handoff` needs to write the fields later.
+fix — the same scope `code-handoff` needs to write the fields later.
 
 ## 7c — Priority and size fields
 
@@ -231,7 +231,7 @@ Only when 7b left `create.supported: true`. Otherwise both keys are `null` for
 adapter `none` and `"unknown"` for the rest — never guess a field nobody looked at.
 
 Enumerate the target's fields and match by name, case-insensitive. Write the name
-**as the tracker spells it**; `handoff` matches it again at create time.
+**as the tracker spells it**; `code-handoff` matches it again at create time.
 
 | Adapter | `fields.priority` | `fields.size` |
 | --- | --- | --- |
@@ -242,7 +242,7 @@ Enumerate the target's fields and match by name, case-insensitive. Write the nam
 
 Then check the options. A field whose options cannot carry the scale — a
 `Priority` with only two options, a `Size` without `XS`–`XL` — is still written,
-and the report names the values that will not map. `handoff` already leaves an
+and the report names the values that will not map. `code-handoff` already leaves an
 unmatched option unset and says so; `init` only says it first.
 
 A field under another name — `Prioridad`, `Estimate` as a T-shirt select — is not

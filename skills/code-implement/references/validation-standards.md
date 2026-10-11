@@ -42,7 +42,7 @@ Run `test_all` only when one of these is true, and say which one:
 
 Not covered by any of those → the report line is
 `test_all → not run (CI owns the full suite)`. That is a complete answer, not a gap,
-and it never blocks `handoff`.
+and it never blocks `code-handoff`.
 
 Two things this does not relax: `coverage_gate` still runs when it is configured,
 even if the repo's gate command drives the suite itself — red coverage blocks the
@@ -125,4 +125,4 @@ All of:
 - No test was deleted, skipped, or weakened to get there.
 - No exclusion was added to a lint, security, or coverage config.
 
-Anything less is not green, and `handoff` is not invoked. Report and stop.
+Anything less is not green, and `code-handoff` is not invoked. Report and stop.

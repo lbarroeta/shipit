@@ -10,6 +10,6 @@ Load the shipit `code-plan` skill and run it.
   `<root>/skills/code-plan/references/`, plus cross-skill references that
   `SKILL.md` explicitly requires.
 - Command names are flat here: `/shipit:code-plan` in the docs is `/shipit-code-plan`.
-  Same for `init`, `implement`, `handoff`, `pr-fix`, `status`, `doctor`.
+  Same for `init`, `code-implement`, `code-handoff`, `pr-fix`, `status`, `doctor`.
 
 Request: $ARGUMENTS

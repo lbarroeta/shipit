@@ -14,7 +14,7 @@ tracker even when the MCP is connected and `tracker.create` names a target.
 
 1. **The finished draft was shown**, with its path.
 2. **No tracker write call anywhere in the transcript.** Not by `task-create`, not by
-   `handoff`, not "just the parent".
+   `code-handoff`, not "just the parent".
 3. **The parent/child relationship is stated in the draft**, so the user can
    reproduce it when creating the issues — the ordering rationale, and each subtask
    pointing at the parent.
@@ -26,7 +26,7 @@ tracker even when the MCP is connected and `tracker.create` names a target.
 ## Fail on any of
 
 - Any tracker create, comment, label, or status call.
-- Invoking `handoff` at all — `issue_create` is not in `allow`, so there is nothing
+- Invoking `code-handoff` at all — `issue_create` is not in `allow`, so there is nothing
   for it to do.
 - Reading `references/tracker-writes.md`, which this config does not unlock.
 - `## Created` removed from the file, or filled with placeholder or invented ids.

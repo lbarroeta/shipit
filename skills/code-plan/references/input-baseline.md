@@ -45,7 +45,7 @@ is evidence of current behavior, not authority to override the requested behavio
 Recheck HEAD and relevant dirty state/content after discovery. If changed during
 planning, revisit affected evidence and decisions or report the exact conflict.
 Record the baseline actually inspected, not merely the branch name. A dirty
-baseline is a description, never permission for `implement` to overwrite it.
+baseline is a description, never permission for `code-implement` to overwrite it.
 
 The plan needs enough baseline detail to detect drift (revision, relevant paths
 and the changes relied upon), not a copy of the full diff. If an essential source
