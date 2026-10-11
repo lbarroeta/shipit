@@ -20,7 +20,7 @@ records one — from the user's answers and the repo's evidence — so `plan` an
 | `<!-- shipit:design -->` block | discovery | In each UI layer rule, and in `AGENTS.md` (and a real-file `CLAUDE.md`) |
 
 It ends at those files. Applying the design to the product — new tokens in CSS, a
-refactored button — is a later `/shipit:task` or `/shipit:plan`.
+refactored button — is a later `/shipit:task-create` or `/shipit:plan`.
 
 ## Context budget
 
@@ -147,7 +147,7 @@ template stands for `paths.rules`: write the configured value.
 - Decisions by source: `user`, `delegated` (with scope), `existing` kept.
 - Inconsistencies found, and which the user resolved.
 - Preview location, when one was made.
-- No product code changed. Next: `/shipit:task` or `/shipit:plan` to implement
+- No product code changed. Next: `/shipit:task-create` or `/shipit:plan` to implement
   what is marked `to implement`.
 - `sdd_tracking: committed` → the files are ready for the user to commit;
   `handoff` has no mode for them. `local` → they stay in this checkout.

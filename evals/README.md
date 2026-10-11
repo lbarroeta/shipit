@@ -16,7 +16,7 @@ with `graders: Required`. Two grants are needed for a meaningful run:
 claude plugin eval . --allow-tools Write "Read(/<absolute plugin path>/**)"
 ```
 
-`Write` lets `task` and `init` write their artifacts. The `Read` grant lets the agent
+`Write` lets `task-create` and `init` write their artifacts. The `Read` grant lets the agent
 open a skill's `references/` and `assets/` — without it the sandbox denies them and
 the case measures `SKILL.md` alone. Granting `Bash` (needed for `init` to verify
 commands) fails to start when `~/.ssh` contains a symbolic link.
@@ -46,6 +46,10 @@ plugin disabled, so the number reported is a delta, not an absolute.
 | `init-ambiguous-tracker` | Guessing a tracker from a branch pattern two adapters share, or writing `none` in a way nothing downstream can distinguish from a real absence |
 | `task-epic-split` | A chain of tickets where only the last one is worth merging; a ticket that does `plan`'s job |
 | `task-no-tracker` | Creating an issue somewhere the repo did not configure, and calling `none` a gap |
+| `task-next-blocked` | Selecting the first/highest-priority blocked issue, conflating hierarchy with dependencies, or mutating tracker state |
+| `task-defined-blocked` | Rejecting a defined dependency-blocked task or inventing business rules to fill essential gaps |
+| `plan-stale-prerequisite` | Starting stale or prerequisite-blocked work before checking the live Goal and unblock condition |
+| `task-provider-relations` | Claiming native hierarchy/dependencies when only text references were published, or losing child content |
 | `run-dirty-main` | Switching main or adopting uncommitted user changes before an orchestrated task |
 | `run-resume-qa` | Restarting from main, duplicating delivery, or calling automated checks human QA approval |
 | `run-model-unavailable` | Role-playing subagents or silently substituting unavailable stage models |

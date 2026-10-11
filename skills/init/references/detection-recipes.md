@@ -181,7 +181,7 @@ Reachable → enumerate, then fill the target:
   both conditional; a repo with an obvious tracker and a single team is asked
   neither.
 - The user declines to choose → `"unknown"`, appended to `unknown[]`, and
-  `create.supported: false`. `task` then writes drafts and says why it stopped
+  `create.supported: false`. `task-create` then writes drafts and says why it stopped
   there.
 
 Then, with the target known:
@@ -191,8 +191,9 @@ Then, with the target known:
 - `create.default_labels` — `[]` unless the repo's existing issues show a label
   applied to effectively all of them. Never invent a scheme.
 - `create.epic_kind` — from the adapter: `parent-issue` (`linear`), `epic`
-  (`shortcut`), the project's Epic issue type (`jira`), `task-list`
-  (`github-issues`). The adapter's `### Create` section owns the detail.
+  (`shortcut`), the project's Epic issue type (`jira`), `parent-issue` when
+  native sub-issues are usable (`github-issues`), otherwise explicit `task-list`
+  fallback. Provider support and connected relation capability are separate checks. The adapter's `### Create` section owns the detail.
 - `create.supported` — `true` only when the mechanism was reachable **and** every
   required target for that adapter is a real value.
 - `create.fields` — where a draft's `Priority` and `Size` are written. Recipe 7c.

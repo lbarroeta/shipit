@@ -1,13 +1,13 @@
 ---
 name: handoff
-description: Use when shipit artifacts must be delivered — branch, commit, push, ready-for-review PRs and tracker review status by default; tracker comments, review-thread replies and issue creation only when `handoff.allow` in `.sdd/config.json` opts into them. Runs after `task`, `plan`, `implement`, or `pr-fix`. Do not use to write plans, tickets, or product code.
+description: Use when shipit artifacts must be delivered — branch, commit, push, ready-for-review PRs and tracker review status by default; tracker comments, review-thread replies and issue creation only when `handoff.allow` in `.sdd/config.json` opts into them. Runs after `task-create`, `plan`, `implement`, or `pr-fix`. Do not use to write plans, tickets, or product code.
 metadata:
   writes_product_code: false
 ---
 
 # shipit handoff
 
-Owns delivery side effects; `task`, `implement` and `pr-fix` produce artifacts.
+Owns delivery side effects; `task-create`, `implement` and `pr-fix` produce artifacts.
 `plan` also owns the startup transition to `In Progress`, including inside `run`.
 This skill delivers their artifacts.
 
@@ -24,7 +24,7 @@ obvious.
 
 By default, `implement` invokes this skill once validation is green, passing its
 report. With `--defer-handoff`, the `run` coordinator delegates it separately.
-`task` invokes it only when `issue_create` is allowed. `pr-fix` never does — the
+`task-create` invokes it only when `issue_create` is allowed. `pr-fix` never does — the
 user runs `/shipit:handoff` by hand after reviewing the fixes. Being invoked either
 way changes nothing: run the same preflight, and trust the report for **content**
 only — never for whether delivery side effects already happened. Check actual
@@ -78,7 +78,9 @@ Rules:
 
 - Never write product code. Never edit a plan. Delivery only. **One exception, in
   `task` mode only:** the `## Created` block of the draft being delivered is
-  appended to with the ids that were created. Append-only, that block only.
+  appended to with the ids that were created. That block only: append created IDs immediately and update pending markers
+  after read-back. A narrowly scoped exception also replaces local relationship
+  placeholders in created issue bodies with real IDs/URLs; no content rewriting.
 - **Check `handoff.allow` before every side effect**, not once at the start. A run
   where `push` is allowed and `pr_body` is not pushes and stops there.
 - **Never widen `allow`.** Not for a run the user "clearly wants", not because a
@@ -143,35 +145,56 @@ rest has nothing to check.
 **Requires `issue_create`.** Not listed → do nothing: the draft on disk is the
 deliverable and the user creates the issues. Say that in one line and stop.
 
-Input: a `task` draft at `<paths.tasks>/<slug>.md`, already confirmed by the user.
-`task` asks; this skill does not ask again. No git in this mode at all — a ticket
+Input: a `task-create` draft at `<paths.tasks>/<slug>.md`, already confirmed by the user.
+`task-create` obtains authorization; this skill does not ask again. No git in this mode at all — a ticket
 exists before a branch does.
 
-- **Create** — one issue for a `task` draft. For an `epic` draft, the parent and one
-  issue per `Subtasks` row, linked by the adapter's parent field, **in the order
-  that adapter's `### Create` specifies** — most want the parent first, GitHub needs
-  the children first. Title, body, labels, priority and size come from the draft
-  **verbatim** — never re-worded, never expanded with a section the draft did not
-  have. The draft's type maps to the adapter's issue type, story type, or existing
-  label; no mapping available → say the type went unmapped, never invent a label.
-  Priority and size map to the tracker's own fields per the adapter's `### Create`
-  table, the same way: matched by name, never created, unmapped said out loud.
+- **Readiness** — unresolved essential `Blockers` prevent publishing. Defined
+  tasks with known unmet Dependencies may be created as blocked backlog work;
+  never advance them to active work. Inspect relation capabilities before writing.
+- **Create** — one issue for a single draft. For an epic, create the parent and
+  each complete `Child #n` section as an issue; the `Subtasks` table is an index,
+  never the child's body. Promote child headings to normal issue headings; omit
+  template instructions, the index, siblings and the draft-only `Created` ledger.
+  Keep Problem, Goal, scope, exclusions, AC IDs, QA/validation and dependency
+  conditions verbatim. Replace local relationship references with returned IDs
+  once available; preserve their semantics and intended direction.
+  Parent usually comes first; a provider's explicit text-only task-list fallback
+  may need children first. Use actual supported hierarchy/blocking capabilities
+  from `tracker-writes.md`. Type, priority, size and labels use existing native
+  concepts/options; never invent fields, issue types or label schemes.
+- **Relations** — hierarchy and dependency links are separate writes, authorized
+  as part of `issue_create`. Suggested order is prose or an existing ordering
+  field, never a fabricated blocker. After endpoints exist, reconcile native
+  relations and read them back. Missing write capability → retain clear body
+  references and report unsupported/manual; a reference is not a native link.
 - **Idempotency** — read the draft's `## Created` block first and skip every entry
-  already listed — except its `pending:` fields, which are retried on the existing
-  issue and dropped from the line once set. Re-running on a delivered draft creates nothing. This is what
+  already listed — except its `pending:` fields/relations, retried on the existing
+  issue and dropped from the line once verified. Also read existing native
+  relations before creating missing ones; a partial retry must finish relations
+  even when both endpoint issues already exist. `dependency:<reference>` uses a
+  stable local child number or external prerequisite ID/URL from Dependencies;
+  resolve local numbers through Created and external references through live
+  tracker reads. Never create a referenced external prerequisite as a new issue.
+  Re-running on a delivered draft creates nothing. This is what
   makes retrying a partial delivery safe rather than duplicating a backlog.
 - **Record** — append each created issue to `## Created` as
   `- #<local n or "parent"> — <ISSUE-ID> — <url>`, immediately after each creation,
   not in one batch at the end. A crash between two creations must still leave the
-  ledger true. A priority or size write that fails after creation appends
-  `— pending: <priority|size>` to that line; an unmapped value is not pending,
+  ledger true. A field or relation write that fails after creation appends
+  `— pending: <priority|size|parent|dependency:<reference>>` to that line;
+  an unsupported/unmapped value is not pending,
   since a retry cannot fix a field the tracker does not have.
 - **Partial failure** — child 3 of 5 fails: the two already created stay recorded,
   the report is `partial`, and it names the exact failing call. Never delete a
   created issue to "clean up" — say what exists and that a re-run creates only the
   rest.
-- **Status** — new issues land in `tracker.create.initial_state`. No transition
-  afterwards: nothing has started, and this needs no `tracker_status`.
+- **Status** — new work lands in the configured unstarted state. For defined
+  blocked tasks, use an enumerated blocked/backlog equivalent and preserve the
+  unmet condition; never create directly into active work just because config
+  names that state. Report any required correction or missing valid initial
+  state. Jira may need its adapter's initial-state transition; nothing has
+  started, and this initialization needs no `tracker_status`.
 - **Comment** — none, whatever `allow` says. The body already carries everything.
 - **Blocked** — `tracker.create.supported` false, adapter `none`, or the adapter's
   mechanism unavailable → create nothing and report `n/a (adapter: none)` or
@@ -279,6 +302,8 @@ recap of the change — a `completed` line needs no explanation:
   the config cannot otherwise tell a skipped step from a forgotten one.
 - Issues created — `task` mode, one line per issue: local number, id, url. Plus the
   ones skipped as already present in `## Created`.
+- Hierarchy/dependency relations: verified native, pending failed write, or
+  unsupported/manual with exact endpoints. Text references are reported separately.
 - Branch.
 - Commit hash, and the files staged — plus generated plans and any `.sdd/*` path
   excluded because tracking is local.

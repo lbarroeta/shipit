@@ -12,7 +12,7 @@ plausible; exactly one is right.
 Guessing wrong puts the wrong branch name and issue reference on every PR. Guessing
 `none` to stay safe is worse in a different way: it is also the correct answer for a
 repo with no tracker, so nothing downstream can tell a misdetection from a fact, and
-`/shipit:task` silently stops being able to create anything.
+`/shipit:task-create` silently stops being able to create anything.
 
 ## Pass requires all of
 

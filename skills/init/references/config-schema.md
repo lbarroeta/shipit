@@ -1,6 +1,6 @@
 # `.sdd/config.json` Schema
 
-The machine contract. Read by `run`, `task`, `plan`, `implement`, `pr-fix`, `handoff`,
+The machine contract. Read by `run`, `task-create`, `task-next`, `plan`, `implement`, `pr-fix`, `handoff`,
 `status`, and `doctor`. Written only by `init`.
 
 Three values carry meaning, and they are not interchangeable:
@@ -38,7 +38,7 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `commands.*` | string \| null | Never written unverified. See placeholders below |
 | `commands_verified.<key>` | `{exit, at, proof}` | `proof` is the form that ran: `version`, `help`, `dry-run`, `real` |
 | `paths.plans` | string | Default `.sdd/plans` |
-| `paths.tasks` | string | Default `.sdd/tasks`. Where `task` writes ticket drafts. Local scratch — `init` excludes it via `.git/info/exclude` |
+| `paths.tasks` | string | Default `.sdd/tasks`. Where `task-create` writes ticket drafts. Local scratch — `init` excludes it via `.git/info/exclude` |
 | `paths.rules` | string | Default `.sdd/rules` |
 | `paths.src` | string[] | Roots that hold product code |
 | `paths.tests` | string[] | Roots that hold tests |
@@ -51,7 +51,7 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `tracker.adapter` | `linear` \| `github-issues` \| `jira` \| `shortcut` \| `none` | Detected; asked when detection is undecided. **Never `"unknown"`** — an unresolved ambiguity is written `none` with the key in `unknown[]`, which reads as undetermined, not absent |
 | `tracker.issue_pattern` | string \| null | Regex, for slug and branch parsing |
 | `tracker.branch_from_tracker` | boolean | Adapter can supply the branch name |
-| `tracker.create.supported` | boolean | Whether a target for new issues is known at all. No skill creates issues; `task` echoes this block so the draft is pasted into the right place |
+| `tracker.create.supported` | boolean | Whether a target for new issues is known at all. `task-create` echoes the target; authorized handoff publishes when issue_create is allowed |
 | `tracker.create.team` | string \| null \| `"unknown"` | Team, group, or workflow a new issue belongs to. Required by `linear` and `shortcut` |
 | `tracker.create.project` | string \| null \| `"unknown"` | Project or project key. Required by `jira`, optional elsewhere. `github-issues`: `<owner>/<number>` of a Project linked to the repo, owner being the Project's |
 | `tracker.create.initial_state` | string \| null | State name a new issue lands in. Matched by name, never by id |
@@ -172,7 +172,7 @@ Absent `run` is backward-compatible; no migration is needed to try the defaults.
 - An absent `tracker.create.fields` reads as `"unknown"` for both keys: `handoff`
   tries the adapter's default field names, exactly as before the field existed.
 - A `tracker.create` block that is absent means the config predates the field.
-  Treat it as `supported: false` — `task` writes a draft and reports the drift.
+  Treat it as `supported: false` — `task-create` writes a draft and reports the drift.
   Never patch the config to add it; that is a re-run of `init`.
 - An absent `handoff.allow` is the default six, not "everything". A config written
   before the field existed uses that same default; an existing explicit list

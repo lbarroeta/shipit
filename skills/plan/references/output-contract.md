@@ -51,6 +51,9 @@ the part that matters.
 
 Exceptions:
 
+- `Readiness` is required for a tracker issue or a draft with dependencies; record
+  relevance and verified unblock evidence without restating the whole ticket.
+
 - `Manual QA` is required whenever UI is touched.
 - `Design` is required whenever UI is touched and `<paths.rules>/design.md`
   exists. It names the pattern, components and states by reference; token values
@@ -72,7 +75,11 @@ Size the **uncertainty**, not the diff. Twelve files that all copy one analogue 
 
 ## Quality bar
 
-- Acceptance criteria are testable behaviour, not restated user wording.
+- Goal remains relevant to the current project/problem; prerequisites were
+  verified before the startup transition. Readiness records specific evidence
+  when planning a tracker issue or a draft with dependencies.
+- Acceptance criteria are testable behaviour with source AC IDs preserved, and
+  source QA scenarios inform Tests/Manual QA coverage.
 - Exact paths. Exact class, module, function, route, template, component, and
   identifier names when known.
 - Every new file cites an analogue with `path:line`, or documents why none exists.
@@ -106,6 +113,8 @@ A non-blocking uncertainty is an **assumption with a default**, recorded in
 
 Run these as checks. Do not emit them into the plan.
 
+- Goal/current relevance and prerequisites verified before any startup write;
+  source boundaries, AC IDs and QA coverage preserved.
 - Required sections present; conditional sections carry content or are gone.
 - Within size budget.
 - No line restates `.sdd/*` or an agent doc.

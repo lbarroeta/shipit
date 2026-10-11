@@ -24,7 +24,7 @@ codex plugin add shipit@shipit
 ```
 
 Start a new session and the ten skills are available. Codex matches them by
-description, and the same names work as slash commands — `/shipit:task`,
+description, and the same names work as slash commands — `/shipit:task-create`, `/shipit:task-next`,
 `/shipit:plan`, `/shipit:init`, `/shipit:design-system`, `/shipit:implement`, `/shipit:handoff`,
 `/shipit:pr-fix`, `/shipit:status`, `/shipit:doctor`, `/shipit:run` — exactly as in Claude Code. Same `skills/`
 directory and the same `.sdd/` contract, so a repo initialized in one runtime
@@ -186,7 +186,7 @@ The individual cycle remains available:
         │
 /shipit:design-system  interview → design contract       once per repo with UI; re-run to update
         │
-/shipit:task        a need becomes a ticket, or an epic  when there is no ticket yet
+/shipit:task-create a need becomes a ticket, or an epic  when there is no ticket yet
         │
 /shipit:plan        plan contract in the current checkout once per task
         │
@@ -198,6 +198,12 @@ The individual cycle remains available:
 /shipit:pr-fix      review comments + red CI             as needed
                     `--comments` / `--ci` to scope
 ```
+
+Use `/shipit:task-next` to recommend the next executable issue from the live
+configured tracker. It considers current Goal/project relevance, priority, explicit
+order and verified dependencies, then explains its choice, alternatives and
+blockers. It is read-only and never marks work started. `plan` repeats the Goal and
+prerequisite checks before its startup status transition.
 
 Plus two for visibility:
 
@@ -222,54 +228,48 @@ checks the Claude package. See `evals/` for behavioral scenarios.
 
 ## From a need to a ticket
 
-`/shipit:task` is the entry of the cycle, for when the work exists as a sentence in
+`/shipit:task-create` is the entry of the cycle, for when the work exists as a sentence in
 Slack and nowhere else. It drafts the ticket against your repo — grounded in real
 paths, not invented ones — shows it to you, and creates it only after you say yes.
 
 ```
-/shipit:task "sessions should expire after 30 idle minutes"
+/shipit:task-create "sessions should expire after 30 idle minutes"
 ```
 
-One need, one ticket. A need that spans two layers or two shippable outcomes becomes
-an **epic with subtasks** instead — each one mergeable, verifiable, and worth landing
-on its own, capped at seven. `--epic` and `--single` override the call; `--dry-run`
-stops at the draft; `--plan` runs `/shipit:plan` on it. By default every run stops
-at the draft and creating the issue is your move — add `issue_create` to
-`handoff.allow` to have `handoff` create it after you confirm.
+One coherent outcome stays one ticket even when it spans several layers. Multiple
+separately useful outcomes may become an **epic with children**, each complete and
+understandable on its own. `--epic` and `--single` override the shape subject to
+coherent scope; `--dry-run` stops at the draft. `--plan` plans one executable task:
+for published work it uses `task-next` scoped to the created IDs; for local drafts
+it checks the same readiness policy. It never chooses the first child blindly.
 
-Every ticket is typed **Bug**, **Feature** or **Chore** on the line under the title
-— what triage filters on first — and mapped to whatever your tracker calls that: a
-Shortcut story type, a Jira issue type, a Linear or GitHub label that already exists.
-The same line sets **Priority** (`P0`–`P3`, `P2` by default) and **Size**
-(`XS`–`XL`, sized on scope and uncertainty, never hours; only an epic parent is
-`XL`). `--priority` and `--size` set them outright. On creation they land in the
-tracker's own fields — Linear priority and T-shirt estimate, the `Priority` and
-`Size` fields of a GitHub Project, Jira's priority — and anything without a matching
-field is reported as unmapped rather than invented. `init` detects those fields once
-and records them in `tracker.create.fields`, so `doctor` can say up front that, for
-example, size will not land on a points-only Linear team; a field under another name
-(`Prioridad`) is set there by hand.
+Every task carries **Problem**, **Goal**, **What to do**, explicit exclusions when
+needed, observable acceptance criteria and **QA / validation scenarios**. Each
+scenario states preconditions, action, expected result and the criteria it proves.
+UI checks are plain language; internal work uses measurable system evidence.
+Children have their own complete descriptions, with a compact parent index.
+Concise is the default, with enough detail to preserve scope and reproducibility;
+there is no fixed line count or five-scenario cap.
 
-Every task also says **what to do**: two to six bullets, each one concrete change
-in behaviour naming the area it lands in, so whoever picks it up knows what has to
-change without the ticket turning into a file list. Subtasks carry it in one
-sentence per row.
-Anything a person can see also carries **QA steps**: five at most, plain language, no
-terminal commands, so a non-developer can confirm the ticket is done. Work with no
-visible surface gets no such section.
+Type (**Bug**, **Feature**, **Chore**), **Priority** (`P0`–`P3`, default `P2`) and
+**Size** (`XS`–`XL`, scope and uncertainty, never hours) are required for every
+issue. Only epic parents are `XL`; `--priority` and `--size` set parent values.
+`init` detects existing native field mappings in `tracker.create.fields`.
+Unmapped values remain in the issue body and are reported; shipit never invents
+fields or converts T-shirt sizes into story points.
 
-Four things keep it from filling your backlog with noise:
+A **dependency** names the required output and observable unblock condition. Such
+work can be fully defined and published while blocked. **Suggested order** is a
+preference; **parent-child hierarchy** groups work. Neither automatically blocks a
+child. Essential missing scope, permission, monetary, data or external-contract
+behaviour needs a decision before publishing or planning; shipit does not invent
+business rules to complete the template.
 
-- **A ticket says what and why, never how.** No file list, no commands, no code —
-  that is `plan`'s output, and writing it here fossilises a guess someone will
-  follow.
-- **Short is enforced, not encouraged.** 26 lines for a task, one table row per
-  subtask, one sentence for the outcome. A sentence that would not change what
-  someone does gets cut.
-- **Blocking ambiguity stops the draft.** Scope, security, or data left open means
-  the question goes to you, not into the backlog for the next person to re-open.
-- **The draft is confirmed before it is created**, every time. There is no flag that
-  skips it.
+By default the draft is the deliverable. With `issue_create` in `handoff.allow`,
+`handoff` publishes the reviewed draft after authorization. It uses the configured
+provider's available capabilities for parent and blocking relations. Unsupported
+relations stay explicit in issue prose and are reported as requiring manual
+linking; a text reference is never claimed as a native relation.
 
 The draft lands at `.sdd/tasks/<slug>.md` and is excluded from git in both tracking
 modes — once the issue exists, the tracker is the source of truth, and a stale copy
@@ -284,7 +284,7 @@ what makes a half-finished epic safe to retry.
 | `linear` | Linear MCP | a parent issue with sub-issues | an existing team label | priority / T-shirt estimate |
 | `jira` | Jira MCP | the project's `Epic` type, enumerated first | the issue type | priority / a `Size` field if any |
 | `shortcut` | Shortcut MCP | a native Epic | the story type, exactly | `Priority` / `Size` custom fields if any |
-| `github-issues` | `gh` | a parent issue with a task list | an existing repo label | the Project's `Priority` / `Size` fields |
+| `github-issues` | `gh` | native sub-issues when supported; explicit text index otherwise | a supported native type or existing repo label | the Project's `Priority` / `Size` fields |
 | `none` | — | — the draft is the deliverable | — | — |
 
 `init` detects which one you use, and asks only when it genuinely cannot tell —
@@ -295,16 +295,16 @@ sets it outright, for CI or to correct a bad detection without hand-editing JSON
 
 An ambiguity nobody resolves is recorded as `none` **and** listed in `unknown[]`, so
 it reads as undetermined rather than absent — the distinction that decides whether
-`/shipit:task` failing to create anything is expected or a misdetection.
+`/shipit:task-create` failing to create anything is expected or a misdetection.
 
 With the adapter settled and its MCP connected, `init` also picks up which team or
 project new issues belong to, asking only when there is more than one. Unreachable
-tracker → `create.supported` goes `false`, `task` still writes the draft, and
+tracker → `create.supported` goes `false`, `task-create` still writes the draft, and
 `doctor` says what is missing. States, labels, transitions and
 issue types are always enumerated from your workspace and matched by name; an id
 copied from someone else's workspace writes to the wrong place, silently.
 
-`task`, `plan`, `implement`, and `pr-fix` never run `git commit`, `git push`, or a
+`task-create`, `task-next`, `plan`, `implement`, and `pr-fix` never run `git commit`, `git push`, or a
 PR command. Only `handoff` does — and what `handoff` may do is a config list, not a
 judgement call:
 
@@ -339,7 +339,7 @@ default, and comment/creation sections only when opted in.
 | `.sdd/rules/<layer>.md` | agents | Layer rules derived from real files |
 | `.sdd/rules/tests/<kind>.md` | agents | Test shape, extracted from a real test |
 
-Plus `.sdd/tasks/`, where `/shipit:task` writes ticket drafts. It is scratch, not
+Plus `.sdd/tasks/`, where `/shipit:task-create` writes ticket drafts. It is scratch, not
 contract: excluded from git in both tracking modes.
 Generated plans also stay local: `handoff` excludes them from commits in every
 tracking mode, including inside `run`. Planning handoff carries the plan in a PR
@@ -447,7 +447,7 @@ Existing UI is the starting point: its identity is kept unless you choose
 otherwise, and inconsistencies are listed with their split, never turned into
 rules. Values already in your CSS or theme stay there — the contract points at
 them. It changes no product code; implementing what it marks `to implement` is a
-normal `/shipit:task` or `/shipit:plan`.
+normal `/shipit:task-create` or `/shipit:plan`.
 
 `plan` reads the design rules only when the task touches UI and records the
 pattern, components and states in a `Design` section; `implement` follows them and
@@ -497,7 +497,7 @@ the one `init` wrote; it does not replace it.
    style, a component the contract proposes — as ordinary work:
 
    ```
-   /shipit:task "Apply the design tokens from .sdd/design-system.md"
+   /shipit:task-create "Apply the design tokens from .sdd/design-system.md"
    ```
 
    then `/shipit:plan` and `/shipit:implement` as usual. Nothing changes in the
@@ -551,7 +551,7 @@ Run `/shipit:doctor` for your machine's actual state.
 | Tier | What | Without it |
 | --- | --- | --- |
 | **0 — required** | `git` | shipit does not run. That is the whole tier. |
-| **1 — recommended** | `gh` authenticated; a tracker MCP if you use one | `handoff` cannot push or open a PR; without a tracker MCP it falls back on your branch convention. `task` still drafts, `plan` and `implement` are unaffected. |
+| **1 — recommended** | `gh` authenticated; a tracker MCP if you use one | `handoff` cannot push or open a PR; without a tracker MCP it falls back on your branch convention. `task-create` still drafts, `plan` and `implement` are unaffected. |
 | **2 — accelerators** | graphify CLI + graph; caveman | Discovery falls back to `rg`. Same answers, more tokens. |
 | **3 — do not enable during a cycle** | the ponytail plugin | Nothing. The useful part is already vendored here. |
 
@@ -609,7 +609,7 @@ extracted from:
 | `init` | ~90 | ~1.7k | new |
 | `doctor` | ~90 | ~1.4k | new |
 | `status` | ~70 | ~1.2k | new |
-| `task` | not yet measured | not yet measured | new |
+| `task-create` | not yet measured | not yet measured | new |
 | `design-system` | not yet measured | not yet measured | new; the interview is multi-turn by design |
 | `run` | not yet measured | not yet measured | new; native subagent work is additional |
 
@@ -619,7 +619,7 @@ stack re-discovery that used to live in their bodies.
 
 Total always-on was **~629 vs ~442** at seven skills, because there were three more
 of them. That is the honest trade: +187 tokens per session bought `init`, `doctor`,
-and `status`. `task` is the eighth and has not been measured yet — expect its
+and `status`. `task-create` and `task-next` have not been measured yet — expect their
 always-on description to cost about the same as the others, roughly +90. `run` is
 the ninth and `design-system` the tenth; neither has been measured. If that is
 not worth it for your setup, disable the plugin per-project rather than working around
@@ -638,7 +638,7 @@ replaced by a scoped subgraph. Measure that with
 | `sdd-implementation` | `/shipit:implement` |
 | `sdd-pr-fix` | `/shipit:pr-fix` |
 | `sdd-handoff` | `/shipit:handoff` |
-| — | `/shipit:init`, `/shipit:design-system`, `/shipit:task`, `/shipit:doctor`, `/shipit:status` |
+| — | `/shipit:init`, `/shipit:design-system`, `/shipit:task-create`, `/shipit:task-next`, `/shipit:doctor`, `/shipit:status` |
 | Conventions hardcoded in the skill | `.sdd/`, generated from your repo |
 | `.claude/plans/` | `<paths.plans>`, default `.sdd/plans/` |
 
