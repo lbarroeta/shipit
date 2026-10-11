@@ -7,7 +7,8 @@ Turn this into a ticket.
 > We need a way for a workspace owner to export all their data. They should be able
 > to request it from the account settings page, get an email when it is ready, and
 > download a zip that expires after seven days. Also the export should not block the
-> web process.
+> web process. Owners also need an export history in settings showing each prior
+> request and whether its download is ready or expired.
 
 Repository state:
 
@@ -18,3 +19,6 @@ Repository state:
   (`app/jobs`), `mailers` (`app/mailers`), and `components`
   (`app/javascript/components`).
 - The Linear MCP is connected.
+
+- Existing verified product rules limit exports to the requesting owner's workspace
+  and define included records. The request preserves those rules.

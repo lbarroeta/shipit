@@ -47,9 +47,9 @@ A missing or draft PR never advances the card.
   unmapped, without enumerating — and `"unknown"` or an absent block means use the
   adapter's default name from the tables below. Never create a field, an option, or a `priority:*` /
   `size:*` label. A tracker without a match → the value stays in the draft, the
-  issue is still created, and the report says `priority unmapped` / `size unmapped`.
+  issue is still created, the body retains its complete typed contract, and the report says `priority unmapped` / `size unmapped`.
   A failure setting the field after the issue exists is `partial`, not a reason to
-  delete the issue: the `## Created` line for that issue gets `— pending: <field>`,
+  delete the issue: the `## Created` line for that issue gets `— pending: <field or relation>`,
   and a re-run retries exactly those fields (see `task` mode in `SKILL.md`).
 - **A comment carries the QA steps and the PR link. Nothing else.** No summary, no
   validation result, no file list, no diff narration, no restating the ticket back
@@ -61,6 +61,27 @@ A missing or draft PR never advances the card.
 - **Nothing to say → no comment.** No QA steps in the report, or `review` mode where
   the thread replies are already the record → skip the write and report the line as
   `n/a`, not as `blocked`. An empty comment is worse than none.
+
+## Publishing contract — all adapters
+
+Create bodies from the complete standalone task/child contract, not an index row.
+Always preserve explicit Problem, Goal, scope/boundaries, AC IDs, scenario details
+and unblock conditions. Formatting conversions are allowed when required by the
+provider; content loss is not. Exclude source/date/shape draft metadata and the
+Created ledger; retain Type/Priority/Size in prose when native mapping is absent.
+
+Inspect usable create/update, hierarchy and dependency read/write capabilities in
+the current session. Provider support alone does not imply the connector exposes
+it. Parent, blocking relation and advisory order have different meanings. Report
+verified native relations separately from prose references. Unsupported concepts
+stay in prose with IDs/URLs and exact manual steps; do not fake links or invent
+labels/fields to emulate them. Failures after creation are partial, ledgered as
+pending relations, read back/reconciled on retry without duplicate issues.
+`dependency:<reference>` may name a local child or an existing external ID/URL;
+resolve the latter live, never create the external prerequisite. Capability known
+absent before an attempt is unsupported/manual, not pending. A supported operation
+that fails (including permission denial) is partial/pending with its exact error;
+retry after access is fixed. Never silently downgrade a failed write to success.
 
 ## `linear`
 
@@ -98,7 +119,7 @@ workspace. `tracker.create.project` is optional and attaches the issue to a proj
 | --- | --- |
 | Title | issue title |
 | Type | the team's `Bug` / `Feature` / `Chore` label — Linear has no issue types. Absent → leave unmapped and say so |
-| Problem + Outcome + What to do + Acceptance criteria + QA steps + Out of scope | issue description, markdown as written |
+| Problem + Goal + What to do + Acceptance criteria + QA / validation scenarios + Out of scope + Dependencies | issue description, markdown as written |
 | `Labels` | labels, only ones the team already has |
 | Priority | the numeric `priority`: `P0` → `1`, `P1` → `2`, `P2` → `3`, `P3` → `4`. Set the number, never match a name — the app shows `3` as `Medium` and the API calls it `Normal` |
 | Size | estimate, only when the team's estimate scale is T-shirt (`XS`–`XL` by name). Another scale, or estimates off → size unmapped |
@@ -108,9 +129,18 @@ states. No match → use the team's default `Backlog`-type state and say so.
 
 Epic: a parent issue with sub-issues. Create the parent, then each child with
 `parentId` set to it. Linear has no separate epic type — `tracker.create.epic_kind`
-is `parent-issue`. Where the workspace uses Projects for this instead, the config
-says `project`, and the children are created into a new project rather than under a
-parent.
+is `parent-issue`. Verify parent assignment is exposed by the connected tool; a
+connected server may create issues without supporting relation writes. A configured
+existing Project groups issues but is not itself a parent issue or blocking link;
+do not create a new project implicitly. If configuration calls for a new project,
+report the separate unsupported/unauthorized capability rather than substitute it.
+
+Dependencies: use the provider's blocking/blocked-by relation only when the connected
+capability supports it. Attach after endpoints exist, verify direction and read
+back. Missing relation writes → keep explicit ID references and unblock conditions
+in the body, report unsupported/manual native linking. Parenthood never becomes a blocking link.
+See [Linear issue relations](https://linear.app/docs/issue-relations) and
+[parent/sub-issues](https://linear.app/docs/parent-and-sub-issues).
 
 ## `github-issues`
 
@@ -141,8 +171,8 @@ Terminal: `closed`.
 exists in the repo (`gh label list` first — `gh` fails the whole call on an unknown
 label). Never `--project`: the Project is attached afterwards, below, because that
 is the only way to get the item id the fields need. The body carries
-`Problem`, `Outcome`, `What to do`, `Acceptance criteria`, `QA steps` and
-`Out of scope` as written.
+`Problem`, `Goal`, `What to do`, `Acceptance criteria`, `QA / validation
+scenarios`, `Out of scope` and `Dependencies` as written.
 
 Priority and size: GitHub issues have neither — they live on a Project as
 single-select fields, by default named `Priority` (`P0`…) and `Size` (`XS`…), which
@@ -171,20 +201,29 @@ Never fall back to a label, whatever the repo has. A token without the `project`
 scope fails step 1 — report `gh auth refresh -s project` as the fix, create the
 issue anyway, and mark priority and size unmapped.
 
-Type: the repo's own label — `bug`, `enhancement`, `chore`, or whatever it uses.
+Type: a native issue type if the repo and usable capability expose one; enumerate
+and match it first. Otherwise the repo's own label — `bug`, `enhancement`, `chore`, or whatever it uses.
 `gh label list` decides; a repo without a matching label gets none, and the report
-says the type went unmapped. GitHub has no issue types.
+says the type went unmapped. No supported native/label match → keep Type in the body and report unmapped.
 
-Epic: GitHub has no parent field. Create the children first, then the parent with a
-task list in its body:
+Epic: GitHub supports native sub-issues and blocking dependencies. Inspect the
+available authenticated capabilities before publishing; basic `gh issue create`
+does not itself attach these relations. Use verified GitHub REST/GraphQL operations
+through `gh api` when available and authorized. Native hierarchy → parent first,
+then attach each child. Native blocked-by relations → create endpoints first,
+then link the dependent to its prerequisite, never reversing direction.
+Enumerate/read back existing relations on retry.
 
-```md
-- [ ] #<child-1>
-- [ ] #<child-2>
-```
+Native relation capability absent or permission denied → preserve explicit parent
+and dependency references in the issue bodies and report unsupported/manual or a
+failed pending write. If the configured fallback is `task-list`, create children
+first and include their actual links in the parent task list; report it as a text
+index, not native hierarchy. Never claim the task list created a native link.
 
-This is the one adapter where children come first — the parent body needs their
-numbers. Record all of them in `## Created` as they are made, parent last.
+Official capability references (verify operation availability, IDs and permissions
+rather than copying a request shape from another provider):
+- [GitHub sub-issues REST API](https://docs.github.com/en/rest/issues/sub-issues)
+- [GitHub issue dependencies REST API](https://docs.github.com/en/rest/issues/issue-dependencies)
 
 State: issues open on creation. `tracker.create.initial_state` applies only when a
 Project status field exists; otherwise it is `null` and nothing is set.
@@ -220,7 +259,7 @@ or with a renamed one, is common and hardcoding the name fails the create call.
 | --- | --- |
 | Title | summary |
 | Type | the issue type — `Bug`, `Story`/`Task`, `Task` for a chore. **Enumerate the project's types and match by name**; they are renamed often |
-| Problem + Outcome + What to do + Acceptance criteria + QA steps + Out of scope | description |
+| Problem + Goal + What to do + Acceptance criteria + QA / validation scenarios + Out of scope + Dependencies | description |
 | `Labels` | labels |
 | Priority | the `priority` field. Enumerate the instance's priorities and match: `P0` → `Highest` (or `Blocker`), `P1` → `High`, `P2` → `Medium`, `P3` → `Low`. A scheme already named `P0`–`P3` matches directly |
 | Size | a field named `Size` or `T-Shirt Size` when the create metadata offers one, matched by option name. None → size unmapped; never convert to story points |
@@ -228,7 +267,17 @@ or with a renamed one, is common and hardcoding the name fails the create call.
 Epic: the project's `Epic` issue type when it has one, with children linked by the
 parent field (`parent` on modern instances, the epic-link custom field on older
 ones — read what the create metadata offers rather than assuming). No `Epic` type
-available → report it and create flat issues instead of inventing a hierarchy.
+available → report it and preserve parent references in flat issue bodies;
+never claim native hierarchy. If description expects rich document data instead
+of markdown, convert formatting while preserving all content and scenario tables;
+do not send unsupported markdown blindly.
+
+Dependencies: enumerate available issue link types and their inward/outward
+semantics. A native blocks/is-blocked-by link needs linking enabled, permission and
+a usable connector operation; verify the dependent's blocked-by endpoint after
+creation. Do not infer direction from a hardcoded name or replace it with parent.
+Unsupported linking → body references/unblock conditions plus a manual report.
+See [Jira link configuration](https://support.atlassian.com/jira-cloud-administration/docs/configure-issue-linking/).
 
 State: a new issue lands in its workflow's first status. Setting a different
 `initial_state` needs a transition immediately after creation — do it only when
@@ -265,7 +314,7 @@ Target: `tracker.create.team` is the group or workflow the story belongs to.
 | --- | --- |
 | Title | story name |
 | Type | story type, natively: `bug`, `feature`, `chore`. The one adapter where the mapping is exact |
-| Problem + Outcome + What to do + Acceptance criteria + QA steps + Out of scope | description |
+| Problem + Goal + What to do + Acceptance criteria + QA / validation scenarios + Out of scope + Dependencies | description |
 | `Labels` | labels |
 | Priority | the workspace's `Priority` custom field when enabled: `P0` → `Highest`, `P1` → `High`, `P2` → `Medium`, `P3` → `Low`, or the same names when it already uses `P0`–`P3`. Not enabled → priority unmapped |
 | Size | a custom field named `Size` when one exists, matched by option name. Estimates are points — never convert a T-shirt size into them; none → size unmapped |
@@ -289,7 +338,7 @@ match → the workflow's default unstarted state, and say so.
 
 ### Create
 
-Nothing is created. The `task` draft on disk is the deliverable: report its path,
+Nothing is created. The `task-create` draft on disk is the deliverable: report its path,
 report the tracker line as `n/a (adapter: none)`, and leave `## Created` empty so a
 later run — once an adapter is configured — still works.
 

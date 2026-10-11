@@ -8,7 +8,7 @@
 # Already cloned anywhere:
 #   ./scripts/install-opencode.sh
 #
-# What it does: clone or update the repo, then symlink the nine commands into
+# What it does: clone or update the repo, then symlink the available commands into
 # your OpenCode commands directory. Re-running it is an update — safe any time.
 #
 # Never does: sudo, npm install, touch opencode.json, or write outside
@@ -49,6 +49,12 @@ src="$ROOT/.opencode/command"
 [ -d "$src" ] || die "no commands at $src — wrong SHIPIT_ROOT?"
 
 mkdir -p "$COMMANDS" || die "cannot create $COMMANDS"
+# Retire only the old installer-owned command link after the task-create rename.
+# Preserve user-authored command files and unrelated symlinks.
+legacy_task="$COMMANDS/shipit-task.md"
+if [ -L "$legacy_task" ] && [ "$(readlink "$legacy_task")" = "$src/shipit-task.md" ]; then
+  rm "$legacy_task" || die "cannot retire old shipit-task command link"
+fi
 n=0
 for f in "$src"/*.md; do
   [ -e "$f" ] || break
@@ -60,9 +66,17 @@ ok "linked $n commands into $COMMANDS"
 
 # The check: OpenCode itself must resolve them, not just the filesystem.
 if command -v opencode >/dev/null 2>&1; then
-  found=$(opencode debug config 2>/dev/null | grep -o '"shipit-[a-z-]*"' | sort -u | wc -l | tr -d ' ')
+  resolved=$(opencode debug config 2>/dev/null) || die "opencode debug config failed"
+  found=0
+  for f in "$src"/*.md; do
+    [ -e "$f" ] || break
+    command_name=$(basename "$f" .md)
+    case "$resolved" in
+      *\""$command_name"\"*) found=$((found + 1)) ;;
+    esac
+  done
   [ "$found" = "$n" ] ||
-    die "opencode resolved $found of $n commands. Run: opencode debug config"
+    die "opencode resolved $found of $n shipped commands. Run: opencode debug config"
   ok "opencode resolves all $n"
 else
   info "opencode not on PATH — install it, then verify with: opencode debug config"

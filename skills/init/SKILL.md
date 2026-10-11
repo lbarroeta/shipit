@@ -260,6 +260,6 @@ job — say so in the report if they look stale.
   `references/config-schema.md § handoff.allow`.
 - Companion tiers, in `doctor`'s format.
 - Any place an agent doc contradicted the repo.
-- Next step: `/shipit:task` for a need with no ticket yet, `/shipit:plan` for one
+- Next step: `/shipit:task-create` for a need with no ticket yet, `/shipit:plan` for one
   that has. UI layers found and no `.sdd/design-system.md` → also
   `/shipit:design-system`, once.

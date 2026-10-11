@@ -91,7 +91,7 @@ reading this should know whether they can proceed, in one line.
 | `handoff.allow` at its default | `handoff` does git and the PR body only. Tracker comments, status moves, thread replies and marking a PR ready are yours. Not a gap — a setting. |
 | `tracker.create.fields` key `null` | Verified absent. The draft still sets `Priority` and `Size`; a created issue does not carry that one in the tracker's own fields, and `handoff` reports it unmapped. Adapter `none` → `n/a`. |
 | `tracker.create.fields` key `"unknown"` | Not detected, so nothing is known yet. `handoff` tries the adapter's default field name, which may well work — report it as unverified, never as unmapped. |
-| `tracker.create.supported` false | The draft carries no paste target. `task` drafts either way — creating the issue is always the user's move — and with adapter `none` this is the expected state, not a gap. |
+| `tracker.create.supported` false | The draft carries no paste target. `task-create` drafts either way — publishing requires authorized `handoff` with `issue_create` — and with adapter `none` this is the expected state, not a gap. |
 | graphify CLI | Discovery falls back to `rg`/`git grep`. Same answers, more tokens. |
 | graphify graph | Same as above — having the CLI without a graph changes nothing. |
 | caveman | Chat prose and reports stay long. Note that shipit keeps PR bodies and reports short on its own, and exempts non-developer QA steps from compression either way. |

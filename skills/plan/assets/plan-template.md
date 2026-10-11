@@ -11,7 +11,8 @@ when `worktree.enabled` is true and one was created or reused.>
 
 ## Goal
 
-<1-2 sentences. What changes for the user or the system.>
+<1-2 sentences. Current intended result and why it still matters; preserve the
+task Goal and boundaries after checking relevance and live prerequisites.>
 
 ## Out of scope
 
@@ -20,7 +21,13 @@ when `worktree.enabled` is true and one was created or reused.>
 
 ## Acceptance criteria
 
-- [ ] <testable behaviour>
+- [ ] <AC ID from source when present>: <testable behaviour>
+
+## Readiness
+
+<Concise evidence of current relevance and satisfied prerequisites. Include IDs
+and observable unblock evidence when prerequisites exist; no duplicated ticket
+body. Required when planning a tracker issue or a draft with dependencies.>
 
 ## Estimate
 

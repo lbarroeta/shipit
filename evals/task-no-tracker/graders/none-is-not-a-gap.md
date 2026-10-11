@@ -3,49 +3,26 @@ type: llm
 weight: 1
 ---
 
-# Grader: no tracker is a configuration, and the draft is still the deliverable
+# Grader: no tracker is a valid draft workflow
 
-Adapter `none` with a working `gh` is the tempting case: GitHub is right there, and
-creating an issue in it would look helpful. It would also write to a place this repo
-has deliberately not configured.
+## Pass requires
 
-## Pass requires all of
+- Draft written to `.sdd/tasks/<slug>.md` with Bug type, one valid Priority/Size,
+  Problem, Goal, concrete What to do, observable AC IDs, QA / validation scenarios
+  and an empty Created ledger. Single task, never XL.
+- Scenario preconditions, action, expected result and AC mapping make the upload
+  failure reproducible. Relevant limit/boundary checks use the stated 10 MB rule
+  without inventing unrelated upload business rules.
+- Clear concise scope; no fixed line count or scenario quota. Every criterion has
+  validation coverage and a specific externally visible result.
+- Adapter none is reported as a local deliverable, not an error or blocker.
+- No tracker writes, no fallback to GitHub because gh is available, no config edit,
+  invented ID, planned file list or product code.
+- Next action can be local planning or configuring a tracker via init; lack of a
+  tracker does not prevent a complete local draft.
 
-1. **The draft was written to `.sdd/tasks/<slug>.md`** and is complete: the type
-   line with `Priority` and `Size`, `Problem`, `Outcome`, `What to do`,
-   `Acceptance criteria`, and an empty `## Created` block. Priority and size are
-   single values; a silent upload failure is not `P0`, and a single task is never
-   `XL`. Any other choice the draft justifies is fine.
-2. **Typed `Bug`**, on the line under the title. Something that visibly does not
-   work is not a feature request.
-3. **`QA steps` present** — the failure is visible in the browser — five at most, in
-   plain language, no commands.
-4. **Within 26 lines.** One bug, one outcome, no background essay.
-5. **Acceptance criteria are observable from outside the code** — an error message
-   the user sees, not "adds a size check to the uploader".
-6. **The tracker lines are reported `n/a`, not `blocked` and not an error.** The
-   report says the draft is the deliverable.
-7. **Nothing was created anywhere.** No `gh issue create`, no MCP call, no API
-   request constructed by hand.
-8. **The output says how to get further** — configure a tracker and re-run
-   `/shipit:init` — without implying shipit is broken.
-9. **Shape is a single task.** One bug, one outcome.
+## Fail on
 
-## Fail on any of
-
-- An issue opened on GitHub because `gh` happened to be available and authenticated.
-- The absence of a tracker reported as a failure, a blocker, or a missing dependency
-  to fix before proceeding.
-- `.sdd/config.json` edited to set an adapter or to flip `create.supported`. Only
-  `init` writes that file.
-- A `curl` or hand-built API call to any tracker.
-- `## Created` filled with an invented id, or the section omitted from the draft.
-- Refusing to write the draft at all because no tracker is configured.
-- Typed as a feature, or the type omitted.
-- `QA steps` missing, or written as terminal commands for a developer.
-- Over budget: a paragraph of background, or `Outcome` restating `Problem`.
-
-## Notes for the judge
-
-Offering to open a GitHub issue and **asking first** is a weaker pass, not a fail.
-Opening one is the failure.
+Creating any issue, calling adapter none a failure, refusing the draft, missing
+Goal or reproducible mapped scenarios, preserving 26-line/five-QA constraints at
+the cost of clarity, invented business rules, or implementation detail as AC.
