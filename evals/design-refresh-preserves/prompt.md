@@ -1,4 +1,4 @@
-Refresh the shipit contract for this repository.
+Run `/shipit:sync` to reconcile the contract for this repository.
 
 `.sdd/` was written by `/shipit:init` and later `/shipit:design-system`. Since
 then nobody edited `.sdd/rules/components.md` by hand, except that
@@ -8,3 +8,5 @@ then nobody edited `.sdd/rules/components.md` by hand, except that
 edited by hand last week. `AGENTS.md` holds the `<!-- shipit:contract -->` block
 followed by a `<!-- shipit:design -->` block. Detection would now produce a
 slightly different exemplar for `components`.
+
+A valid `.sdd/sync-state.json` contains the original generated bases.

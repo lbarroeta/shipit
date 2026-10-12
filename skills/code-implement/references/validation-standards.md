@@ -40,7 +40,7 @@ manual/external scenarios rather than duplicating the plan in another matrix.
   run them (including when both `test_one` and `test_all` are unavailable), stop
   with `Implementation Blocked` or `Implementation Incomplete` as applicable.
   Name the affected AC/check and the missing command or evidence. Request the
-  needed clarification or `/shipit:init` refresh; never invent a command or
+  needed clarification or `/shipit:sync`; never invent a command or
   replace planned tests with manual QA to get green.
 - Human/external QA planned for review may remain pending through handoff. Keep
   its scenario, AC, executor, prerequisites and expected result in the report and
@@ -130,7 +130,7 @@ Say exactly that:
 ```
 <command> → exit 127 (not found)
 CONTRACT DRIFT: config.json names a command that no longer exists here.
-Re-run /shipit:init to refresh the contract.
+Run /shipit:sync to reconcile the contract.
 ```
 
 Do not improvise a replacement command. Do not mark the step green. Do not silently

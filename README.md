@@ -25,7 +25,7 @@ codex plugin add shipit@shipit
 
 Start a new session and the ten skills are available. Codex matches them by
 description, and the same names work as slash commands — `/shipit:task-create`, `/shipit:task-next`,
-`/shipit:code-plan`, `/shipit:init`, `/shipit:design-system`, `/shipit:code-implement`, `/shipit:code-handoff`,
+`/shipit:code-plan`, `/shipit:init`, `/shipit:sync`, `/shipit:design-system`, `/shipit:code-implement`, `/shipit:code-handoff`,
 `/shipit:pr-fix`, `/shipit:status`, `/shipit:doctor`, `/shipit:run` — exactly as in Claude Code. Same `skills/`
 directory and the same `.sdd/` contract, so a repo initialized in one runtime
 works in the others.
@@ -155,7 +155,7 @@ with `claude --plugin-dir /absolute/path/to/shipit`.
 ### Then, once per repository
 
 ```
-/shipit:init --upgrade
+/shipit:sync --upgrade
 ```
 
 Brings `.sdd/config.json` up to the installed version: adds new keys, converts old
@@ -164,6 +164,38 @@ re-detected or re-asked. Already current → it says so and stops.
 
 Repos with a UI then run `/shipit:design-system` once — see
 [*Adding it to a project already running shipit*](#adding-it-to-a-project-already-running-shipit).
+
+## Maintaining repository context
+
+`init` initializes once. Invoking it on an initialized project reports integrity
+and directs to `sync`; it never regenerates existing context. Use `/shipit:sync`
+to migrate configuration and reconcile affected stack, commands, conventions,
+layers, rules and documentation. `/shipit:sync --check` inspects without writing;
+`--upgrade` migrates config only and does not certify repository context freshness.
+The old `init --upgrade` invocation redirects without modifying files.
+
+Sync preserves preferences, human edits, explicit permissions and design decisions.
+Generated facts update from evidence; human-doc corrections need the request/plan's
+authorization, and conflicts remain visible. `.sdd/sync-state.json` stores accepted
+contract bases and source hashes, following `sdd_tracking`; dates never decide
+whether an edit is human. Legacy contracts without that baseline are reconciled
+conservatively. No-change sync does not rewrite files. Python 3.10+ is needed for
+the baseline helper. Graph queries guide discovery; existing graphs receive local
+incremental maintenance only in their owning checkout. Code structure uses
+`graphify update .`; documentation and other semantic inputs use the available
+Graphify skill's `/graphify <repo> --update` flow, including deletion handling.
+Structural and semantic coverage are reported separately; missing capabilities
+leave explicit stale/unknown coverage. This applies to standalone sync and both
+run checkpoints. `--check` and `--upgrade` do not update the graph. No automatic
+tool installation or full graph build.
+
+Run checkpoints are `sync_before → plan → implement → sync_after → handoff`.
+Both sync checkpoints use the independently configurable `run.models.<provider>.sync`
+route. The final sync produces a separate delivery report including contract/doc
+edits and final validation; the builder report remains immutable. A newly required
+failed check returns to implementation and then sync. Active runs saved before
+sync checkpoints require explicit reconciliation/replanning on their saved branch;
+already delivered effects and journals must be reconciled before retrying.
 
 ## The cycle
 
@@ -177,8 +209,9 @@ For an existing issue/card, Claude Code and local Codex can run the whole cycle:
 `run` fetches the task through your configured tracker, checks its acceptance
 criteria, switches to `main`, fetches its remote and merges the upstream SHA with
 `--ff-only --no-overwrite-ignore`, then creates the task branch. This protected
-equivalent of `git pull --ff-only` also preserves ignored local files. Three real,
-sequential subagents then plan, implement/validate and deliver
+equivalent of `git pull --ff-only` also preserves ignored local files. Five sequential
+native subagent stages then sync context, plan, implement/validate, sync context
+again and deliver
 under `handoff.allow`. The coordinator waits for each result; missing models,
 blocked criteria or failed validation stop the pipeline. Pending user changes are
 never stashed or discarded. Your repo must already have `.sdd/` configured, Python
@@ -193,6 +226,7 @@ are never moved backwards; `run` resumes at later stages do not repeat the trans
 
 | Stage | Claude Code | Codex |
 | --- | --- | --- |
+| Sync (before and after) | Sonnet 5.5 / high | Sol 6.1 / high |
 | Plan | Opus 5.5 / high | Astra 6 / high |
 | Implement | Sonnet 5.5 / high | Sol 6.1 / high |
 | Handoff | Haiku 5.5 / high | Luna 6 / high |
@@ -206,7 +240,8 @@ stage; unavailable effective-model metadata is disclosed rather than guessed.
 The explicit request to run the issue authorizes execution within its criteria,
 after the coordinator checks the generated plan. Scope/security/data blockers
 still go to the user. `code-implement --defer-handoff` lets the builder return control
-before the separate delivery agent runs; standalone `code-implement` is unchanged.
+before final sync and the separate delivery agent run. Standalone `code-implement`
+also returns its report; invoke `sync` and `code-handoff` explicitly afterward.
 
 State and issue/checkout locks live under the Git common directory, outside the
 diff. Repeating an issue resumes its saved branch and checkpoints without pulling
@@ -225,9 +260,13 @@ The individual cycle remains available:
         │
 /shipit:task-create a need becomes a ticket, or an epic  when there is no ticket yet
         │
+/shipit:sync             reconcile context before planning
+        │
 /shipit:code-plan        plan contract in the current checkout once per task
         │
 /shipit:code-implement   red/green + validation scoped to the change
+        │
+/shipit:sync             reconcile contracts/docs after implementation
         │
 /shipit:code-handoff     branch, commit, push, PR body           delivery side effects
                     tracker + threads only if allowed
@@ -327,7 +366,7 @@ what makes a half-finished epic safe to retry.
 `init` detects which one you use, and asks only when it genuinely cannot tell —
 `ENG-412` is a valid Linear id *and* a valid Jira key, so a branch name alone never
 decides between those two; a connected MCP does. A clean match asks nothing, and a
-repo with no tracker at all is not a question either. `/shipit:init --tracker linear`
+repo with no tracker at all is not a question either. `/shipit:sync --tracker linear`
 sets it outright, for CI or to correct a bad detection without hand-editing JSON.
 
 An ambiguity nobody resolves is recorded as `none` **and** listed in `unknown[]`, so
@@ -355,7 +394,7 @@ PR, converts an existing draft when needed, and moves the linked card to
 review/QA/terminal states. No card or adapter `none` → the tracker step is `n/a`.
 Tracker comments, review-thread replies and issue creation remain opt-in: add
 `tracker_comment`, `thread_replies` or `issue_create` per repo. Existing explicit
-allow-lists are preserved on init refresh/upgrade. A capability that is not listed is not performed, and the run says
+allow-lists are preserved by sync and migrations. A capability that is not listed is not performed, and the run says
 `skipped (not in handoff.allow)` rather than doing it anyway.
 The `code-plan` startup transition to `In Progress` is separate and applies whenever
 planning an existing issue with a configured tracker, including inside `run`.
@@ -365,7 +404,7 @@ default, and comment/creation sections only when opted in.
 
 ## The `.sdd/` contract
 
-`init` writes five kinds of file, and every claim in them carries evidence — a
+`init` writes the initial contract files and a synchronization baseline, and factual claims carry evidence — a
 `path:line`, or the exact command output that proved it.
 
 | File | For | Content |
@@ -385,7 +424,7 @@ local plan is the deliverable, with no empty commit to create a PR.
 
 And, once `/shipit:design-system` has run, `.sdd/design-system.md` and
 `.sdd/rules/design.md` — see *A design contract for UI* below. `init` never
-rewrites them, and a refresh carries their `<!-- shipit:design -->` blocks over
+rewrites them, and sync carries their `<!-- shipit:design -->` blocks over
 untouched.
 
 `init` asks once, per repo, how it should be tracked:
@@ -406,7 +445,7 @@ Three rules make it trustworthy:
   `.cursor/rules` are referenced; `.sdd/` records only what they do not state. When a
   doc and the repo disagree, the repo wins and the discrepancy is reported.
 
-`init` is the single point of failure by design: a bad detection poisons every later
+`init` and `sync` own context accuracy: a bad detection poisons every later
 plan. That is why the evidence rules are hard rules and why `unknown[]` is printed
 loudly rather than buried in JSON.
 
@@ -425,7 +464,7 @@ them under `language` in `.sdd/config.json` (`en` by default):
 `.sdd/` itself always stay English, so the repo stays greppable for everyone. An
 old `"language": "es"` still works: it sets `plan`, `task` and `pr`, and `code`
 stays `en`. Change it by editing the keys, or
-`/shipit:init --language plan=es,pr=en,code=en`.
+`/shipit:sync --language plan=es,pr=en,code=en`.
 
 ### The pointer that makes it read
 
@@ -442,7 +481,7 @@ them, between `<!-- shipit:contract -->` markers:
 ```
 
 `AGENTS.md` missing is created; present is appended once. `CLAUDE.md` missing becomes
-a symlink to `AGENTS.md`, so the two never drift. Refresh replaces the block in place
+a symlink to `AGENTS.md`, so the two never drift. Sync replaces the block in place
 — everything outside the markers is yours and is never touched.
 
 That is what makes the contract portable across runtimes. Claude Code, Codex,
@@ -503,7 +542,7 @@ the one `init` wrote; it does not replace it.
 2. **Bring the config to the installed version:**
 
    ```
-   /shipit:init --upgrade
+   /shipit:sync --upgrade
    ```
 
    This release does not change the config's shape, so it only records the new
@@ -541,7 +580,7 @@ the one `init` wrote; it does not replace it.
    product until that work ships.
 
 Later, re-run `/shipit:design-system` whenever identity changes or pending
-decisions are settled; it updates the same files. `/shipit:init` refreshes keep
+decisions are settled; it updates the same files. `/shipit:sync` keeps
 the design files and blocks untouched. One edge case: a repo whose `init`
 created a layer keyed `design` already has its rule at `.sdd/rules/design.md` —
 `design-system` stops and reports it; rename that layer rule to
@@ -623,7 +662,7 @@ first:
 
 | Lever | Attacks |
 | --- | --- |
-| `.sdd/config.json` | Re-detecting the stack on every run. Paid once by `init`. |
+| `.sdd/config.json` | Re-detecting unchanged facts. Initialized once, reconciled by `sync` when sources change. |
 | Context budget | Wide reads. Rule files load only for layers actually touched. |
 | graphify | Grep dumps and whole-file reads, replaced by a scoped subgraph. |
 | caveman | Prose. Non-developer QA steps stay exempt from compression; everything else, PR bodies included, is short by default. |

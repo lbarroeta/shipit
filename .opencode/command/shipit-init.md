@@ -1,5 +1,5 @@
 ---
-description: Detect this repo's stack, commands, layers and tests into .sdd/
+description: Initialize this repo's Shipit contract once
 ---
 
 Load the shipit `init` skill and run it.

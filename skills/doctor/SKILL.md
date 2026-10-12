@@ -96,7 +96,7 @@ reading this should know whether they can proceed, in one line.
 | graphify graph | Same as above — having the CLI without a graph changes nothing. |
 | caveman | Chat prose and reports stay long. Note that shipit keeps PR bodies and reports short on its own, and exempts non-developer QA steps from compression either way. |
 | `.sdd/` absent | `code-plan` and `code-implement` refuse to run. Fix: `/shipit:init`. |
-| pointer absent | shipit skills still read `.sdd/` by path, but every other agent working in this repo ignores it and codes to its own priors. Fix: `/shipit:init` (refresh). |
+| pointer absent | shipit skills still read `.sdd/` by path, but every other agent working in this repo ignores it and codes to its own priors. Fix: `/shipit:sync`. |
 | `unknown[]` non-empty | Those verification steps do not exist. Named in every implement report. |
 | `ponytail` **present** | Its persistent mode contradicts spec-driven tests and truncates reports. Fix: `stop ponytail`. |
 

@@ -3,7 +3,7 @@ type: llm
 weight: 1
 ---
 
-# Grader: an init refresh preserves the design contract
+# Grader: a context sync preserves the design contract
 
 ## Pass requires all of
 

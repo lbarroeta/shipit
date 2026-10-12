@@ -1,6 +1,6 @@
 # Detection Recipes
 
-Run in order. Each recipe names what to look for and what evidence to record.
+For first init, run in order. Sync loads affected recipes only, preserving existing preferences per its reconciliation policy. Each recipe names what to look for and what evidence to record.
 Do not improvise a detection this file does not describe — an invented convention
 is worse than an `unknown`.
 
@@ -75,7 +75,8 @@ For each candidate, in this order:
    `null` + append the key to `unknown[]`.
 
 Do not run `setup`, `build`, or a full `test_all` just to verify — resolving the
-executable is enough for those. Record which proof was used.
+executable is enough to establish availability for those. Record proof `resolve`
+and the exact command used; never report their operation as executed successfully.
 
 > This recipe exists because of a real failure: a repo's agent doc documented a
 > binstub that did not exist in the repo, and every plan that cited it was wrong.
@@ -247,7 +248,7 @@ unmatched option unset and says so; `init` only says it first.
 
 A field under another name — `Prioridad`, `Estimate` as a T-shirt select — is not
 matched automatically. It surfaces as `null`, and the report says to set the name
-by hand in `config.json`. Refresh keeps a hand-set name that still exists in the
+by hand in `config.json`. Sync keeps a hand-set name that still exists in the
 tracker; one that no longer does is reported and asked, like a hand-edited file.
 
 ## 8 — Graph
@@ -272,12 +273,16 @@ CLI + graph → fill `graph` with
 }
 ```
 
-Read-only commands only. `graphify` has flags beyond these (`--dfs`, `--budget`,
+Query/explain/path are read-only; update is reserved for sync or explicit graph
+maintenance. `graph.update` above refreshes code structure only; semantic doc
+changes require the Graphify skill's incremental `--update` flow, as specified
+in `../../sync/references/reconciliation.md`. Do not treat CLI success as proof
+that documentation in the graph is current. `graphify` has flags beyond these (`--dfs`, `--budget`,
 rebuild modes); they do not go in the config — `code-plan` needs the three read
 commands, not the tool's whole surface.
 CLI only → `graph: null`, and note in the report that `graphify .` would build one
 (state the cost; do not run it).
-Neither → `graph: null`, and no skill mentions a graph again.
+Neither → `graph: null`; report source-only discovery honestly.
 
 Also check whether the graph output is excluded (`git check-ignore -q
 graphify-out`, true whether the rule lives in `.gitignore` or `.git/info/exclude`).
@@ -321,7 +326,7 @@ wins and the contradiction is reported.
 Report-only. See `skills/doctor/references/tiers.md` for the tier definitions and
 the exact commands. Fill `companions` with `present` / `absent` per entry.
 
-## 12 — Worktree defaults
+## 12 — Worktree defaults (first init only)
 
 - `enabled: false`. **Always false at init.** Worktrees are opt-in: the founder
   flips it when they actually want parallel tasks, once `worktree.setup` and the
