@@ -402,6 +402,14 @@ planning an existing issue with a configured tracker, including inside `run`.
 The tracker reference is read only for enabled capabilities: status rules by
 default, and comment/creation sections only when opted in.
 
+PR descriptions lead with the problem and resulting behavior, then final
+validation. Review notes cover concrete decisions, risks or deployment ordering
+only when relevant. Aim for 100–180 visible words for ordinary changes, fewer for
+trivial ones; material risks and pending checks stay visible even when longer.
+Full QA and supporting evidence stay in a details block or a verified link the
+team can access. `code-implement` drafts the body, `sync` reconciles it with final
+evidence, and `code-handoff` checks it before delivery and publishes it verbatim.
+
 ## The `.sdd/` contract
 
 `init` writes the initial contract files and a synchronization baseline, and factual claims carry evidence — a
@@ -418,8 +426,9 @@ default, and comment/creation sections only when opted in.
 Plus `.sdd/tasks/`, where `/shipit:task-create` writes ticket drafts. It is scratch, not
 contract: excluded from git in both tracking modes.
 Generated plans also stay local: `code-handoff` excludes them from commits in every
-tracking mode, including inside `run`. Planning handoff carries the plan in a PR
-body when a PR exists or the branch has commits ahead of its base; otherwise the
+tracking mode, including inside `run`. Planning handoff carries a short proposal
+summary and the complete plan in a collapsed PR-body block when a PR exists or
+the branch has commits ahead of its base; otherwise the
 local plan is the deliverable, with no empty commit to create a PR.
 
 And, once `/shipit:design-system` has run, `.sdd/design-system.md` and

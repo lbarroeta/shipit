@@ -75,6 +75,8 @@ Rules:
   `tracker_comment`, `tracker_status` or `issue_create`. `issue_create` also needs
   that file's `### Create` subsection; the other capabilities do not.
 - Optional: `references/worktree-lifecycle.md` when the branch lives in a worktree.
+- When publishing a PR body: `../code-implement/assets/pr-description-template.md`
+  for the description check below.
 - Never read the product diff to decide content. The report is the manifest.
 
 ## Hard rules
@@ -120,12 +122,13 @@ Rules:
 - Never remove a worktree. That is `/shipit:status --prune`.
 - **One line per side effect.** This skill reports what it did, never what the
   change was — the report it was handed already said that, and a PR body is not
-  improved by a second telling. Copy sections from the report verbatim or leave
-  them out; never expand them.
+  improved by a second telling. Publish prepared implementation/review bodies
+  verbatim; never expand them. Plan-mode bodies follow the summary/full-plan rule
+  below.
 
 ## Preflight — all modes
 
-`task` mode runs steps 1, 5 and 6 only. It touches no branch and no remote, so the
+`task` mode runs steps 1, 5 and 7 only. It touches no branch and no remote, so the
 rest has nothing to check.
 
 1. Read `handoff.allow`. Nothing this mode needs is listed → stop here and say so;
@@ -140,7 +143,19 @@ rest has nothing to check.
    Only when the plan names a worktree must you be in it — see
    `references/worktree-lifecycle.md`.
 5. Confirm the artifacts to deliver exist on disk.
-6. Any check fails → stop and report what is missing. Produce **no** partial side
+6. When `pr_body` is allowed and a body will be published, check the prepared body
+   before delivery effects. It must explain the problem and resulting behavior,
+   summarize final validation, keep material risks/prerequisites/pending checks
+   visible, and retain complete applicable QA inline, in details or at a verified
+   team-accessible link. Reject unsupported claims, report dumps, generic filler
+   and inaccessible evidence links. Apply the template's relevance guidance;
+   its word target alone is not a failure. In plan mode use the plan-body rule
+   below instead of claiming implementation or validation has happened.
+   Return a deficient implementation/review body to its producer through the
+   caller with specific corrections, before commit/push. Do not rewrite it or
+   inspect the product diff to fill missing facts. No replacement body in review
+   mode → no description check or body write.
+7. Any check fails → stop and report what is missing. Produce **no** partial side
    effects. Half a handoff is worse than none.
 
 ## Mode: task
@@ -213,9 +228,13 @@ exists before a branch does.
 - **Push** — only existing commits on the task branch; no plan or empty commit.
 - **PR** — Ready for review. Create without `--draft`. Title
   `<ISSUE-ID> Plan: <short title>`. Body states this is
-  planning only and execution belongs to `/shipit:code-implement`. Always carry the
-  plan's complete content verbatim in the body, including evidence, baseline,
-  decisions and validation coverage when present; do not extract only Files/Notes.
+  planning only and execution belongs to `/shipit:code-implement`. Lead with a
+  short problem/proposed-outcome summary and review-relevant decisions, open
+  questions and prerequisites. Label validation as planned, not executed. Keep
+  the complete plan verbatim in a collapsed `Full plan` details block, including
+  evidence, baseline, decisions and validation coverage. Never use a local path
+  as the reviewer-accessible plan or expand the entire plan above the fold.
+  Prepare and check this body during preflight, before delivery effects.
   Update an existing PR when available. No commits ahead of the base and no
   existing PR → skip PR creation and report the local plan path; do not create a
   dummy commit to open a planning PR.
