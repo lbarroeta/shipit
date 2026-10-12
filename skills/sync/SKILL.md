@@ -97,6 +97,21 @@ report the gap; never reset it from a template.
    Use `language.plan`. Return `completed`, `blocked` or `failed`, with concrete
    scope; missing evidence is not success.
 
+After implementation, in standalone and coordinated runs, check `PR Preparation`
+against the final changes and validation evidence. Write a separate **delivery
+report** based on the builder's report template: retain QA, AC coverage and
+validation evidence; include final contract/doc edits in `Files Changed`, with
+exact new checks and links to original evidence. Handoff receives this final
+report; preserve the original builder report. Use
+`../code-implement/assets/pr-description-template.md`: update the delivery copy
+when sync changes reviewer-relevant behavior, documentation or check results;
+keep material risks and pending checks visible and full QA/evidence accessible.
+Do not append a sync log to the body. Missing implementation facts return to the
+builder through the caller; never invent them. Never relabel a failed check as
+passing. A material contradiction with plan scope returns to the caller for
+replanning; a check failure returns to implementation. Do not dispatch either
+agent yourself.
+
 ## Coordinated runs
 
 `run` invokes this skill twice, as separate checkpoints `sync_before` and
@@ -106,13 +121,8 @@ ownership manifest, including pre-sync edits and generated plans; omit plans fro
 any delivery manifest. No external effects.
 
 Before planning, return the sync report and owned paths for the planner/builder.
-After implementation, preserve the immutable builder report and write a separate
-**delivery report** based on its report template: retain QA, AC coverage and
-validation evidence; include final contract/doc edits in `Files Changed`, with
-exact new checks and links to original evidence. Handoff receives this final
-report. Never relabel a failed check as passing. A material contradiction with
-plan scope returns to the coordinator for replanning; a check failure returns to
-implementation. Do not dispatch either agent yourself.
+After implementation, return the separate delivery report described above to the
+coordinator.
 
 ## Flags
 

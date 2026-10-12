@@ -72,6 +72,8 @@ PR link: the `sc-<n>` id in the branch name is what Shortcut matches on.
 **Mechanism:** none. Delivery is git and the PR host only.
 
 - Branch from `.sdd/conventions.md`, else ask.
-- Everything a tracker would have carried goes in the PR body instead.
+- Keep issue context and complete QA/evidence available in the PR using the
+  description template's visible-summary/detail split. No tracker does not mean
+  copying the entire implementation report into the body.
 - Report the tracker line as `n/a (adapter: none)`, not as `blocked`. Absence of a
   tracker is a configuration, not a failure.

@@ -124,4 +124,7 @@ the comment now.>
 ## PR Preparation
 
 <Title and body from `assets/pr-description-template.md`, including its section
-drops. Written here, put on the PR by `code-handoff` — never posted from this skill.>
+drops and visible-summary/detail split. Full QA and validation above remain the
+evidence; do not copy this report's structure into the body. Written here, checked
+against final evidence by `sync`, then put on the PR by `code-handoff` — never
+posted from this skill.>

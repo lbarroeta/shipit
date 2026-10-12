@@ -10,62 +10,62 @@ real risk harder to find.
 
 Follow the repo's commit convention from `.sdd/conventions.md` when it has one
 (a `feat:`/`fix:` prefix, a scope). No convention recorded → plain imperative.
+Omit the issue ID when none is linked; never invent one.
 
 ## Body
 
-Sections are optional except **What**, **Validation**, and **Risk**. Drop any
-heading whose content would be filler; never write a heading followed by "N/A" or a
-restatement of another section.
+Lead with the concrete problem and resulting behavior, then validation. Add review
+notes only when they change how someone should assess or deploy the change.
+Aim for 100–180 visible words for a normal change, fewer for a trivial one. This is
+an editorial target, not a minimum or a hard cap: material risks and verification
+gaps take priority. Detail inside a collapsed block does not count toward it.
 
 ```markdown
-## What
+<2-3 sentences at most: concrete problem, previous behavior, and resulting
+behavior. Combine what and why. Link the issue when available; no file inventory.>
 
-<1-2 sentences. The change in reviewer terms. Not a file list — the diff has that.>
+## Review notes
 
-## Why
-
-<One line. Link the issue rather than restating it. Drop when the title says it.>
-
-## How
-
-<Only what a reviewer would otherwise reverse-engineer: a non-obvious decision, an
-ordering constraint, why the boring approach failed. 3 lines max. Usually absent —
-a self-explanatory diff needs no How.>
+<Optional, normally up to 3 bullets: non-obvious decisions, compatibility changes,
+migration/deployment ordering, or concrete risks and mitigations supported by the
+evidence. Keep merge/deploy prerequisites visible. Omit this section when there
+is nothing specific to review; no generic "Low risk" or speculative hazards.
+Mention an exclusion only when it explains a likely review question.>
 
 ## Validation
 
-<Commands and exit codes, copied from the report, in a code block. Identify final
-reruns after TDD red or repaired failures. Preserve relevant verification gaps and
-developer-only manual/external checks with evidence or pending executor and
-prerequisites; do not omit them for backend changes.>
+<State what final checks prove, with relevant exact commands and final results
+from the report. Keep material verification gaps, unrun checks and pending
+human/external QA visible, including who must act and essential prerequisites
+when known. Do not narrate TDD red or repaired failures; retain their evidence in
+the report. Required pre-delivery checks still block delivery when missing.>
 
-## Risk
+<details>
+<summary>QA steps and supporting evidence</summary>
 
-<One line: what could break, and what would catch it. `Low — <reason>` is complete
-when true.>
+<When applicable, copy complete non-developer QA steps and their statuses verbatim,
+including backend checks in external services. Preserve developer-only manual
+checks with their executor, prerequisites, expected results and observed evidence
+or pending status. Put lengthy command evidence here when needed; distinguish
+final results from earlier attempts. This detail supports the visible summary,
+never replaces a visible risk or pending-check notice.>
 
-## QA
-
-<Non-developer QA, including backend checks in external services: paste the steps
-and their pending/completed status verbatim. Written for someone who
-does not read code — trimming them for brevity destroys their purpose, and this is
-the one section that is never cut.>
-
-<Backend-only: `Backend only. Manual UI QA not applicable.` plus one line on what
-developer validation covered. Keep applicable manual/external QA above and
-developer-only checks in Validation; this sentence does not replace them.>
-
-## Out of scope
-
-<Only when the plan has entries. Bullets, one line each, with the trigger for doing
-it later. Prevents the "why didn't you also…" review round. No entries → no
-section.>
+</details>
 ```
 
 ## Rules
 
 - Never claim a command passed that was not run.
 - Never describe behaviour the diff does not contain.
+- Every sentence must explain the problem, a review-relevant decision, evidence,
+  or a necessary precaution. Drop repeated facts and empty/irrelevant sections.
+- Keep the full validation record and QA guide in the implementation report.
+  In the PR, omit an empty details block; short QA can stay inline. A verified
+  team-accessible link to the complete guide/evidence can replace the block, but
+  a local report/plan path cannot. No tracker or accessible destination → embed
+  the detail. Never discard QA to meet the length target.
+- Backend-only changes need no UI-QA disclaimer. Preserve applicable backend
+  manual/external checks and their status instead.
 - No preamble, no closing summary, no "this PR" throat-clearing, no emoji headers.
 - `code-handoff` creates PRs ready for review and converts existing drafts when
   `pr_ready` is allowed. Readiness does not mean human QA has passed.

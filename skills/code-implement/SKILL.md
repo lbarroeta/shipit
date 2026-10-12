@@ -125,8 +125,10 @@ and verified with commands that are known to run in this repo.
    this does not remove backend manual/external checks. Pending QA is never passed.
 8. **PR text.** Compose the title and body from
    `assets/pr-description-template.md` into the report. Write it; do not post it.
-   Every section there earns its place or is dropped — an empty heading costs a
-   reviewer more than it gives.
+   Lead with problem and resulting behavior; summarize final validation and keep
+   material risks and pending checks visible. Preserve full QA/evidence using the
+   template's details/link rules. Apply its relevance and length guidance before
+   returning the report; do not export the report's full section structure.
 9. **Return for context sync.** Return the implementation report, full changed-file
    manifest and exact validation evidence to the caller. The next stages are
    `shipit:sync` then `shipit:code-handoff`; do not dispatch either internally.

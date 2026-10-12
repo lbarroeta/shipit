@@ -62,6 +62,11 @@ plugin disabled, so the number reported is a delta, not an absolute.
 | `design-incomplete-interview` | Answering the design interview on the user's behalf; a contract marked approved that nobody confirmed; an inconsistency promoted to a rule |
 | `design-refresh-preserves` | A `sync` reconciliation wiping the design contract, its layer-rule blocks, or a human design decision |
 | `plan-backend-no-design` | Backend plans paying for visual context they never use |
+| `pr-description-trivial` | Padding small changes with generic risk, irrelevant sections or invented checks |
+| `pr-description-long-qa` | Shortening QA for brevity, hiding pending status or linking inaccessible local evidence |
+| `pr-description-final-evidence` | Publishing stale validation/deployment claims or hiding material migration risk after sync |
+| `pr-description-handoff-gate` | Delivering a deficient body before correction or applying the body gate when no body is published |
+| `pr-description-plan` | Expanding the entire plan by default, losing its evidence or claiming planned checks passed |
 
 Every case targets a rule that, when broken, produces confidently wrong output
 rather than an error. Those are the failures worth paying for a grader to catch.
