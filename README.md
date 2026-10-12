@@ -181,8 +181,13 @@ contract bases and source hashes, following `sdd_tracking`; dates never decide
 whether an edit is human. Legacy contracts without that baseline are reconciled
 conservatively. No-change sync does not rewrite files. Python 3.10+ is needed for
 the baseline helper. Graph queries guide discovery; existing graphs receive local
-incremental maintenance only in their owning checkout, with stale/unknown coverage
-reported. No automatic tool installation or full graph build.
+incremental maintenance only in their owning checkout. Code structure uses
+`graphify update .`; documentation and other semantic inputs use the available
+Graphify skill's `/graphify <repo> --update` flow, including deletion handling.
+Structural and semantic coverage are reported separately; missing capabilities
+leave explicit stale/unknown coverage. This applies to standalone sync and both
+run checkpoints. `--check` and `--upgrade` do not update the graph. No automatic
+tool installation or full graph build.
 
 Run checkpoints are `sync_before → plan → implement → sync_after → handoff`.
 Both sync checkpoints use the independently configurable `run.models.<provider>.sync`

@@ -78,7 +78,9 @@ report the gap; never reset it from a template.
    a command or reveals a required check, execute that check against final files;
    failure returns to the builder in a run. Sync never repairs product code to
    make a check pass. Keep existing product validation only when its inputs still
-   match. See the reference for graph maintenance and design protection.
+   match. After final edits, maintain the existing graph using the reference's
+   structural/semantic update paths; a CLI-only refresh cannot certify docs.
+   Preserve design protection throughout.
 6. **Record only reviewed state.** After a complete reconciliation, prepare an
    inventory outside the repository with `managed` (all init/sync-owned generated
    file paths) and `unresolved: []`. Run
@@ -90,7 +92,8 @@ report the gap; never reset it from a template.
    outstanding drift before advancing the global baseline. No differences → no
    rewrites, including dates. A failed/partial run never certifies freshness.
 7. **Report.** State phase, baseline status, changed/retired/preserved paths,
-   documentation conflicts, graph state, exact validation and remaining unknowns.
+   documentation conflicts, separate structural/semantic graph state, exact
+   validation and remaining unknowns.
    Use `language.plan`. Return `completed`, `blocked` or `failed`, with concrete
    scope; missing evidence is not success.
 

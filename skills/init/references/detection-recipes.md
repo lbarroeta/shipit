@@ -273,7 +273,11 @@ CLI + graph → fill `graph` with
 }
 ```
 
-Query/explain/path are read-only; update is reserved for sync or explicit graph maintenance. `graphify` has flags beyond these (`--dfs`, `--budget`,
+Query/explain/path are read-only; update is reserved for sync or explicit graph
+maintenance. `graph.update` above refreshes code structure only; semantic doc
+changes require the Graphify skill's incremental `--update` flow, as specified
+in `../../sync/references/reconciliation.md`. Do not treat CLI success as proof
+that documentation in the graph is current. `graphify` has flags beyond these (`--dfs`, `--budget`,
 rebuild modes); they do not go in the config — `code-plan` needs the three read
 commands, not the tool's whole surface.
 CLI only → `graph: null`, and note in the report that `graphify .` would build one

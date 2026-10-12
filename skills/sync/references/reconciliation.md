@@ -96,14 +96,37 @@ successful execution in the final validation report.
 ## Graph lifecycle
 
 Use existing query/explain/path commands to guide discovery and validate facts in
-current source. After relevant source/doc changes, update an existing graph in its
-owning checkout using its configured update command (supported default:
-`graphify update .`). Normal sync authorizes this local incremental maintenance;
-never install tools or perform a full semantic rebuild as an implicit fallback.
-Report CLI absence, update failure or remaining semantic gaps explicitly, use
-source evidence, and leave graph freshness unknown/stale. Such a gap alone does
-not block a source-verified contract. Missing graph → source discovery, optional
-setup recommendation. Shared graph → report owner and defer its update there.
+current source. Ordinary sync maintains an existing graph in its owning checkout,
+both standalone and at each run checkpoint. Inspect graph freshness independently
+of the Shipit baseline: a previous source-verified sync may have left graph work
+pending. After reconciliation and final source/doc edits, choose the update path:
+
+- Code-only drift with verified current semantic coverage: run the configured
+  update command (supported structural default: `graphify update .`). Its success
+  proves a structural refresh, not a semantic refresh of documentation.
+- New, changed or deleted docs, contracts or other semantic inputs in the indexed
+  corpus, or unknown/stale semantic coverage: load the available `graphify` skill
+  and its incremental-update reference, then execute `/graphify <repo> --update`.
+  This is an agent skill invocation, not a shell command. Follow its supported
+  incremental detection, extraction, merge and output regeneration; reuse cached
+  unchanged content and prune deleted sources. The host agent can perform semantic
+  extraction without a new API key. Preserve corpus exclusions, graph direction
+  and output settings; do not expand indexing to excluded contracts or secrets.
+- No indexed drift and verified coverage: leave graph outputs unchanged.
+
+Normal sync authorizes this local incremental maintenance. Never install or upgrade
+tools or perform a full graph rebuild as an implicit fallback. Missing semantic
+skill/runtime → use the available structural update where useful, but report the
+semantic gap. Missing graph → source discovery and optional setup recommendation.
+Shared graph → report its owner and defer mutation there, including any local source
+changes that the shared graph does not represent.
+
+Report structural and semantic status separately (`current`, `stale`, `unknown`,
+or `not-applicable`), with scope, update evidence and pending files. Failed/omitted
+extraction remains pending for the next sync; never stamp it as processed. A new
+Shipit baseline does not certify graph freshness. Graph gaps alone do not block a
+source-verified contract, but downstream skills must use source evidence for those
+gaps. `--check` only inspects; `--upgrade` never updates the graph.
 
 ## Config upgrades
 
