@@ -20,7 +20,7 @@ of loading the whole graph/report.
 
 `graph: null` but `graphify-out/graph.json` exists → stale config. Use the supported
 read commands `graphify query "{q}"`, `graphify explain "{node}"`, and
-`graphify path "{a}" "{b}"` for this run; recommend `/shipit:init` to refresh config.
+`graphify path "{a}" "{b}"` for this run; recommend `/shipit:sync` to refresh config.
 Never build or update a graph during planning.
 
 The graph is a map, not proof of behavior. Inspect relationship type, direction,

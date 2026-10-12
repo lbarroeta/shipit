@@ -32,7 +32,7 @@ from commits without editing gitignore or the repo contract. Issue locks are sha
 across linked worktrees; checkout locks also prevent two different issues editing
 the same checkout. Only the owning coordinator can checkpoint or pause.
 
-Stages: `preparing → plan → implement → handoff → qa → done`. `pause` preserves
+Stages: `preparing → sync_before → plan → implement → sync_after → handoff → qa → done`. `pause` preserves
 stage and releases locks. A later `begin` reacquires them. Resume requires the same
 checkout and unchanged source/artifact hashes; it restores the saved branch only
 from a clean tree and never resets to main. Display saved QA/done results through
@@ -56,7 +56,7 @@ coordinator has prepared Git and verified all stage routes. The coordinator does
 not perform a second write. Verify the planner's reported transition or preserved
 state before checkpointing; a failed transition blocks the stage and requires
 pausing to release the locks. Read-only resolution, Git preparation and resumes
-at implement/handoff/qa/done do not perform this transition.
+at implement/sync_after/handoff/qa/done do not perform this transition.
 
 ## Delegation message
 
@@ -67,11 +67,15 @@ paths; result/artifact destination; allowed effects; and the concrete outcome it
 must return. Use unique report/result names for each dispatch or repair so saved
 reports remain available. Do not flood children with the entire conversation.
 
+Synchronizer: execute `shipit:sync` in the supplied phase, no product code or
+external writes. Before planning return context evidence and owned paths. After
+implementation return a separate cumulative delivery report; preserve the builder
+artifact. Both checkpoints use route `sync`.
 Planner: write the plan in `<paths.plans>`, use `--no-worktree`, no product code.
 Builder: execute with `--defer-handoff`; the explicit run request authorizes
 execution within the fetched criteria after the coordinator's contract check.
 Keep plan corrections in the planner, not the builder. Delivery: `implementation`
-mode, immutable builder report, journal path; no product or plan edits.
+mode, immutable post-sync delivery report plus builder evidence, journal path; no product or plan edits.
 Each child saves a result JSON and returns its path plus a short summary:
 
 ```json
@@ -86,13 +90,21 @@ Each child saves a result JSON and returns its path plus a short summary:
 ```
 
 `effective` is populated by the coordinator only from runtime metadata; children
-leave unknown values null. The planner must return empty `blockers` for completion.
+leave unknown values null. The planner and both sync stages must return empty `blockers` for completion.
 Builder adds `validation`: exact executed `{ "command": "...", "exit_code": 0 }`
 entries, plus `files`: repo-relative paths exactly matching the tracked diff and
 non-ignored untracked files. Exclude local-only `.sdd` artifacts from that manifest;
 retain non-ignored generated plans here for ownership validation, but omit them
 from the report's `Files Changed` delivery manifest. Record any skipped checks
 with reasons in the report.
+Sync adds `context_status` (`current` or `updated`), `requires_revalidation: false`,
+`validation` (non-empty successful executed context checks), and `files` (the full
+non-ignored run-owned manifest, not just sync edits). `unknown[]` entries for
+irrelevant/missing optional capabilities may remain; unresolved relevant conflicts
+may not. A partial/blocked result never checkpoints. After-implementation checks
+include newly required checks; retain builder validation only with unchanged
+inputs and cite it in the final delivery report. The coordinator verifies that
+product files did not change during sync and no required check was omitted.
 Delivery adds `delivery_status` (`completed`, `partial`, `blocked`, `skipped`) and
 actual effect proofs. Use `blocked`/`failed` and a concrete reason when unable to
 finish; never emit `completed` with pending required work.
@@ -100,14 +112,16 @@ finish; never emit `completed` with pending required work.
 Coordinator verifies artifact contents and evidence, then runs `checkpoint` with
 the stage and result file. Keep the plan and builder report immutable after their
 checkpoints. To correct a plan gap after discussing it with the planner, use
-`replan --issue-key KEY --owner OWNER --reason 'Concrete contract gap'`. This
+`replan --issue-key KEY --owner OWNER --reason 'Concrete contract gap'`.
+If the failed child made additional owned edits, supply its verified blocked result
+with `--result-file PATH`; this captures ownership before invalidating checkpoints. This
 archives the prior checkpoint references and invalidates downstream stages; then
-dispatch the planner and checkpoint the replacement. Do not edit state hashes to
+dispatch pre-plan sync, then the planner and checkpoint the replacement. Do not edit state hashes to
 bypass checks. For a changed/missing artifact or changed issue source that blocks
 `begin`, use `begin --replan-reason 'Concrete approved correction'` only after
 reconciliation. Changed business/security/data scope requires the user's explicit
 decision first. This archives checkpoints, updates the task snapshot and resumes
-at plan on the existing branch. Never apply this flag automatically to bypass a
+at sync_before on the existing branch. Never apply this flag automatically to bypass a
 scope mismatch. Dirty files still need ownership verification; replanning does not
 grant ownership of user edits.
 
@@ -117,7 +131,7 @@ Before each allowed effect, delivery reads the current repo/remote/PR state and
 its journal. Record the exact result immediately after each successful action in
 `delivery.json` under the run directory: branch, commit SHA and manifest, upstream
 push, PR URL/body hash, and any permitted tracker effect IDs. Use atomic writes.
-The `validated_head` checkpoint and the builder's manifest identify the proposed
+The final sync `validated_head` checkpoint and cumulative manifest identify the proposed
 change. Before dispatch run `verify --issue-key KEY --owner OWNER`: it checks saved
 artifacts, validated file contents and unexpected diff paths. A changed HEAD may
 represent interrupted delivery; the delivery agent must reconcile the exact commit
@@ -134,6 +148,11 @@ Already tracked plans retain their base version in the delivery tree; local edit
 stay on disk. A changed HEAD must descend from `validated_head` and its entire
 tree must match that saved
 tree; matching file hashes alone cannot authorize unrelated committed changes.
+State version 2 requires both sync checkpoints. Active version-1 runs cannot
+silently skip them: preserve snapshots/journal, reconcile any already-published
+effects, then explicitly `begin --replan-reason ...` on the same branch. Saved
+qa/done results remain readable; a legacy QA failure goes through pre-plan sync.
+Do not invalidate delivered work automatically or duplicate its effects.
 Older checkpoints without this tree snapshot must return to implementation.
 An older checkpoint whose `validated_files` includes generated plans but lacks
 `delivery_files` must also return to the builder for a new checkpoint; never edit
@@ -146,7 +165,8 @@ next delivery agent reads the journal before doing anything.
 
 In a coordinated run, save the handoff report separately in the run directory;
 do not append to the checkpointed builder artifact. Link both reports in final
-delivery. Standalone `code-implement` retains its existing append behavior.
+delivery. Standalone code-implement returns its report for sync and explicit handoff; it
+does not dispatch sync or delivery internally.
 
 ## Human QA
 
@@ -158,6 +178,12 @@ python3 /plugin/skills/run/scripts/run_state.py --repo /repo qa --issue-key 'lin
 ```
 
 `pass` moves to done. `blocked` stays at qa. `fail` keeps the plan/branch, records
-feedback and invalidates builder/delivery checkpoints, returning to implement.
+feedback and invalidates builder/final-sync/delivery checkpoints, returning to implement.
+After a product validation failure discovered by sync, save its blocked result
+with full owned manifest, then run `repair --issue-key KEY --owner OWNER
+--reason 'Exact failed check' --result-file /run-dir/blocked-sync.json`. This archives
+the old implementation evidence, retains plan/pre-sync, and returns to implement.
+The builder receives sync-owned doc/config changes and must revalidate before a
+new sync_after checkpoint. `replan` instead reruns sync_before and planning.
 Do not mark pass from automated checks or another agent's opinion. Give the builder
 the recorded feedback; keep any corrective work inside the original criteria.

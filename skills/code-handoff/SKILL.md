@@ -1,6 +1,6 @@
 ---
 name: code-handoff
-description: Use when shipit artifacts must be delivered — branch, commit, push, ready-for-review PRs and tracker review status by default; tracker comments, review-thread replies and issue creation only when `handoff.allow` in `.sdd/config.json` opts into them. Runs after `task-create`, `code-plan`, `code-implement`, or `pr-fix`. Do not use to write plans, tickets, or product code.
+description: Use when shipit artifacts must be delivered — branch, commit, push, ready-for-review PRs and tracker review status by default; tracker comments, review-thread replies and issue creation only when `handoff.allow` in `.sdd/config.json` opts into them. Runs after `task-create`, `code-plan`, final `sync`, or `pr-fix`. Do not use to write plans, tickets, or product code.
 metadata:
   writes_product_code: false
 ---
@@ -22,8 +22,11 @@ written), `implementation` (after a change is verified), `review` (after PR feed
 is resolved). Ask which one when it is not given and the branch does not make it
 obvious.
 
-By default, `code-implement` invokes this skill once validation is green, passing its
-report. With `--defer-handoff`, the `run` coordinator delegates it separately.
+Implementation delivery follows `code-implement → sync → code-handoff`. Receive
+the final sync delivery report plus original implementation evidence. The `run`
+coordinator delegates delivery only after `sync_after`; standalone users invoke
+it explicitly after sync. Context drift or pending required checks return to sync
+or implementation before any delivery effect.
 `task-create` invokes it only when `issue_create` is allowed. `pr-fix` never does — the
 user runs `/shipit:code-handoff` by hand after reviewing the fixes. Being invoked either
 way changes nothing: run the same preflight, and trust the report for **content**
@@ -55,7 +58,7 @@ Rules:
 - **Read `references/tracker-writes.md` only when `tracker_comment`,
   `tracker_status` or `issue_create` is listed.** Read its status rules on the
   default `allow`; skip comment/creation sections unless enabled.
-- An unknown entry is ignored: report the drift and suggest `/shipit:init`. Never
+- An unknown entry is ignored: report the drift and suggest `/shipit:sync`. Never
   patch `.sdd/config.json` yourself.
 - `allow` present but empty, or a mode left with no permitted step, → do nothing and
   say which capability the run needed. Half a handoff is worse than none.
@@ -261,8 +264,8 @@ exception applies only to proven effects of this run; unrelated commits do not
 satisfy it. If reconciliation is ambiguous, stop without repeating the write.
 
 Save the handoff report separately under the supplied run directory. Keep the
-checkpointed builder report immutable; the coordinator links both reports rather
-than appending to it. Standalone callers retain the append behavior below.
+checkpointed builder and final sync reports immutable; the coordinator links
+all reports rather than appending to them. Standalone callers retain the append behavior below.
 
 ## Mode: review
 

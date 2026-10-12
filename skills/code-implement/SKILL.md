@@ -127,24 +127,17 @@ and verified with commands that are known to run in this repo.
    `assets/pr-description-template.md` into the report. Write it; do not post it.
    Every section there earns its place or is dropped — an empty heading costs a
    reviewer more than it gives.
-9. **Deliver.** `--defer-handoff` → return the report and validation results to
-   the caller without invoking `code-handoff`. Used by `shipit:run` so its delivery
-   subagent gets the configured model. Otherwise, validation green and the report
-   written → invoke `code-handoff` in
-   `implementation` mode and pass it the report. Its report is appended to yours
-   verbatim, never summarized into a claim it did not make. Do not invoke it when
-   the run ended `# Implementation Blocked` or `# Implementation Incomplete`, or
-   when required final validation remains failed or unverified. A recorded TDD
-   red or repaired failure does not block once affected checks pass on final files.
-10. **Graph sync.** `graph` set, product code changed, and **you are in the main
-    checkout** → run `<graph.update>`. Inside a worktree, skip it and say so: the
-    graph is shared, and updating it from a branch writes branch-local state into
-    every other worktree's view. It is updated in the main checkout after the merge.
+9. **Return for context sync.** Return the implementation report, full changed-file
+   manifest and exact validation evidence to the caller. The next stages are
+   `shipit:sync` then `shipit:code-handoff`; do not dispatch either internally.
+   `run` owns those stages when coordinated. Standalone work follows the same
+   explicit sequence. Failed or unverified required checks remain blockers.
+   Graph maintenance belongs to sync so it includes final documentation changes.
 
 ## User change protection
 
 Uncommitted changes are user-owned unless this run made them. A `shipit:run`
-delegation may name the generated plan as a run-owned artifact; verify that path
+delegation may name generated plans and sync-produced contracts as run-owned artifacts; verify that path
 and the saved run record before treating it as such. On resume, pending manifests
 and archived revision manifests establish ownership only for paths whose saved
 content hashes still match. Verify those hashes before continuing prior edits.
@@ -209,4 +202,4 @@ PR Preparation.
 ## Flag
 
 `--defer-handoff`: validation and report only; no delivery agent or external side
-effects. The default standalone workflow still invokes `code-handoff` automatically.
+effects. Retained for compatibility; standalone execution also returns before sync/handoff.

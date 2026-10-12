@@ -1,7 +1,7 @@
 # `.sdd/config.json` Schema
 
 The machine contract. Read by `run`, `task-create`, `task-next`, `code-plan`, `code-implement`, `pr-fix`, `code-handoff`,
-`status`, and `doctor`. Written only by `init`.
+`status`, and `doctor`. Created by `init`; maintained and migrated only by `sync`.
 
 Three values carry meaning, and they are not interchangeable:
 
@@ -19,7 +19,7 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | Key | Type | Notes |
 | --- | --- | --- |
 | `shipit_version` | string | Plugin version that wrote the file |
-| `generated_at` | date | Used by refresh mode to detect human edits |
+| `generated_at` | date | Initial generation date; never used to infer human edits |
 | `sdd_tracking` | `committed` \| `local` | Asked once at first `init`. `local` means excluded via `.git/info/exclude`, never `.gitignore`. Read by `code-handoff` (staging) and `code-plan`'s worktree step (contract sharing) |
 | `handoff.allow` | string[] | Side effects `code-handoff` may perform. Absent → `["branch", "commit", "push", "pr_body", "pr_ready", "tracker_status"]`. See below |
 | `run.models` | object | Optional stage model/effort overrides by `anthropic` or `openai`. Empty/absent uses the pinned defaults in `skills/run/assets/models.json`. See below |
@@ -36,7 +36,7 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `stack.frameworks` | string[] | Only from declared dependencies |
 | `stack.package_manager` | string \| null | Decided by lockfile |
 | `commands.*` | string \| null | Never written unverified. See placeholders below |
-| `commands_verified.<key>` | `{exit, at, proof}` | `proof` is the form that ran: `version`, `help`, `dry-run`, `real` |
+| `commands_verified.<key>` | `{exit, at, proof, command}` | Exact proving command; proof is `resolve`, `version`, `help`, `dry-run`, or `real`. Only `real` proves execution of the operation |
 | `paths.plans` | string | Default `.sdd/plans` |
 | `paths.tasks` | string | Default `.sdd/tasks`. Where `task-create` writes ticket drafts. Local scratch — `init` excludes it via `.git/info/exclude` |
 | `paths.rules` | string | Default `.sdd/rules` |
@@ -142,7 +142,7 @@ Defaults to `branch`, `commit`, `push`, `pr_body`, `pr_ready` and `tracker_statu
 on a default nobody remembers. Granting a capability
 never creates one: `tracker_comment` with adapter `none` is still `n/a`.
 
-Existing explicit allow-lists remain authoritative; init refresh/upgrade never
+Existing explicit allow-lists remain authoritative; sync never
 adds permissions to them automatically. Unknown entries are ignored and reported
 as drift. An empty list means `code-handoff` does nothing and says which capability the
 run needed.
@@ -152,15 +152,16 @@ and is independent of this list.
 ## `run.models`
 
 `run` uses native subagents, with one complete `{model, effort}` pair per stage.
-Defaults: Anthropic plan = Opus 5.5/high, implement and handoff = Sonnet 5.5/high;
-OpenAI plan = Sol 6.1/high, implement and handoff = Luna 6/xhigh. Runtime IDs are
-pinned in the run skill's `assets/models.json`; aliases are not used.
+Defaults: Anthropic plan = Opus 5.5/high, sync and implement = Sonnet 5.5/high,
+handoff = Haiku 5.5/high; OpenAI plan = Astra 6/high, sync and implement = Sol 6.1/high,
+handoff = Luna 6/high. Runtime IDs are pinned in the run skill's
+`assets/models.json`; aliases are not used. Both sync checkpoints share route `sync`.
 
 Example override: `run.models.openai.plan = {"model": "gpt-6.1-sol", "effort": "high"}`.
-Only `plan`, `implement`, `handoff` are valid stage keys. Overrides must be complete
+Only `sync`, `plan`, `implement`, `handoff` are valid stage keys. Overrides must be complete
 pairs, available in the hosting runtime; Claude Code also needs a matching native
 agent definition. A mismatch blocks the run instead of inheriting the session
-model. `init` writes `{}` and preserves explicit overrides on refresh/upgrade.
+model. `init` writes `{}`; `sync` preserves explicit overrides.
 Absent `run` is backward-compatible; no migration is needed to try the defaults.
 
 ## Reading it safely
@@ -173,18 +174,18 @@ Absent `run` is backward-compatible; no migration is needed to try the defaults.
   tries the adapter's default field names, exactly as before the field existed.
 - A `tracker.create` block that is absent means the config predates the field.
   Treat it as `supported: false` — `task-create` writes a draft and reports the drift.
-  Never patch the config to add it; that is a re-run of `init`.
+  Never patch the config to add it; that is a run of `sync`.
 - An absent `handoff.allow` is the default six, not "everything". A config written
   before the field existed uses that same default; an existing explicit list
   continues to limit delivery to its listed capabilities.
-- Never write to this file outside `init`. A skill that wants to change the
-  contract reports the drift and lets the user re-run `init`.
+- Only `init` (creation) and `sync` (maintenance) write this file. Other skills
+  report drift and return it to `sync`; they never patch config independently.
 - A command that fails *because it does not exist* means the contract has drifted.
   Say that explicitly rather than reporting it as a code failure.
 
 ## Upgrades
 
-Read by `init --upgrade`, top to bottom, every row after the config's
+Read by `sync` and `sync --upgrade`, top to bottom, every row after the config's
 `shipit_version`. A release that changes the config's shape adds a row; one that
 does not, adds nothing.
 
@@ -192,4 +193,4 @@ does not, adds nothing.
 | --- | --- | --- |
 | `0.8.0` | `language` became one language per action | String → ask the four keys, each prefilled: `plan`, `task`, `pr` with the string, `code` with `en`. Absent → ask, default `en` per key. Already an object → nothing |
 | `0.9.0` | `run.models` adds optional native subagent routing | Add `{ "models": {} }` under `run` only when absent; preserve any existing routes. Defaults are pinned in the plugin |
-| `0.10.0` | `tracker.create.fields` names where `Priority` and `Size` land | Absent → add `{ "priority": "unknown", "size": "unknown" }` and append both keys to `unknown[]`; adapter `none` → `null` for both, nothing appended. Upgrade does not detect — say `/shipit:init` resolves them once the tracker is reachable |
+| `0.10.0` | `tracker.create.fields` names where `Priority` and `Size` land | Absent → add `{ "priority": "unknown", "size": "unknown" }` and append both keys to `unknown[]`; adapter `none` → `null` for both, nothing appended. Upgrade does not detect — say `/shipit:sync` resolves them once the tracker is reachable |

@@ -59,9 +59,22 @@ class RunStateTests(unittest.TestCase):
         self.assertEqual(result.returncode == 0, success, result.stdout + result.stderr)
         return json.loads(result.stdout)
 
-    def begin(self, success=True, repo=None):
-        return self.call("begin", "--provider", "openai", "--task-file", str(self.task_file),
-                         "--branch", "codex/42-product", success=success, repo=repo)
+    def begin(self, success=True, repo=None, sync=True):
+        state = self.call("begin", "--provider", "openai", "--task-file", str(self.task_file),
+                          "--branch", "codex/42-product", success=success, repo=repo)
+        if success and sync and state["stage"] == "sync_before":
+            mode = state["mode"]
+            state = self.synced(state)
+            state["mode"] = mode
+        return state
+
+    def synced(self, state):
+        files = sorted(filter(None, (self.git(self.repo, "diff", "--name-only", "--no-renames", "HEAD")
+                       + "\n" + self.git(self.repo, "ls-files", "--others", "--exclude-standard")).splitlines()))
+        result = self.result(state, state["stage"], files=files, context_status="current",
+                             requires_revalidation=False,
+                             validation=[{"command": "git diff --check", "exit_code": 0}])
+        return self.checkpoint(state, state["stage"], result)
 
     def owned(self, state, command, *args, success=True):
         return self.call(command, "--issue-key", self.task["key"], "--owner", state["owner"],
@@ -72,7 +85,7 @@ class RunStateTests(unittest.TestCase):
         artifact = directory / f"{stage}.md"
         artifact.write_text(f"{stage} evidence\n")
         result = {"status": "completed", "artifact": str(artifact),
-                  "requested": state["routes"][stage], "effective": {"model": None, "effort": None},
+                  "requested": state["routes"]["sync" if stage.startswith("sync_") else stage], "effective": {"model": None, "effort": None},
                   "blockers": []}
         result.update(extra)
         path = directory / f"{stage}-result.json"
@@ -90,7 +103,7 @@ class RunStateTests(unittest.TestCase):
         self.git(self.repo, "diff", "--check")
         result = self.result(state, "implement", files=["product.txt"],
                              validation=[{"command": "git diff --check", "exit_code": 0}])
-        return self.checkpoint(state, "implement", result)
+        return self.synced(self.checkpoint(state, "implement", result))
 
     def test_new_task_pulls_main_before_branching(self):
         self.git(self.repo, "switch", "-c", "old-task")
@@ -186,7 +199,7 @@ class RunStateTests(unittest.TestCase):
         self.assertIn("scope changed", self.begin(success=False)["reason"])
         resumed = self.call("begin", "--provider", "openai", "--task-file", str(self.task_file),
                             "--replan-reason", "User approved updated acceptance criteria")
-        self.assertEqual(resumed["stage"], "plan")
+        self.assertEqual(resumed["stage"], "sync_before")
         snapshot = json.loads((Path(resumed["state_path"]).parent / "task.json").read_text())
         self.assertEqual(snapshot["acceptance_criteria"], self.task["acceptance_criteria"])
         self.assertEqual(resumed["artifacts"], {})
@@ -327,7 +340,7 @@ class RunStateTests(unittest.TestCase):
         (self.repo / "link.txt").symlink_to("missing-target.txt")
         result = self.result(state, "implement", files=["product.txt", "new.txt", "link.txt"],
                              validation=[{"command": "git diff --check", "exit_code": 0}])
-        state = self.checkpoint(state, "implement", result)
+        state = self.synced(self.checkpoint(state, "implement", result))
         index = Path(self.git(self.repo, "rev-parse", "--absolute-git-dir")) / "index"
         index_before = index.read_bytes()
         self.owned(state, "verify")
@@ -348,6 +361,7 @@ class RunStateTests(unittest.TestCase):
         first.write_text("Revised local plan\n")
         state = self.checkpoint(state, "plan", self.result(state, "plan", artifact=str(first)))
         state = self.owned(state, "replan", "--reason", "Correct the plan fixture")
+        state = self.synced(state)
         current = first.with_name("next-plan.md")
         current.write_text("Replacement local plan\n")
         state = self.checkpoint(state, "plan", self.result(state, "plan", artifact=str(current)))
@@ -355,7 +369,7 @@ class RunStateTests(unittest.TestCase):
         result = self.result(state, "implement",
                              files=["product.txt", ".sdd/plans/first plan.md", ".sdd/plans/next-plan.md"],
                              validation=[{"command": "git diff --check", "exit_code": 0}])
-        state = self.checkpoint(state, "implement", result)
+        state = self.synced(self.checkpoint(state, "implement", result))
         self.assertEqual(state["delivery_files"], ["product.txt"])
         self.owned(state, "verify")
         first.write_text("Unvalidated archived plan edit\n")
@@ -385,7 +399,7 @@ class RunStateTests(unittest.TestCase):
         link.symlink_to("missing-one.txt")
         result = self.result(state, "implement", files=["link.txt"],
                              validation=[{"command": "git diff --check", "exit_code": 0}])
-        state = self.checkpoint(state, "implement", result)
+        state = self.synced(self.checkpoint(state, "implement", result))
         self.owned(state, "verify")
         link.unlink()
         link.symlink_to("missing-two.txt")
@@ -405,7 +419,7 @@ class RunStateTests(unittest.TestCase):
         os.utime(product, ns=(cached_time, cached_time))
         result = self.result(state, "implement", files=["product.txt"],
                              validation=[{"command": "git diff --check", "exit_code": 0}])
-        state = self.checkpoint(state, "implement", result)
+        state = self.synced(self.checkpoint(state, "implement", result))
         self.git(self.repo, "add", "product.txt")
         self.git(self.repo, "commit", "-m", "Racy timestamp fixture")
         self.owned(state, "verify")
@@ -420,7 +434,7 @@ class RunStateTests(unittest.TestCase):
     def test_replan_archives_prior_checkpoints(self):
         state = self.implemented()
         state = self.owned(state, "replan", "--reason", "Missing edge case")
-        self.assertEqual(state["stage"], "plan")
+        self.assertEqual(state["stage"], "sync_before")
         self.assertEqual(state["artifacts"], {})
         self.assertIn("implement", state["revisions"][0]["artifacts"])
 
@@ -484,17 +498,122 @@ class RunStateTests(unittest.TestCase):
         self.assertEqual(state["stage"], "qa")
         state = self.owned(state, "qa", "--outcome", "fail", "--feedback", "Step 1 failed")
         self.assertEqual(state["stage"], "implement")
-        self.assertEqual(set(state["artifacts"]), {"plan"})
+        self.assertEqual(set(state["artifacts"]), {"sync_before", "plan"})
         self.assertEqual(state["qa"][0]["outcome"], "fail")
+
+    def test_sync_stages_cannot_be_skipped_and_changes_reach_delivery(self):
+        state = self.begin(sync=False)
+        self.assertEqual(state["stage"], "sync_before")
+        result = self.result(state, "plan")
+        self.assertIn("Expected stage", self.checkpoint(state, "plan", result, success=False)["reason"])
+        (self.repo / ".sdd/stack.md").write_text("Initial context\n")
+        state = self.synced(state)
+        self.assertIn(".sdd/stack.md", state["owned_files"])
+        state = self.checkpoint(state, "plan", self.result(state, "plan"))
+        (self.repo / "product.txt").write_text("updated\n")
+        result = self.result(state, "implement", files=["product.txt", ".sdd/stack.md"],
+                             validation=[{"command": "git diff --check", "exit_code": 0}])
+        state = self.checkpoint(state, "implement", result)
+        self.assertEqual(state["stage"], "sync_after")
+        builder = Path(state["artifacts"]["implement"]["path"]).read_bytes()
+        self.owned(state, "verify")
+        result = self.result(state, "handoff", delivery_status="completed")
+        self.assertIn("Expected stage", self.checkpoint(state, "handoff", result, success=False)["reason"])
+        (self.repo / ".sdd/stack.md").write_text("Final context\n")
+        state = self.synced(state)
+        self.assertEqual(state["stage"], "handoff")
+        self.assertEqual(builder, Path(state["artifacts"]["implement"]["path"]).read_bytes())
+        self.assertIn(".sdd/stack.md", state["delivery_files"])
+        self.owned(state, "verify")
+
+    def test_sync_conflicts_and_pending_validation_block_advancement(self):
+        state = self.begin(sync=False)
+        for extra in ({"context_status": "partial"}, {"requires_revalidation": True},
+                      {"blockers": ["Human preference conflicts with source"]},
+                      {"validation": [{"command": "check", "exit_code": 1}]}):
+            data = dict(files=[], context_status="current", requires_revalidation=False,
+                        validation=[{"command": "check", "exit_code": 0}])
+            data.update(extra)
+            result = self.result(state, "sync_before", **data)
+            self.assertEqual(self.checkpoint(state, "sync_before", result, success=False)["status"], "blocked")
+        self.assertEqual(self.call("status", "--issue-key", self.task["key"])["stage"], "sync_before")
+
+    def test_sync_owned_edits_are_protected_on_resume(self):
+        state = self.begin(sync=False)
+        (self.repo / ".sdd/stack.md").write_text("Synced context\n")
+        state = self.synced(state)
+        self.owned(state, "pause", "--reason", "Interrupted before planning")
+        (self.repo / ".sdd/stack.md").write_text("New user edit\n")
+        self.assertIn("Run-owned files changed", self.begin(success=False)["reason"])
+
+    def test_failed_post_sync_returns_to_builder_and_repeats_sync(self):
+        state = self.begin()
+        state = self.checkpoint(state, "plan", self.result(state, "plan"))
+        (self.repo / "product.txt").write_text("updated\n")
+        result = self.result(state, "implement", files=["product.txt"],
+                             validation=[{"command": "check", "exit_code": 0}])
+        state = self.checkpoint(state, "implement", result)
+        failed = self.result(state, "sync_after", status="blocked", files=["product.txt"],
+                             blockers=["New required check failed"])
+        state = self.owned(state, "repair", "--reason", "New check", "--result-file", str(failed))
+        self.assertEqual(state["stage"], "implement")
+        self.assertNotIn("implement", state["artifacts"])
+        self.assertEqual(set(state["artifacts"]), {"sync_before", "plan"})
+        result = self.result(state, "implement", files=["product.txt"],
+                             validation=[{"command": "new check", "exit_code": 0}])
+        state = self.checkpoint(state, "implement", result)
+        self.assertEqual(state["stage"], "sync_after")
+
+    def test_legacy_active_run_requires_explicit_reconciliation(self):
+        state = self.begin()
+        self.owned(state, "pause", "--reason", "Upgrade fixture")
+        path = Path(state["state_path"])
+        saved = json.loads(path.read_text())
+        saved["version"] = 1
+        saved["artifacts"].pop("sync_before")
+        path.write_text(json.dumps(saved))
+        self.assertIn("Legacy run", self.begin(success=False)["reason"])
+        state = self.call("begin", "--provider", "openai", "--task-file", str(self.task_file),
+                          "--replan-reason", "Reconciled old run")
+        self.assertEqual(state["stage"], "sync_before")
+        self.assertEqual(state["version"], 2)
+
+    def test_post_sync_replan_preserves_new_context_ownership(self):
+        state = self.begin()
+        state = self.checkpoint(state, "plan", self.result(state, "plan"))
+        (self.repo / "product.txt").write_text("updated\n")
+        result = self.result(state, "implement", files=["product.txt"],
+                             validation=[{"command": "check", "exit_code": 0}])
+        state = self.checkpoint(state, "implement", result)
+        (self.repo / ".sdd/stack.md").write_text("New evidence\n")
+        result = self.result(state, "sync_after", status="blocked",
+                             files=["product.txt", ".sdd/stack.md"], blockers=["Plan conflict"])
+        state = self.owned(state, "replan", "--reason", "Approved plan correction",
+                           "--result-file", str(result))
+        self.assertEqual(state["stage"], "sync_before")
+        self.assertEqual(set(state["revisions"][-1]["owned_files"]), {"product.txt", ".sdd/stack.md"})
+        state = self.synced(state)
+        self.assertEqual(state["stage"], "plan")
+
+    def test_sync_route_override_is_independent_of_builder(self):
+        self.config["run"] = {"models": {"openai": {
+            "sync": {"model": "custom-sync", "effort": "high"},
+            "implement": {"model": "custom-builder", "effort": "medium"}}}}
+        (self.repo / ".sdd/config.json").write_text(json.dumps(self.config))
+        routes = self.call("routes", "--provider", "openai")["routes"]
+        self.assertEqual(routes["sync"]["model"], "custom-sync")
+        self.assertEqual(routes["implement"]["model"], "custom-builder")
 
     def test_default_routes_and_complete_override(self):
         default = self.call("routes", "--provider", "openai")["routes"]
         self.assertEqual(default, {
+            "sync": {"model": "gpt-6.1-sol", "effort": "high"},
             "plan": {"model": "gpt-6-astra", "effort": "high"},
             "implement": {"model": "gpt-6.1-sol", "effort": "high"},
             "handoff": {"model": "gpt-6-luna", "effort": "high"},
         })
         self.assertEqual(self.call("routes", "--provider", "anthropic")["routes"], {
+            "sync": {"model": "claude-sonnet-5-5", "effort": "high"},
             "plan": {"model": "claude-opus-5-5", "effort": "high"},
             "implement": {"model": "claude-sonnet-5-5", "effort": "high"},
             "handoff": {"model": "claude-haiku-5-5", "effort": "high"},

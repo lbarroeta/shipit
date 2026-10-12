@@ -149,7 +149,7 @@ def routes(repo, provider):
         raise Blocked("run and run.models must be objects.")
     overrides = run_config.get("models", {}).get(provider, {})
     if not isinstance(overrides, dict) or set(overrides) - set(selected):
-        raise Blocked("run.models must contain only plan, implement and handoff routes.")
+        raise Blocked("run.models must contain only sync, plan, implement and handoff routes.")
     selected.update(overrides)
     for stage, route in selected.items():
         if (not isinstance(route, dict) or set(route) != {"model", "effort"}
@@ -180,6 +180,9 @@ def begin(repo, args):
             raise Blocked(f"Run belongs to checkout {state['repo']}.")
         if state and state["source_digest"] != source_digest and not args.replan_reason:
             raise Blocked("Task scope changed. Reconcile the saved plan with the user before resuming.")
+        if state and state.get("version", 1) < 2 and state["stage"] not in {"qa", "done", "preparing"}:
+            if not args.replan_reason:
+                raise Blocked("Legacy run lacks sync checkpoints. Reconcile existing delivery effects, then resume with --replan-reason.")
         if state:
             state["owner"] = owner
             state["provider"] = args.provider
@@ -213,7 +216,7 @@ def begin(repo, args):
             git(repo, "check-ref-format", "--branch", args.branch)
             if git(repo, "branch", "--list", args.branch):
                 raise Blocked("Task branch already exists without a run record; inspect it before adopting it.")
-            state = {"version": 1, "issue_key": task["key"], "issue_url": task["url"],
+            state = {"version": 2, "issue_key": task["key"], "issue_url": task["url"],
                      "repo": str(repo), "branch": args.branch, "source_digest": source_digest,
                      "provider": args.provider, "routes": routes(repo, args.provider)["routes"],
                      "owner": owner, "stage": "preparing", "status": "active",
@@ -249,7 +252,8 @@ def begin(repo, args):
             git(repo, "switch", "--no-overwrite-ignore", state["branch"])
         else:
             git(repo, "switch", "--no-overwrite-ignore", "-c", state["branch"], state["base_sha"])
-        state["stage"] = "plan"
+        state["version"] = 2
+        state["stage"] = "sync_before"
         state["status"] = "active"
         write_json(path, state)
         return {"mode": "new", "state_path": str(path), **state}
@@ -271,6 +275,10 @@ def verify_artifacts(state):
 
 def verify_pending(repo, state):
     pending = state.get("pending")
+    if not pending and state["stage"] in {"plan", "implement", "sync_after"} and "owned_files" in state:
+        owned = state["owned_files"]
+        if changed_paths(repo) != set(owned) or any(file_digest(repo / name) != value for name, value in owned.items()):
+            raise Blocked("Run-owned files changed since the last checkpoint; reconcile before resuming.")
     if pending:
         if file_digest(Path(pending["artifact"])) != pending["sha256"]:
             raise Blocked("Incomplete run report changed; reconcile ownership before resuming.")
@@ -279,14 +287,28 @@ def verify_pending(repo, state):
             raise Blocked("Incomplete run files changed; do not adopt user changes as run-owned.")
 
 
+def capture_pending(repo, state, result_file):
+    result = read_result(result_file)
+    artifact = Path(result["artifact"]).resolve()
+    files = result.get("files")
+    if (result["status"] not in {"blocked", "failed"} or not artifact.is_file()
+            or not isinstance(files, list) or set(files) != changed_paths(repo)):
+        raise Blocked("Incomplete result needs a report and verified full run-owned manifest.")
+    state["pending"] = {"artifact": str(artifact), "sha256": file_digest(artifact),
+                        "files": {name: file_digest(repo / name) for name in files}}
+
+
 def reset_plan(state, reason):
     state.setdefault("revisions", []).append({
         "reason": reason, "artifacts": state["artifacts"],
         "source_digest": state["source_digest"],
-        "owned_files": state.get("pending", {}).get("files", state.get("validated_files", {}))})
+        "owned_files": state.get("pending", {}).get("files", state.get("owned_files", state.get("validated_files", {})))})
     state["artifacts"] = {}
     state.pop("pending", None)
-    state["stage"] = "plan"
+    state["stage"] = "sync_before"
+    state["version"] = 2
+    for key in ("validated_files", "validated_head", "validated_diff", "validated_tree", "delivery_files"):
+        state.pop(key, None)
 
 
 def changed_paths(repo):
@@ -340,7 +362,8 @@ def verify_validation(repo, state):
 
 
 def checkpoint(repo, state, args):
-    expected = {"plan": "implement", "implement": "handoff", "handoff": "qa"}
+    expected = {"sync_before": "plan", "plan": "implement", "implement": "sync_after",
+                "sync_after": "handoff", "handoff": "qa"}
     if state["stage"] != args.stage:
         raise Blocked(f"Expected stage {state['stage']}, received {args.stage}.")
     result = read_result(args.result_file)
@@ -353,15 +376,27 @@ def checkpoint(repo, state, args):
     effective = result.get("effective", {})
     if not requested.get("model") or not requested.get("effort"):
         raise Blocked("Record the requested model and effort.")
-    if requested != state["routes"][args.stage]:
+    if requested != state["routes"]["sync" if args.stage.startswith("sync_") else args.stage]:
         raise Blocked("Requested model/effort differs from this run's configured route.")
     if effective.get("model") and effective["model"] != requested["model"]:
         raise Blocked("Effective model differs from the configured route.")
     if effective.get("effort") and effective["effort"] != requested["effort"]:
         raise Blocked("Effective effort differs from the configured route.")
-    if args.stage == "plan" and result.get("blockers") != []:
-        raise Blocked("The plan must explicitly report no unresolved blockers.")
-    if args.stage == "implement":
+    if args.stage in {"sync_before", "plan", "sync_after"} and result.get("blockers") != []:
+        raise Blocked("The stage must explicitly report no unresolved blockers.")
+    if args.stage == "sync_after" and str(artifact) == state["artifacts"]["implement"]["path"]:
+        raise Blocked("Final sync must write a separate delivery report; preserve builder evidence.")
+    if args.stage.startswith("sync_"):
+        if result.get("context_status") not in {"current", "updated"}:
+            raise Blocked("Sync needs current or updated context; partial/unknown context cannot advance.")
+        if result.get("requires_revalidation") is not False:
+            raise Blocked("Sync must resolve required revalidation before advancing.")
+        if not isinstance(result.get("files"), list) or set(result["files"]) != changed_paths(repo):
+            raise Blocked("Sync manifest must exactly match current changes, including prior run-owned files.")
+        checks = result.get("validation", [])
+        if not checks or any(check["exit_code"] != 0 for check in checks):
+            raise Blocked("Sync needs successful executed context validation.")
+    if args.stage in {"implement", "sync_after"}:
         checks = result.get("validation", [])
         if not checks or any(not check.get("command") or type(check.get("exit_code")) is not int
                              or check["exit_code"] != 0 for check in checks):
@@ -381,6 +416,10 @@ def checkpoint(repo, state, args):
         state["validated_tree"] = proposed_tree(repo, state["delivery_files"], state["validated_head"])
     if args.stage == "handoff" and result.get("delivery_status") not in {"completed", "skipped"}:
         raise Blocked("A partial/blocked delivery remains at handoff for reconciliation.")
+    if args.stage.startswith("sync_"):
+        state["routes"] = routes(repo, state["provider"])["routes"]
+    if args.stage != "handoff":
+        state["owned_files"] = {name: file_digest(repo / name) for name in changed_paths(repo)}
     state["artifacts"][args.stage] = {"path": str(artifact), "sha256": file_digest(artifact)}
     state.pop("pending", None)
     state["agents"].append({"stage": args.stage, "agent_id": result.get("agent_id"),
@@ -401,17 +440,17 @@ def main():
     start.add_argument("--replan-reason", help="Explicitly reconcile an approved scope/artifact correction")
     status = commands.add_parser("status")
     status.add_argument("--issue-key", required=True)
-    for command in ("checkpoint", "pause", "qa", "verify", "replan"):
+    for command in ("checkpoint", "pause", "qa", "verify", "replan", "repair"):
         sub = commands.add_parser(command)
         sub.add_argument("--issue-key", required=True)
         sub.add_argument("--owner", required=True)
         if command == "checkpoint":
-            sub.add_argument("--stage", choices=["plan", "implement", "handoff"], required=True)
+            sub.add_argument("--stage", choices=["sync_before", "plan", "implement", "sync_after", "handoff"], required=True)
             sub.add_argument("--result-file", required=True)
-        elif command in {"pause", "replan"}:
+        elif command in {"pause", "replan", "repair"}:
             sub.add_argument("--reason", required=True)
-            if command == "pause":
-                sub.add_argument("--result-file", help="Save a verified incomplete child's report and owned files")
+            if command in {"pause", "repair", "replan"}:
+                sub.add_argument("--result-file", help="Save a verified incomplete child's report and owned files", required=command == "repair")
         elif command == "qa":
             sub.add_argument("--outcome", choices=["pass", "fail", "blocked"], required=True)
             sub.add_argument("--feedback", required=True)
@@ -434,24 +473,28 @@ def main():
             require_owner(state, locks, args.owner)
             if args.command == "pause":
                 if args.result_file:
-                    result = read_result(args.result_file)
-                    artifact = Path(result.get("artifact", "")).resolve()
-                    files = result.get("files")
-                    if (result.get("status") not in {"blocked", "failed"} or not artifact.is_file()
-                            or not isinstance(files, list) or set(files) != changed_paths(repo)):
-                        raise Blocked("Incomplete result needs a report and verified full run-owned manifest.")
-                    state["pending"] = {"artifact": str(artifact), "sha256": file_digest(artifact),
-                                        "files": {name: file_digest(repo / name) for name in files}}
+                    capture_pending(repo, state, args.result_file)
                 state.update(status="paused", reason=args.reason)
             else:
                 require_branch(repo, state)
                 if args.command == "replan":
+                    if args.result_file:
+                        capture_pending(repo, state, args.result_file)
                     verify_pending(repo, state)
                     reset_plan(state, args.reason)
                 else:
                     verify_artifacts(state)
-                if args.command == "verify":
-                    if state["stage"] != "handoff":
+                if args.command == "repair":
+                    if state["stage"] != "sync_after":
+                        raise Blocked("Repair is only applicable after implementation sync failed.")
+                    capture_pending(repo, state, args.result_file)
+                    state.setdefault("repairs", []).append({"reason": args.reason,
+                        "artifacts": {key: state["artifacts"][key] for key in ("implement", "sync_after") if key in state["artifacts"]}})
+                    for key in ("implement", "sync_after", "handoff"):
+                        state["artifacts"].pop(key, None)
+                    state["stage"] = "implement"
+                elif args.command == "verify":
+                    if state["stage"] not in {"sync_after", "handoff"}:
                         raise Blocked("Validation verification is only applicable before delivery.")
                     verify_validation(repo, state)
                 elif args.command == "checkpoint":
@@ -465,8 +508,12 @@ def main():
                     if args.outcome == "pass":
                         state["stage"] = "done"
                     elif args.outcome == "fail":
-                        state["stage"] = "implement"
-                        for stage in ("implement", "handoff"):
+                        if state.get("version", 1) < 2:
+                            reset_plan(state, "Legacy QA repair requires synchronized context")
+                        else:
+                            state["stage"] = "implement"
+                        state["owned_files"] = {name: file_digest(repo / name) for name in changed_paths(repo)}
+                        for stage in ("implement", "sync_after", "handoff"):
                             state["artifacts"].pop(stage, None)
             write_json(state_path, state)
             if args.command == "pause":

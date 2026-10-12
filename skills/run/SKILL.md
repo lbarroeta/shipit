@@ -1,6 +1,6 @@
 ---
 name: run
-description: Execute an existing issue or card from its ID or URL through shipit planning, implementation, validation and handoff, using sequential native subagents with stage-specific models. Resume the same task or process human QA feedback. For non-developers with a defined task; not for drafting ideas or creating tickets. Supports Claude Code and local Codex.
+description: Execute an existing issue or card from its ID or URL through shipit context sync, planning, implementation, final sync and handoff, using sequential native subagents with stage-specific models. Resume the same task or process human QA feedback. For non-developers with a defined task; not for drafting ideas or creating tickets. Supports Claude Code and local Codex.
 metadata:
   input: issue-id-or-url
   output: qa-delivery
@@ -10,7 +10,7 @@ metadata:
 # shipit run
 
 One conversation owns the task. You are the coordinator: prepare Git, delegate,
-wait, checkpoint and explain QA. **Do not perform the planner, builder or delivery
+wait, checkpoint and explain QA. **Do not perform the synchronizer, planner, builder or delivery
 agent's work yourself.** Use real native subagents, not role-playing or new
 user-owned chats. Their model/effort pairs come from `assets/models.json`, with
 explicit per-repo overrides in `run.models` of `.sdd/config.json`.
@@ -73,43 +73,55 @@ and passes `--no-worktree` to its planner.
    force-push or adopt an unrelated branch. Resume keeps the saved branch and
    checkout; it never pulls `main` again. If another task's branch is selected,
    it switches to the saved branch only when clean. Resolve and verify availability
-   of all three returned model/effort pairs before any child runs. Retain owner
+   of all four returned model/effort routes before any child runs. Retain owner
    token and state path.
-4. **Planner.** Delegate `shipit:code-plan --no-worktree` with the issue snapshot,
-   checkout and authorized scope. Pass the absolute plugin path to
-   `skills/code-plan/SKILL.md`. Wait for completion. Verify the plan exists,
-   meets `code-plan`'s output contract and has no blockers, including its startup
-   tracker transition (`orchestration.md § Planning status`); checkpoint `plan`.
-   A blocked result stays at this stage; pause with the exact gap. Keep a
-   generated plan's path as a run-owned file
-   for the builder's user-change protection.
-5. **Builder.** Delegate `shipit:code-implement --defer-handoff` with the plan, explicit
-   task-run authorization and the absolute plugin path to
-   `skills/code-implement/SKILL.md`. Include run-owned paths (generated plan, verified pending
-   file hashes, and archived revision ownership that still matches). Wait; verify its report and actual
-   validation results. Keep generated plans out of the report's delivery manifest;
-   retain non-ignored plan paths in the result's full ownership manifest. The helper
-   validates them locally while excluding them from the delivery tree.
-   Write reports/results into the run directory under
-   Git metadata so they cannot become accidental commits. Checkpoint `implement`
-   only after executed validation exits 0. No delivery on blocked/incomplete work.
-6. **Delivery.** Before dispatch, verify the branch and validated files have not
-   changed since the builder returned. Delegate `shipit:code-handoff` in `implementation`
-   mode with the absolute plugin path to `skills/code-handoff/SKILL.md`, the
-   immutable report, current allow-list and durable delivery journal.
-   Wait and verify actual commit/push/PR outcomes; checkpoint `handoff` only when
-   permitted steps finished or were deliberately skipped. Partial delivery stays
-   at `handoff`: reconcile existing effects before retrying, never duplicate them.
-7. **Human QA.** Present what changed, where to test, plain-language steps with
+4. **Context before planning.** Delegate `shipit:sync` in `before-plan` phase
+   using route `sync` and the absolute `skills/sync/SKILL.md` path. Pass issue,
+   checkout, ownership and report/result paths. Wait; verify source evidence,
+   conflicts, actual context validation and full owned-file manifest. Checkpoint
+   `sync_before` only when context is current/updated with no unresolved blockers.
+   Re-read config after sync; resolve routes/capabilities again before later stages.
+   If tracker identity changed, re-resolve the issue rather than keeping a stale
+   target. No planning from an unverified sync result.
+5. **Planner.** Delegate `shipit:code-plan --no-worktree` with the issue snapshot,
+   synchronized context, sync-owned paths, checkout and authorized scope. Pass the
+   absolute plugin path to `skills/code-plan/SKILL.md`. Wait; verify the plan exists,
+   meets its output contract and has no blockers, including startup tracker
+   transition (`orchestration.md § Planning status`); checkpoint `plan`. Preserve
+   its path as a run-owned file. Blocked results pause at this stage.
+6. **Builder.** Delegate `shipit:code-implement --defer-handoff` with plan, explicit
+   task-run authorization and absolute skill path. Include all run-owned paths
+   from sync and planning, verified pending hashes and archived ownership still
+   matching disk. Wait; verify report and executed validation. Store immutable
+   reports/results in the run directory under Git metadata. Checkpoint `implement`
+   only with passing executed checks and full ownership manifest; generated plans
+   remain in ownership but outside the report's delivery manifest.
+7. **Context after implementation.** Run the helper's `verify` before dispatch to
+   check builder artifacts/files have not changed. Delegate `shipit:sync` in
+   `after-implement` phase using the same `sync` route, with plan, builder report,
+   validated manifest and ownership. It returns a separate final delivery report
+   that includes context/doc edits and applicable final validation. Preserve the
+   original builder report. Checkpoint `sync_after` only with current/updated
+   context, no conflicts, no pending revalidation and passing context checks.
+   A required product check failure uses `repair --result-file ... --reason ...`
+   to return to the builder, then sync again; changed plan scope uses `replan` and
+   the user's decision when needed. Never send stale builder hashes to delivery.
+8. **Delivery.** Run `verify` against the post-sync snapshot. Delegate
+   `shipit:code-handoff` in `implementation` mode with its absolute skill path,
+   immutable **sync_after delivery report**, original builder evidence, current
+   allow-list and durable journal. Wait and verify actual outcomes; checkpoint
+   `handoff` only when permitted steps finished or were deliberately skipped.
+   Partial delivery stays at `handoff`; reconcile effects before retrying.
+9. **Human QA.** Present what changed, where to test, plain-language steps with
    expected results, and what remains. Reachable environment/account/setup available
    → "Ready for QA". Missing environment → "Implemented; QA blocked", with the
    missing prerequisite, never terminal instructions for the non-developer. Backend
    only → report what automated validation covered and any applicable non-UI checks.
    A draft PR or green tests do not mean human QA passed. Record only explicit human
    results. On failure, attach the failed step/expected/actual evidence, invalidate
-   implementation/delivery checkpoints and delegate repair to the builder on the
-   same branch. A scope change returns to the user and planner.
-8. **Pause cleanly.** After children finish, pause the run to release both locks
+   implementation/final-sync/delivery checkpoints and delegate repair to the builder on the
+   same branch, followed by final sync before delivery. A scope change returns to the user and planner.
+10. **Pause cleanly.** After children finish, pause the run to release both locks
    while waiting for QA, a decision or after any failure. For incomplete work,
    persist the verified child result and full run-owned manifest using
    `pause --result-file`; those file hashes protect ownership on resume. No child may still be
@@ -122,8 +134,9 @@ and passes `--no-worktree` to its planner.
 
 The coordinator is the only dispatcher. Spawn one child per stage; wait before
 advancing. Use native follow-up messages to ask for evidence or a bounded repair.
-A builder that finds a contract gap returns it to you; ask the planner to correct
-the plan, then give the new artifact to the builder. Major scope changes need the
+A builder that finds context drift returns it to you; use `replan` to return
+through pre-plan sync and planning before implementation. Plan-scope changes
+require the corresponding decision, not an automatic rewrite of acceptance criteria. Major scope changes need the
 user. Do not let children spawn their own pipeline or call `run` recursively.
 
 `references/orchestration.md` owns the message/result contracts and checkpoints.

@@ -1,6 +1,6 @@
 ---
 name: init
-description: Use to bootstrap or refresh the `.sdd/` contract for a repo — detects stack, verified commands, layers, test patterns, tracker, and companions from evidence, then points `AGENTS.md` at it so any agent loads it. Run once per repo before `code-plan` or `code-implement`. Do not use to plan or write product code.
+description: Use to initialize the `.sdd/` contract for a repo once — detects stack, verified commands, layers, test patterns, tracker, and companions from evidence, then points `AGENTS.md` at it so any agent loads it. Use sync to maintain or migrate an existing contract. Run once per repo before the sync/plan/implement/handoff cycle. Do not use to plan or write product code.
 metadata:
   writes_product_code: false
   output: sdd-contract
@@ -8,7 +8,7 @@ metadata:
 
 # shipit init
 
-Read the repo, write the contract the other skills depend on. Every other shipit
+Initialize the repo context, write the contract the other skills depend on. Every other shipit
 skill is repo-agnostic *because* this one is not.
 
 Produces, at the repo root:
@@ -16,6 +16,7 @@ Produces, at the repo root:
 | Path | For | Content |
 | --- | --- | --- |
 | `.sdd/config.json` | machines | Commands, paths, layers, tracker, worktree, companions |
+| `.sdd/sync-state.json` | sync | Accepted generated bases and source fingerprints |
 | `.sdd/stack.md` | agents | Stack facts, one row per fact, each with evidence |
 | `.sdd/conventions.md` | agents | Patterns this repo actually follows, each with an exemplar |
 | `.sdd/rules/<layer>.md` | agents | Per-layer rules derived from real files |
@@ -69,13 +70,13 @@ two happened in the report.
 
 ## Hard rules
 
-- **No evidence, no claim.** Every line in `.sdd/*.md` carries a `path:line` or
+- **No evidence, no claim.** Every factual claim in `.sdd/*.md` carries a `path:line` or
   the exact command output that proved it. No exemplar → write `unknown`. `code-plan`
   then asks instead of guessing.
-- **A command is written only after it ran here and exited 0** (or its
-  `--version`/dry-run equivalent did). One that fails is written `null` and its
-  key is appended to `unknown[]`. Never write a command you inferred from a
-  README.
+- **Command evidence is explicit.** Record the exact proving command, exit and
+  proof kind (`resolve`, `version`, `help`, `dry-run`, `real`). Only `real` proves
+  operation execution; availability is not a passing test/build. Failed verification
+  becomes `null` plus its key in `unknown[]`. Follow detection recipe 4.
 - **Never import conventions from another repo, another framework, or your own
   priors.** This repo's files are the only source.
 - **Existing agent docs are referenced, never duplicated.** `CLAUDE.md`,
@@ -84,8 +85,9 @@ two happened in the report.
   sources of truth is the failure mode this avoids.
 - **Agent docs are documentation, not ground truth.** When a doc and the repo
   disagree, the repo wins and the discrepancy goes in the report.
-- **Install nothing.** Detect and report. `--with-companions` and `--with-graph`
-  are the only paths to a mutation, and each asks first.
+- **Install nothing by default.** Contract writes are part of initialization.
+  `--with-companions` and `--with-graph` are the only setup extensions; they
+  require authorization for installation or initial graph construction.
 - **Never write a secret** into `.sdd/`. `worktree.link[]` stays empty unless the
   user names paths explicitly.
 - **The pointer never overwrites an agent doc.** Everything outside the
@@ -101,8 +103,7 @@ two happened in the report.
   in does not imply the language its owner wants shipit to write in. Ask once,
   default `en` per key, record it in `language.{plan,task,pr,code}`.
 - **`sdd_tracking` is asked once.** First `init` only, before anything is written.
-  Refresh reads the recorded value and never re-asks except on a discrepancy
-  against real git state.
+  `sync` preserves it and resolves discrepancies against real git state.
 - **Ticket drafts are never committed.** `<paths.tasks>` (default `.sdd/tasks/`)
   is appended to `.git/info/exclude` in **both** tracking modes. A draft is scratch
   that stops being true the moment the issue exists in the tracker, which is the
@@ -114,17 +115,20 @@ two happened in the report.
   checkout.
 - **`handoff.allow` is written, never asked.** The template's six defaults —
   `branch`, `commit`, `push`, `pr_body`, `pr_ready`, `tracker_status` — go in as-is
-  on first init. Preserve existing explicit allow-lists on refresh/upgrade. Name
+  on first init. `sync` preserves existing explicit allow-lists. Name
   it in the report so additional opt-ins are discoverable.
 - **`run.models` is configuration, not detection.** First init writes `{}` to use
-  the plugin's pinned stage routes. Refresh/upgrade preserves existing overrides.
+  the plugin's pinned stage routes. `sync` preserves existing overrides.
 - No product code. No branch, commit, PR, or tracker write.
 
 ## Workflow
 
 1. **Preflight.** `git rev-parse --show-toplevel` for the root; `git rev-parse --abbrev-ref origin/HEAD` for the default branch. Not a git repo → say so and stop: tier 0 is unmet.
-2. **Refresh check.** `.sdd/` already exists → switch to Refresh mode below —
-   or Upgrade mode, with `--upgrade`.
+2. **Already initialized?** Existing `.sdd/config.json` → check that it parses
+   and required contract files/pointers exist, report gaps and direct to
+   `/shipit:sync`; do not refresh, migrate, ask setup questions or write files.
+   A partial `.sdd/` without config is not permission to overwrite its contents:
+   inspect ownership and recover only missing first-setup outputs within the request.
 3. **Ask tracking.** First `init` only — there is no recorded decision yet. Ask
    whether `.sdd/` should be committed (default — a team contract visible to CI,
    teammates, and any other agent) or stay local (nobody else sees it; each
@@ -140,7 +144,9 @@ two happened in the report.
    `pr`; `code` stays `en` unless named. Accept a tag (`es`, `pt-BR`) or a plain
    name; store the tag. Identifiers, commit subjects, branch names and `.sdd/`
    itself stay English. See `references/config-schema.md § Scope of language`.
-5. **Detect.** Work through `references/detection-recipes.md` in order. It owns every recipe; do not improvise a detection this file does not describe.
+5. **Detect.** When Graphify CLI and an existing graph are present, query relevant
+   architecture/convention concepts first and verify candidates in source; never
+   treat stale graph output as proof. Missing graph → source discovery. Work through `references/detection-recipes.md` in order. It owns every recipe; do not improvise a detection this file does not describe.
 6. **Verify commands.** Run each candidate command. Green → write it. Red or absent → `null` plus `unknown[]`. Record the result in `commands_verified`.
 7. **Derive layers.** From real directories, with one exemplar each. No fixed list of layer names.
 8. **Derive test rules.** One real test per kind, reduced to its shape.
@@ -154,73 +160,41 @@ two happened in the report.
 11. **Point at it.** Write the pointer block per *Discovery pointer* above, then link or append `CLAUDE.md`.
     Append `<paths.tasks>` to `.git/info/exclude` if nothing already covers it —
     check with `git check-ignore -q` first, in both tracking modes.
-12. **Self-check.** Every `.md` line has evidence. Every non-null command has a `commands_verified` entry. `unknown[]` matches what was actually left undetermined. The pointer exists exactly once per file. Fix before reporting.
+12. **Self-check and baseline.** Every factual claim in `.md` has evidence. Every non-null command has a `commands_verified` entry. `unknown[]` matches what was actually left undetermined. The pointer exists exactly once per file. Fix before reporting, then record the initial baseline below.
 
-## Refresh mode
+## Initial baseline
 
-`.sdd/` exists. Detection re-runs identically, then:
+After self-check, use `../sync/scripts/context_state.py` to record the exact files
+just generated. Follow `../sync/references/reconciliation.md § Baseline contract`.
+Create a temporary JSON inventory outside the repo: `managed` lists config, stack,
+conventions and each generated layer/test rule (respect `paths.rules`), and
+`unresolved` is `[]`. Run:
 
-- Show a diff per file before writing anything.
-- A file with no human edits since generation (compare against its `generated_at`
-  header) is rewritten silently.
-- A file that has been edited by hand is **never** overwritten without showing the
-  diff and asking. Human edits outrank detection — someone knew something the
-  repo does not show.
-- The pointer block is replaced between its markers without asking — it is generated
-  content. A missing block is re-added. Text outside the markers is never touched.
-- `sdd_tracking` absent — config predates this field — → ask, same as a first
-  `init`, before continuing refresh.
-- `sdd_tracking` present → read it, never re-asked — unless the repo state
-  disagrees: recorded `local` but `git ls-files .sdd | head -1` returns a
-  tracked path, or `git check-ignore -q .sdd` now fails. Either disagreement is
-  reported and asked again, same as a hand-edited file.
-- `language` is a human decision, not a detection: keep the recorded values, never
-  re-ask. `--language` overrides it; a config predating the field gets `en` per
-  key. A legacy string is migrated to the object per `§ Scope of language` —
-  `plan`, `task`, `pr` take the string, `code` gets `en` — and reported.
-- `tracker.adapter` is kept as recorded and never re-asked. `--tracker` overrides it.
-  The one exception: detection now contradicts the recorded value with a connected
-  MCP — report that as a discrepancy and ask, the same as a hand-edited file. A
-  recorded `none` that sits in `unknown[]` is re-offered once when a tracker MCP is
-  connected this time; a `none` that was a clean detection is left alone.
-- `tracker.create.fields` re-detects when a key is `"unknown"` or `null`. A string
-  is kept while the tracker still has a field by that name — it may have been set
-  by hand for a renamed field. Gone from the tracker → report and ask.
-- The design contract belongs to `design-system`, not to detection:
-  `.sdd/design-system.md` and `<paths.rules>/design.md` are never rewritten,
-  moved, or deleted here, and every `<!-- shipit:design -->` block — in a layer
-  rule or an agent doc — is carried over byte-identical. A layer rule rewritten
-  silently keeps its block at the end; the block alone never counts as a human
-  edit. A newly detected UI layer without the block → name it in the report and
-  suggest `/shipit:design-system` to link it.
-- Report what changed, what was kept, and what became `unknown` since last run.
+```sh
+python3 <plugin>/skills/sync/scripts/context_state.py --repo <repo> record --inventory <inventory.json>
+```
 
-## Upgrade mode
+The resulting `.sdd/sync-state.json` follows `sdd_tracking`. It stores accepted
+bases and source hashes so sync can recognize human edits; a date is not an edit
+detector. Python 3.10+ is required for this helper. If unavailable, report initial
+baseline pending; never claim the context can be synchronized without that gap.
+Unknown detected capabilities may remain in `unknown[]`; unresolved ownership or
+contradictory decisions must not be passed off as a completed baseline.
 
-`--upgrade`: bring an existing `.sdd/config.json` up to this plugin's version
-without re-running detection. The config's `shipit_version` against the plugin's
-is the whole scope.
+## Existing projects
 
-1. No `.sdd/config.json` → say so and stop; that is a first `init`.
-2. Same version → say "already current" and stop. Newer config than plugin → say
-   so and stop; never downgrade.
-3. Walk `references/config-schema.md § Upgrades` for every row after the recorded
-   version, in order, and apply each row's action.
-4. Any key in `assets/config-template.json` still missing from the config → add it
-   with the template value, unless the schema marks it asked (`sdd_tracking`,
-   `language`) — those are asked, same as a first `init`.
-5. Set `shipit_version`. Show the config diff and ask once before writing.
-
-Only `config.json` is touched. Values already recorded are never changed except
-by a row's action. The `.md` files, the pointer and detection are Refresh mode's
-job — say so in the report if they look stale.
+`init` initializes once. Maintenance belongs to `/shipit:sync`, including config
+migrations, command revalidation, documentation reconciliation and pointer repair.
+Legacy `init --upgrade` requests receive the replacement `/shipit:sync --upgrade`
+and stop without writing. `--language` / `--tracker` on an initialized repo are
+redirected to the same flags on sync; never rerun first-setup defaults.
 
 ## Flags
 
 - `--language <tag>` — set `plan`, `task` and `pr` without asking; `code` untouched.
   `--language plan=es,pr=en,code=en` sets only the keys named. For CI and re-runs.
-- `--upgrade` — migrate `config.json` to this plugin's version, per *Upgrade mode*.
-  Run it after updating the plugin.
+- `--upgrade` — retired here; use `/shipit:sync --upgrade` for config-only migration
+  or `/shipit:sync` for migration plus context reconciliation.
 - `--tracker <adapter>` — set `tracker.adapter` without detecting or asking:
   `linear`, `github-issues`, `jira`, `shortcut`, or `none`. For CI, and for
   correcting a detection in one command instead of hand-editing `config.json`. An
