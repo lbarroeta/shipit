@@ -43,7 +43,7 @@ shipit produces the same answers without these. It spends more tokens doing it.
 | graphify CLI | `command -v graphify` | `uv tool install graphifyy` | fast, free. Needs `uv` or pip already present |
 | graphify graph | `test -f <graph.out>/graph.json` | `graphify .` in the main checkout | **minutes + extraction tokens.** Never run automatically, at any flag |
 | caveman | `claude plugin list` names it | `claude plugin marketplace add JuliusBrussee/caveman` then `claude plugin install caveman@caveman` | plugin install, ships hooks |
-| Context7 | MCP tools `resolve-library-id` / `query-docs` listed in the session, else `command -v ctx7` | `claude mcp add --scope user --transport http context7 https://mcp.context7.com/mcp` (optional `--header "Authorization: Bearer <key>"` for higher rate limits), or `npm install -g ctx7` | user-scope MCP config, or a global npm package. Never run by `--fix` |
+| Context7 | MCP tools `resolve-library-id` / `query-docs` listed in the session, else `command -v ctx7` and `ctx7 whoami` printing `Logged in` | `claude mcp add --scope user --transport http context7 https://mcp.context7.com/mcp --header "Authorization: Bearer <key>"`; Codex: `[mcp_servers.context7]` in `~/.codex/config.toml`. Or `npm install -g ctx7` then `ctx7 login` | user-scope MCP config, or a global npm package. Never run by `--fix` |
 
 Notes:
 
@@ -54,7 +54,10 @@ Notes:
   it, library/framework API claims come from model memory and are marked
   `unverified (no docs source)`. `references/docs-lookup.md` owns when it is used.
   The MCP is a session fact `scripts/companions.sh` cannot see; doctor reads it
-  from the session, like a tracker.
+  from the session, like a tracker. Its key cannot be read without exposing it,
+  so a connected MCP is reported `ok (login not verifiable)`. Installed but not
+  logged in, or missing, raises the readiness alert in every `code-implement` and
+  `sync` run until fixed.
 - caveman compresses prose. shipit exempts non-developer QA steps from compression
   either way, so installing it never degrades the deliverable.
 

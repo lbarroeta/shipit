@@ -26,9 +26,10 @@ and verified with commands that are known to run in this repo.
   jobs, webhooks), authorization, scoped data access, trust-boundary input, secret
   handling, or query/shell construction: `references/security-standards.md`.
   Apply these triggers to support changes discovered during implementation too.
-- Required only when a trigger in `../../references/docs-lookup.md` fires — code
-  written against an external API that no cited analogue shows at the installed
-  version, or a check failing on an API assumption: that file. This skill is the
+- Required every run: `../../references/docs-lookup.md` § Readiness alert. The
+  rest of that file only when one of its triggers fires — code written against an
+  external API that no cited analogue shows at the installed version, or a check
+  failing on an API assumption. This skill is the
   only one in the cycle that looks up API docs; the plan does not.
 - Never bulk-load every rule file or every agent doc. Resolve symlinked docs once.
 - If a rule was skipped, do not claim compliance with it.
@@ -78,7 +79,8 @@ and verified with commands that are known to run in this repo.
    Legacy plans may omit these sections: verify equivalent behavior/coverage during
    preflight rather than rejecting their format. Search for more when the plan
    lacks detail or relevant drift needs checking; a graph query
-   before `rg` when `graph` is set and its output is present.
+   before `rg` when `graph` is set and its output is present. Check Context7
+   readiness per `docs-lookup.md`; not `ready` → print its alert now, continue.
 2. **Contract gate.** The plan must have a goal, acceptance criteria, a `Files`
    table with analogues, tests mapped to rule files, `Manual QA` when UI is
    touched, and no unresolved blockers. Missing → stop with
@@ -208,7 +210,7 @@ Include the exact failing command output when the stop came from repeated failur
 Use `assets/implementation-report-template.md`. Sections in that order: QA Handoff,
 QA Steps For Non-Developer, Plan, Summary, Files Changed, Tests Added/Updated,
 Validation Commands Run, Security Notes, Handoff, Known Risks or Follow-ups,
-PR Preparation.
+PR Preparation. A Context7 readiness alert from preflight goes above QA Handoff.
 
 ## Flag
 

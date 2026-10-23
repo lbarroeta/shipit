@@ -88,12 +88,18 @@ else
 fi
 
 # The Context7 MCP is a session fact this script cannot see; doctor adds it.
+# `ctx7 whoami` exits 0 either way; only its text tells the states apart.
 if has ctx7; then
-  ok "context7 cli" "$(command -v ctx7)"
+  if ctx7 whoami 2>/dev/null | grep -q "Not logged in"; then
+    miss "context7 login" "ctx7 installed but not logged in: lower rate limits, lookups may fail"
+    note "run: ctx7 login    (or export CONTEXT7_API_KEY=<key>)"
+  else
+    ok "context7 cli" "$(command -v ctx7), logged in"
+  fi
 else
   miss "context7 cli" "fine if the Context7 MCP is connected; otherwise API facts are unverified"
-  note "MCP (preferred): claude mcp add --scope user --transport http context7 https://mcp.context7.com/mcp"
-  note "or CLI: npm install -g ctx7"
+  note "MCP (preferred): claude mcp add --scope user --transport http context7 https://mcp.context7.com/mcp --header \"Authorization: Bearer <key>\""
+  note "or CLI: npm install -g ctx7 && ctx7 login"
 fi
 
 echo

@@ -5,23 +5,60 @@ current, version-matched documentation instead of model memory. Context7 is the
 supported source. Read by `code-implement`, where code is written, and by `sync`,
 where versions drift. `code-plan` does not look up docs: the plan names files,
 symbols and analogues, and the implementer verifies the API at the moment it
-writes the call. Never loaded "just in case".
+writes the call. **Readiness alert** runs in every preflight; the rest is read
+only when a trigger fires.
 
 ## Mechanism, in order
 
 1. **Context7 MCP** — tools `resolve-library-id` and `query-docs`, under whatever
    prefix the host gives them (`mcp__context7__…`, `mcp__<gateway>__context7__…`).
    Only when they are listed in this session.
-2. **`ctx7` CLI** — only when `command -v ctx7` succeeds:
-   `ctx7 library <name> "<query>"` then `ctx7 docs <libraryId> "<query>"`.
+2. **`ctx7` CLI** — only when `command -v ctx7` succeeds and `ctx7 whoami` prints
+   `Logged in`: `ctx7 library <name> "<query>"` then `ctx7 docs <libraryId> "<query>"`.
+   Logged out it works on anonymous rate limits that fail mid-run, so shipit
+   treats it as not ready rather than half-working.
    Never `npx ctx7@latest` implicitly: it downloads and runs a package, and
    installing tools is `doctor --fix`'s call.
-3. **Neither** → no lookup. The API claim is marked `unverified (no docs source)`
-   in the report, once. Missing docs degrade the work; they never block it.
+3. **Neither** → no lookup, and the **Readiness alert** below. The API claim is
+   marked `unverified (no docs source)`. Missing docs degrade the work; they never
+   block it.
 
 `companions.context7` in `config.json` records what `init`/`sync` saw. The
 session is the truth: a connected MCP beats a stale `absent`, and a configured
 one that fails to connect is `unverified`, not absent.
+
+## Readiness alert
+
+`code-implement` and `sync` check readiness once, in preflight, before any work —
+not only when a trigger fires, so the user can fix it before the run depends on it:
+
+| State | Evidence |
+| --- | --- |
+| `ready` | Context7 MCP tools listed in the session, or `ctx7` on PATH and `ctx7 whoami` prints `Logged in` (`CONTEXT7_API_KEY` counts) |
+| `not logged in` | No MCP; `ctx7` present but `ctx7 whoami` prints `Not logged in` |
+| `missing` | No MCP tools, no `ctx7` |
+| `failing` | A call returned an auth (401/403), rate-limit (429) or connection error. Raised mid-run; no further lookups this run |
+
+The MCP's login (API key header or OAuth) cannot be read without exposing the
+key, so a listed MCP is `ready` until a call proves otherwise.
+
+Not `ready` → print this block before work starts and repeat it at the top of the
+final report, in `language.plan` with commands verbatim:
+
+```
+⚠ Context7 <missing | not logged in | failing>: library and framework APIs in
+this run are not checked against the installed version; they are marked
+`unverified (no docs source)`.
+Fix (once per machine), then re-run:
+  Claude Code MCP: claude mcp add --scope user --transport http context7 https://mcp.context7.com/mcp --header "Authorization: Bearer <key>"
+  CLI:             npm install -g ctx7 && ctx7 login
+Check with /shipit:doctor.
+```
+
+The alert never blocks and never fixes: no install, no `ctx7 login` (it opens a
+browser and is the user's account), no key requested or written. A run without
+Context7 must still finish correctly — it is the alert that makes the lower
+assurance visible instead of silent.
 
 ## Triggers
 

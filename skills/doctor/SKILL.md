@@ -46,8 +46,9 @@ lose rather than implying breakage.
    whether that adapter's mechanism is connected in this session. Say which of the
    two sources each half came from; never report an MCP as connected without having
    seen it in the session. Context7 the same way: its MCP tools listed in the
-   session → `ok  MCP connected`; otherwise the script's `ctx7` line. Configured
-   but failed to connect → `unverified`, not missing.
+   session → `ok  MCP connected (login not verifiable)`; otherwise the script's
+   `ctx7` lines, including login. Configured but failed to connect →
+   `unverified`, not missing.
 4. Print the report below.
 5. `--fix` → show what will run, ask once, then invoke the script with `--yes`.
    Re-run step 1 afterwards and print the new state.
@@ -64,7 +65,7 @@ tier 2  graphify cli        ok       ~/.local/bin/graphify
         graphify graph      missing  → graphify .        cost: minutes + tokens
         graph in worktree   n/a      symlinked from main checkout
         caveman             missing  → prose stays uncompressed
-        context7            ok       MCP connected
+        context7            ok       MCP connected (login not verifiable)
 tier 3  ponytail            absent   correct — ladder is vendored
 
 contract
@@ -97,7 +98,7 @@ reading this should know whether they can proceed, in one line.
 | `tracker.create.supported` false | The draft carries no paste target. `task-create` drafts either way — publishing requires authorized `code-handoff` with `issue_create` — and with adapter `none` this is the expected state, not a gap. |
 | graphify CLI | Discovery falls back to `rg`/`git grep`. Same answers, more tokens. |
 | graphify graph | Same as above — having the CLI without a graph changes nothing. |
-| Context7 (no MCP, no `ctx7`) | `code-implement` and `sync` cannot check library APIs or deprecations against the installed version; those claims are marked unverified. Implementation still works. |
+| Context7 (no MCP, no `ctx7`, or `ctx7` not logged in) | Every `code-implement` and `sync` run opens with a readiness alert. They cannot check library APIs or deprecations against the installed version; those claims are marked unverified. Implementation still works. |
 | caveman | Chat prose and reports stay long. Note that shipit keeps PR bodies and reports short on its own, and exempts non-developer QA steps from compression either way. |
 | `.sdd/` absent | `code-plan` and `code-implement` refuse to run. Fix: `/shipit:init`. |
 | pointer absent | shipit skills still read `.sdd/` by path, but every other agent working in this repo ignores it and codes to its own priors. Fix: `/shipit:sync`. |

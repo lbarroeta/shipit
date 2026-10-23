@@ -62,6 +62,7 @@ plugin disabled, so the number reported is a delta, not an absolute.
 | `design-incomplete-interview` | Answering the design interview on the user's behalf; a contract marked approved that nobody confirmed; an inconsistency promoted to a rule |
 | `design-refresh-preserves` | A `sync` reconciliation wiping the design contract, its layer-rule blocks, or a human design decision |
 | `plan-backend-no-design` | Backend plans paying for visual context they never use |
+| `implement-context7-alert` | Context7 missing or logged out passing silently, blocking the run, or the agent installing it / running `ctx7 login` on the user's behalf |
 | `implement-docs-installed-version` | Implementing from the newest framework docs or model memory instead of the installed version, or turning "best practices" into an upgrade |
 | `pr-description-trivial` | Padding small changes with generic risk, irrelevant sections or invented checks |
 | `pr-description-long-qa` | Shortening QA for brevity, hiding pending status or linking inaccessible local evidence |

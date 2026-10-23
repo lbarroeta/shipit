@@ -148,5 +148,6 @@ An observed substitution blocks the stage.
 
 Output follows `language.plan`; QA instructions stay complete even in terse mode.
 End with issue link, task branch, delivered PR/artifacts, QA status and any exact
-blocker. No merge, deployment, production mutation or tracker notification implied
+blocker. A Context7 readiness alert from any child is relayed once, verbatim, at
+the top of that summary — never dropped. No merge, deployment, production mutation or tracker notification implied
 by running this pipeline.

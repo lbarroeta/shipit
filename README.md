@@ -637,7 +637,7 @@ Run `/shipit:doctor` for your machine's actual state.
 | --- | --- | --- |
 | **0 — required** | `git` | shipit does not run. That is the whole tier. |
 | **1 — recommended** | `gh` authenticated; a tracker MCP if you use one | `code-handoff` cannot push or open a PR; without a tracker MCP it falls back on your branch convention. `task-create` still drafts, `code-plan` and `code-implement` are unaffected. |
-| **2 — accelerators** | graphify CLI + graph; caveman; Context7 | Discovery falls back to `rg`: same answers, more tokens. Without Context7, library and framework API claims come from model memory and are marked unverified. |
+| **2 — accelerators** | graphify CLI + graph; caveman; Context7 | Discovery falls back to `rg`: same answers, more tokens. Without Context7 — or with `ctx7` not logged in — every `code-implement` and `sync` run opens with an alert, and library and framework API claims are marked unverified. |
 | **3 — do not enable during a cycle** | the ponytail plugin | Nothing. The useful part is already vendored here. |
 
 Nothing is installed for you. `doctor --fix` offers the two safe installs after one
