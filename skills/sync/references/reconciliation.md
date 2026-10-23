@@ -81,6 +81,32 @@ contradictions block downstream work until resolved. Accepted plan/request may
 already authorize a precise human-doc correction; otherwise return a proposed
 patch and the needed decision. Do not mass-regenerate README or user docs.
 
+## Dependency drift
+
+Triggered when a manifest, lockfile or runtime pin moved a dependency the contract
+names (`stack.*`, a rule's exemplar or guidance) by a major or minor version, or
+when no recorded version exists yet for a framework the rules lean on. Patch-only
+bumps refresh the version text and stop there.
+
+1. Read installed versions from lockfiles/pin files, never declared ranges.
+2. For each moved framework/runtime/library the rules or conventions mention:
+   `../../references/docs-lookup.md`, asking for the upgrade/migration notes and
+   deprecations between the old and new version. Budget per that file.
+3. Apply by ownership, through the normal base/current/candidate merge:
+   - `stack.md` — version value and evidence: owned, update with the citation.
+   - Generated rules and `conventions.md` that recommend an API now deprecated or
+     removed at the installed version: owned, candidate cites the docs and the
+     replacement. A human edit on that fact → conflict, never a silent rewrite.
+   - Human docs (README, agent docs, ADRs) stating the old behaviour: proposed
+     patch with the citation, not an edit, unless the approved plan names it.
+   - Product code still using the deprecated API: report as pending follow-up
+     with paths and the replacement. Sync never edits product code.
+4. No docs source → update versions from lockfiles only, and report the
+   deprecation review as `unknown`, not done.
+
+A newer upstream version than the installed one is never a reason to change the
+contract; it is at most a line in the report.
+
 ## Command evidence
 
 Follow detection recipes, preserving `{path}` / `{base}` placeholders. Record

@@ -61,7 +61,7 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `tracker.create.fields.size` | string \| null \| `"unknown"` | Same, for `Size` (`XS`–`XL`). Only a T-shirt field counts — `estimate` in Linear when the team's scale is T-shirt, a `Size` single-select on a GitHub Project, a `Size` field in Jira or Shortcut. A points scale is `null`: a size is never converted to points |
 | `graph` | object \| null | `{tool, out, query, path, explain, update}`. Null unless CLI **and** graph exist |
 | `markers.debt` | string | Default `ponytail:` |
-| `companions.*` | `present` \| `absent` | `ponytail`, `graphify_cli`, `graphify_graph`, `caveman` |
+| `companions.*` | `present` \| `absent` | `ponytail`, `graphify_cli`, `graphify_graph`, `caveman`, `context7` (MCP tools listed in the session or `ctx7` on PATH; a session fact, re-read by `sync`) |
 | `worktree.enabled` | boolean | **Default `false`.** Opt-in: `code-plan` works in the current checkout unless the user turns this on |
 | `worktree.root` | string | Default `../worktrees/<repo.name>` |
 | `worktree.base` | string | Branch new worktrees fork from |
@@ -194,3 +194,4 @@ does not, adds nothing.
 | `0.8.0` | `language` became one language per action | String → ask the four keys, each prefilled: `plan`, `task`, `pr` with the string, `code` with `en`. Absent → ask, default `en` per key. Already an object → nothing |
 | `0.9.0` | `run.models` adds optional native subagent routing | Add `{ "models": {} }` under `run` only when absent; preserve any existing routes. Defaults are pinned in the plugin |
 | `0.10.0` | `tracker.create.fields` names where `Priority` and `Size` land | Absent → add `{ "priority": "unknown", "size": "unknown" }` and append both keys to `unknown[]`; adapter `none` → `null` for both, nothing appended. Upgrade does not detect — say `/shipit:sync` resolves them once the tracker is reachable |
+| `0.14.0` | `companions.context7` records the docs-lookup source | Absent → add `"context7": "absent"`. Upgrade does not detect — `/shipit:sync` reads it from the session |

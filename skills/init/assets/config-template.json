@@ -80,7 +80,8 @@
     "ponytail": "absent",
     "graphify_cli": "absent",
     "graphify_graph": "absent",
-    "caveman": "absent"
+    "caveman": "absent",
+    "context7": "absent"
   },
   "worktree": {
     "enabled": false,

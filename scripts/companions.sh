@@ -87,6 +87,15 @@ else
   note "shipit exempts non-developer QA steps and PR bodies from compression"
 fi
 
+# The Context7 MCP is a session fact this script cannot see; doctor adds it.
+if has ctx7; then
+  ok "context7 cli" "$(command -v ctx7)"
+else
+  miss "context7 cli" "fine if the Context7 MCP is connected; otherwise API facts are unverified"
+  note "MCP (preferred): claude mcp add --scope user --transport http context7 https://mcp.context7.com/mcp"
+  note "or CLI: npm install -g ctx7"
+fi
+
 echo
 echo "tier 3 — do NOT enable during an SDD cycle"
 if plugin_present ponytail; then

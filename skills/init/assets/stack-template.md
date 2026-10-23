@@ -13,7 +13,7 @@ Duplicating them creates a second source of truth that drifts.
 | Language | | `path:line` |
 | Runtime version | | pin file, not what is installed locally |
 | Package manager | | lockfile |
-| Framework | | declared dependency, `path:line` |
+| Framework | name + installed version | lockfile entry, `path:line` |
 | Database | | config or dependency, `path:line` |
 | Test framework | | dependency + CI invocation |
 | Lint | | CI job, `path:line` |
