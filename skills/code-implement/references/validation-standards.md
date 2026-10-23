@@ -1,6 +1,6 @@
 # Validation Standards
 
-Every command comes from `.sdd/config.json` `commands.*`. Never invent one, never
+Every command comes from `docs/shipit/config.json` `commands.*`. Never invent one, never
 substitute a sibling you happen to know, never run a command the contract does not
 carry.
 
@@ -122,7 +122,7 @@ Rules:
 ## Contract drift
 
 A command that fails **because it does not exist** — binary not found, script
-missing, task not defined — is not a code failure. It means `.sdd/config.json` has
+missing, task not defined — is not a code failure. It means `docs/shipit/config.json` has
 drifted from the repo since `init` ran.
 
 Say exactly that:

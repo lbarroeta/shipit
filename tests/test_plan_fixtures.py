@@ -51,7 +51,7 @@ class PlanFixtureTests(unittest.TestCase):
         destination = self.root / "permissions"
         FIXTURES.prepare("permissions", destination)
         repo = destination / "repo"
-        plans = repo / ".sdd/plans"
+        plans = repo / "docs/plans"
         plans.mkdir()
         (plans / "plan.md").write_text("Plan output\n")
         self.assertTrue(FIXTURES.verify(destination)["unchanged_inputs"])

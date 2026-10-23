@@ -87,7 +87,7 @@ follow-up, never for code written now.
 | Current recommended API for the installed version | New code uses it, matching repo conventions |
 | Analogue uses an API deprecated at the installed version, replacement available at that version | New code uses the replacement. Existing call sites are not refactored → `Known Risks or Follow-ups`: migrate `<n>` call sites of `<API>`, and the trigger |
 | Better practice that needs a newer version | Follow-up only. No dependency upgrade inside a task |
-| Docs contradict a `.sdd/` rule or agent doc | The repo's accepted decision wins for this change. A factual claim (API exists, default value) is reported for `sync`; a policy is never overridden by docs |
+| Docs contradict a contract rule or agent doc | The repo's accepted decision wins for this change. A factual claim (API exists, default value) is reported for `sync`; a policy is never overridden by docs |
 | The plan's approach does not exist at the installed version | Fix within plan scope when an equivalent is available; a contract change stops with `# Implementation Blocked` / `Incomplete` naming the version gap |
 
 "Best practice" means the documented recommendation for the installed version,

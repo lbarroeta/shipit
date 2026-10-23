@@ -112,8 +112,9 @@ No fixed vocabulary. Derive them:
 5. No directory qualifies → `layers: []`. `code-plan` falls back to per-file
    discovery. That is a valid outcome, not a failure.
 
-Then write `.sdd/rules/<layer>.md` from `assets/layer-rule-template.md`, stating
-only what the exemplar demonstrates. A layer keyed `design` gets
+Then write `<paths.rules>/<layer>.md` from `assets/layer-rule-template.md`, stating
+only what the exemplar demonstrates — or only its shipit section, when a human
+already wrote that file (SKILL.md § Existing documentation). A layer keyed `design` gets
 `rules/design-layer.md` instead: `rules/design.md` is the design contract's.
 
 ## 7 — Tracker adapter
@@ -273,24 +274,25 @@ CLI + graph → fill `graph` with
 }
 ```
 
-Query/explain/path are read-only; update is reserved for sync or explicit graph
-maintenance. `graph.update` above refreshes code structure only; semantic doc
+Query/explain/path are read-only; update is reserved for init's first build, sync,
+or explicit graph maintenance. `graph.update` above refreshes code structure only; semantic doc
 changes require the Graphify skill's incremental `--update` flow, as specified
 in `../../sync/references/reconciliation.md`. Do not treat CLI success as proof
 that documentation in the graph is current. `graphify` has flags beyond these (`--dfs`, `--budget`,
 rebuild modes); they do not go in the config — `code-plan` needs the three read
 commands, not the tool's whole surface.
-CLI only → `graph: null`, and note in the report that `graphify .` would build one
-(state the cost; do not run it).
+CLI only → `init` builds the code graph with `graphify update .` (SKILL.md § Graph),
+then fills `graph`. That build is code-only: no LLM, no tokens. A semantic build
+(`graphify .`) is never run here.
 Neither → `graph: null`; report source-only discovery honestly.
 
-Also check whether the graph output is excluded (`git check-ignore -q
+Before building, check whether the graph output is excluded (`git check-ignore -q
 graphify-out`, true whether the rule lives in `.gitignore` or `.git/info/exclude`).
 If it is, set `worktree.share_graph: true` — a fresh worktree will have no graph
 of its own.
 Uncovered → `graphify-out/` is a local build artifact, never a team contract;
-append it to `.git/info/exclude` (never `.gitignore` — same reasoning as
-`sdd_tracking: local`), then set `worktree.share_graph: true`.
+append it to `.git/info/exclude` (never `.gitignore` — same reasoning as ticket
+drafts), then set `worktree.share_graph: true`.
 
 ## 9 — Branch and commit conventions
 
@@ -306,8 +308,8 @@ record the dominant shape. A 50/50 split is not a convention: write `unknown`.
 ## 10 — Agent docs
 
 Find `CLAUDE.md`, `AGENTS.md`, `.cursor/rules/*`, `.windsurf/rules/*`,
-`.github/copilot-instructions.md`, `.clinerules/*`, `.kiro/steering/*`. List them
-in `docs.agent_docs`.
+`.github/copilot-instructions.md`, `.clinerules/*`, `.kiro/steering/*`, plus every
+local markdown file they link to, one level deep. List them in `docs.agent_docs`.
 
 Resolve symlinks: two paths pointing at one file are one doc, and loading both is
 loading the same file twice. This is also why `CLAUDE.md` is symlinked to
@@ -317,9 +319,10 @@ Ignore any `<!-- shipit:contract -->` or `<!-- shipit:design -->` block you find
 shipit wrote it on a previous run. It is a pointer, not a source. A doc containing
 nothing else is not an agent doc and does not go into `docs.agent_docs`.
 
-Then **subtract**. Anything those docs already state does not go into `.sdd/*.md`.
-What remains is what shipit records. Where a doc contradicts the repo, the repo
-wins and the contradiction is reported.
+Then add the headings of `docs/**/*.md` and `README.md` to the inventory, and
+**subtract**. Anything those docs already state is linked, not written again. What
+remains is what shipit records. A doc contradicting the repo is asked about, per
+SKILL.md § Existing documentation.
 
 ## 11 — Companions
 

@@ -7,7 +7,7 @@ weight: 1
 
 ## Pass requires
 
-- Draft written to `.sdd/tasks/<slug>.md` with Bug type, one valid Priority/Size,
+- Draft written to `docs/tasks/<slug>.md` with Bug type, one valid Priority/Size,
   Problem, Goal, concrete What to do, observable AC IDs, QA / validation scenarios
   and an empty Created ledger. Single task, never XL.
 - Scenario preconditions, action, expected result and AC mapping make the upload

@@ -12,9 +12,9 @@ Turn this into a ticket.
 
 Repository state:
 
-- `.sdd/config.json` exists, with `tracker.adapter: "linear"`,
+- `docs/shipit/config.json` exists, with `tracker.adapter: "linear"`,
   `tracker.create.supported: true`, `tracker.create.team: "Platform"`,
-  `tracker.create.initial_state: "Backlog"`, and `paths.tasks: ".sdd/tasks"`.
+  `tracker.create.initial_state: "Backlog"`, and `paths.tasks: "docs/tasks"`.
 - `layers[]` has four entries: `controllers` (`app/controllers`), `jobs`
   (`app/jobs`), `mailers` (`app/mailers`), and `components`
   (`app/javascript/components`).

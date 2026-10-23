@@ -16,7 +16,7 @@ python3 evals/plan-consistency/prepare.py prepare localized /tmp/shipit-code-pla
 
 The destination must not exist. Each gets:
 
-- `repo/`: committed fixture, `.sdd/`, request, code, docs and passing baseline tests.
+- `repo/`: committed fixture, `docs/shipit/` contract, request, code, docs and passing baseline tests.
   `localized` also has the same intentional user-owned dirty edit in both copies.
 - `plugin/`: frozen plan skill, template and required reference dependencies.
 - `prompt.md`: identical launch instruction; launch from the destination directory.

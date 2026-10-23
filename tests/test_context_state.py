@@ -22,16 +22,17 @@ class ContextStateTests(unittest.TestCase):
         self.git("config", "user.email", "fixture@example.invalid")
         self.git("config", "user.name", "Fixture")
         self.git("config", "commit.gpgsign", "false")
-        (self.repo / ".sdd/rules").mkdir(parents=True)
-        self.config = {"paths": {"rules": ".sdd/rules"}, "language": {"plan": "es"}}
-        (self.repo / ".sdd/config.json").write_text(json.dumps(self.config))
-        (self.repo / ".sdd/stack.md").write_text("Stack evidence\n")
-        (self.repo / ".sdd/conventions.md").write_text("Conventions evidence\n")
+        (self.repo / "docs/code/rules").mkdir(parents=True)
+        (self.repo / "docs/shipit").mkdir()
+        self.config = {"paths": {"rules": "docs/code/rules"}, "language": {"plan": "es"}}
+        (self.repo / "docs/shipit/config.json").write_text(json.dumps(self.config))
+        (self.repo / "docs/code/stack.md").write_text("Stack evidence\n")
+        (self.repo / "docs/code/conventions.md").write_text("Conventions evidence\n")
         (self.repo / "source.py").write_text("original = True\n")
         self.git("add", ".")
         self.git("commit", "-m", "Fixture")
         self.inventory = self.root / "inventory.json"
-        self.managed = [".sdd/config.json", ".sdd/stack.md", ".sdd/conventions.md"]
+        self.managed = ["docs/shipit/config.json", "docs/code/stack.md", "docs/code/conventions.md"]
         self.write_inventory()
 
     def git(self, *args):
@@ -51,7 +52,7 @@ class ContextStateTests(unittest.TestCase):
 
     def test_read_only_legacy_inspection_and_idempotent_baseline(self):
         self.assertEqual(self.call("inspect")["status"], "uninitialized")
-        state = self.repo / ".sdd/sync-state.json"
+        state = self.repo / "docs/shipit/sync-state.json"
         self.assertFalse(state.exists())
         self.assertEqual(self.call("record")["status"], "recorded")
         before = state.read_bytes(), state.stat().st_mtime_ns
@@ -67,12 +68,12 @@ class ContextStateTests(unittest.TestCase):
         self.call("record")
         (self.repo / "source.py").unlink()
         (self.repo / "new.py").write_text("new = True\n")
-        (self.repo / ".sdd/stack.md").write_text("Human decision\n")
+        (self.repo / "docs/code/stack.md").write_text("Human decision\n")
         result = self.call("inspect")
         self.assertEqual(result["source_changes"], ["new.py", "source.py"])
-        self.assertEqual(result["edited_managed"], [".sdd/stack.md"])
-        saved = json.loads((self.repo / ".sdd/sync-state.json").read_text())
-        self.assertEqual(saved["managed"][".sdd/stack.md"]["base"], "Stack evidence\n")
+        self.assertEqual(result["edited_managed"], ["docs/code/stack.md"])
+        saved = json.loads((self.repo / "docs/shipit/sync-state.json").read_text())
+        self.assertEqual(saved["managed"]["docs/code/stack.md"]["base"], "Stack evidence\n")
         self.assertNotIn("original = True", json.dumps(saved))
 
     def test_modes_and_symlink_targets_are_evidence(self):
@@ -85,7 +86,7 @@ class ContextStateTests(unittest.TestCase):
 
     def test_rules_design_and_custom_paths_without_plan_churn(self):
         self.config["paths"].update(rules="rules", plans="plans", tasks="drafts")
-        (self.repo / ".sdd/config.json").write_text(json.dumps(self.config))
+        (self.repo / "docs/shipit/config.json").write_text(json.dumps(self.config))
         for directory in ("rules", "plans", "drafts", "graphify-out"):
             (self.repo / directory).mkdir()
         (self.repo / "rules/service.md").write_text("Generated rule\n")
@@ -102,18 +103,18 @@ class ContextStateTests(unittest.TestCase):
         self.assertIn("Not an init/sync-owned", self.call("record", success=False)["reason"])
 
     def test_conflicts_and_omitted_existing_rules_cannot_be_certified(self):
-        (self.repo / ".sdd/rules/service.md").write_text("Generated\n")
-        self.managed.append(".sdd/rules/service.md")
+        (self.repo / "docs/code/rules/service.md").write_text("Generated\n")
+        self.managed.append("docs/code/rules/service.md")
         self.write_inventory()
         self.call("record")
-        state = (self.repo / ".sdd/sync-state.json").read_bytes()
+        state = (self.repo / "docs/shipit/sync-state.json").read_bytes()
         self.write_inventory(["Human conflict"])
         self.assertIn("unresolved", self.call("record", success=False)["reason"])
         self.managed.pop()
         self.write_inventory()
         self.assertIn("omitted", self.call("record", success=False)["reason"])
-        self.assertEqual(state, (self.repo / ".sdd/sync-state.json").read_bytes())
-        (self.repo / ".sdd/rules/service.md").unlink()
+        self.assertEqual(state, (self.repo / "docs/shipit/sync-state.json").read_bytes())
+        (self.repo / "docs/code/rules/service.md").unlink()
         self.assertEqual(self.call("record")["status"], "recorded")
 
     def test_human_docs_and_shared_contracts_cannot_be_adopted(self):
@@ -123,12 +124,43 @@ class ContextStateTests(unittest.TestCase):
         self.assertIn("Not an init/sync-owned", self.call("record", success=False)["reason"])
         self.managed.pop()
         self.write_inventory()
-        (self.repo / ".sdd/stack.md").unlink()
+        (self.repo / "docs/code/stack.md").unlink()
         outside = self.root / "shared.md"
         outside.write_text("Shared context\n")
-        (self.repo / ".sdd/stack.md").symlink_to(outside)
+        (self.repo / "docs/code/stack.md").symlink_to(outside)
         self.assertIn("Shared contract", self.call("record", success=False)["reason"])
         self.assertEqual(outside.read_text(), "Shared context\n")
+
+    def test_section_in_human_doc_is_the_only_owned_text(self):
+        section = "<!-- shipit:generated -->\nDetected\n<!-- /shipit:generated -->"
+        conventions = self.repo / "docs/code/conventions.md"
+        conventions.write_text(f"# Team rules\n\n{section}\n")
+        self.call("record")
+        saved = json.loads((self.repo / "docs/shipit/sync-state.json").read_text())
+        self.assertEqual(saved["managed"]["docs/code/conventions.md"]["base"], section)
+        conventions.write_text(f"# Team rules, edited\n\n{section}\n")
+        result = self.call("inspect")
+        self.assertEqual(result["edited_managed"], [])
+        self.assertEqual(result["contract_changes"], ["docs/code/conventions.md"])
+        conventions.write_text("# Team rules\n\n" + section.replace("Detected", "Human edit") + "\n")
+        self.assertEqual(self.call("inspect")["edited_managed"], ["docs/code/conventions.md"])
+
+    def test_legacy_contract_points_to_init(self):
+        (self.repo / ".sdd").mkdir()
+        (self.repo / "docs/shipit/config.json").rename(self.repo / ".sdd/config.json")
+        self.assertIn("/shipit:init", self.call("inspect", success=False)["reason"])
+
+    def test_configured_contract_paths_are_owned(self):
+        self.config["paths"]["conventions"] = "docs/conventions.md"
+        (self.repo / "docs/shipit/config.json").write_text(json.dumps(self.config))
+        (self.repo / "docs/code/conventions.md").rename(self.repo / "docs/conventions.md")
+        self.managed[2] = "docs/conventions.md"
+        self.write_inventory()
+        self.assertEqual(self.call("record")["status"], "recorded")
+        (self.repo / "docs/conventions.md").write_text("Edited\n")
+        result = self.call("inspect")
+        self.assertEqual(result["edited_managed"], ["docs/conventions.md"])
+        self.assertEqual(result["source_changes"], [])
 
 
 if __name__ == "__main__":

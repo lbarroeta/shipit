@@ -10,6 +10,6 @@ BILL-24's policy artifact. This task cannot start until that artifact is approve
 and accessible to customers; BILL-24 is still In Progress. The label can follow the
 repo's existing help-link wording.
 
-Config exists with Linear Billing/Payments, paths.tasks `.sdd/tasks`, default
+Config exists with Linear Billing/Payments, paths.tasks `docs/tasks`, default
 handoff.allow. Current repo evidence verifies the refund button and its permission
 rules. The desired outcome, scope and prerequisite are fully defined.

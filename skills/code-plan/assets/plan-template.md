@@ -77,7 +77,7 @@ the decision taken.>
 ## Design
 
 <Only when UI is touched and `<paths.rules>/design.md` exists. Names, never restates:
-values and rule text stay in `.sdd/`. Delete this section otherwise.>
+values and rule text stay in the design docs. Delete this section otherwise.>
 
 Surface · pattern: <surface> · <pattern from `design-system.md` § Screen patterns>
 
@@ -93,7 +93,7 @@ States: <the `<paths.rules>/design.md` § 4 states this change renders>
 
 | Test | Rule | Proves |
 | --- | --- | --- |
-| `<path>` + <scenario> | `.sdd/rules/tests/<kind>.md` | <AC IDs/regression and observable expected result> |
+| `<path>` + <scenario> | `docs/code/rules/tests/<kind>.md` | <AC IDs/regression and observable expected result> |
 
 <Each AC links through Files (or Evidence for already-met behavior) to Tests or
 Manual QA. Include affected consumers and negative paths when relevant.>

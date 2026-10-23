@@ -11,7 +11,12 @@ import sys
 import uuid
 
 
-STATE = ".sdd/sync-state.json"
+CONFIG = "docs/shipit/config.json"
+STATE = "docs/shipit/sync-state.json"
+PATHS = {"stack": "docs/code/stack.md", "conventions": "docs/code/conventions.md",
+         "rules": "docs/code/rules", "design_system": "docs/design-system/contract.md",
+         "plans": "docs/plans", "tasks": "docs/tasks"}
+SECTION = ("<!-- shipit:generated -->", "<!-- /shipit:generated -->")
 
 
 def git(repo, *args):
@@ -47,14 +52,29 @@ def fingerprint(path):
             "executable": bool(path.stat().st_mode & 0o111)}
 
 
+def owned(path):
+    """Shipit's marked section of a human doc, else the whole file: (fingerprint, text)."""
+    if path.is_symlink() or not path.is_file():
+        return fingerprint(path), None
+    text = path.read_text()
+    start = text.find(SECTION[0])
+    end = text.find(SECTION[1], start)
+    if start == -1 or end == -1:
+        return fingerprint(path), text
+    section = text[start:end + len(SECTION[1])]
+    return {"kind": "section", "sha256": hashlib.sha256(section.encode()).hexdigest()}, section
+
+
+def configured(config, key):
+    return relative(config.get("paths", {}).get(key, PATHS[key]))
+
+
 def under(name, prefix):
     return name == prefix or name.startswith(prefix.rstrip("/") + "/")
 
 
 def source_snapshot(repo, config):
-    paths = config.get("paths", {})
-    excluded = [".sdd", "graphify-out", paths.get("plans", ".sdd/plans"),
-                paths.get("tasks", ".sdd/tasks"), paths.get("rules", ".sdd/rules")]
+    excluded = ["docs/shipit", "graphify-out", *(configured(config, key) for key in PATHS)]
     graph = config.get("graph") or {}
     excluded.append(graph.get("out", "graphify-out"))
     names = set(filter(None, git(repo, "ls-files", "--cached", "--others",
@@ -65,8 +85,8 @@ def source_snapshot(repo, config):
 
 
 def contract_snapshot(repo, config):
-    rules = relative(config.get("paths", {}).get("rules", ".sdd/rules"))
-    names = {".sdd/config.json", ".sdd/stack.md", ".sdd/conventions.md", ".sdd/design-system.md"}
+    rules = configured(config, "rules")
+    names = {CONFIG, *(configured(config, key) for key in ("stack", "conventions", "design_system"))}
     root = repo / rules
     if root.exists():
         names.update(p.relative_to(repo).as_posix() for p in root.rglob("*.md"))
@@ -83,7 +103,7 @@ def inspect(repo, config, baseline):
     contracts = contract_snapshot(repo, config)
     modified = []
     for name, entry in baseline.get("managed", {}).items():
-        if fingerprint(repo / relative(name)) != entry["fingerprint"]:
+        if owned(repo / relative(name))[0] != entry["fingerprint"]:
             modified.append(name)
     return {"status": "uninitialized" if not baseline else "changed" if (
                 sources != baseline.get("sources") or contracts != baseline.get("contracts")
@@ -102,11 +122,12 @@ def record(repo, config, inventory, baseline):
         raise ValueError("Inventory needs a managed list of reviewed generated paths.")
     if inventory.get("unresolved") != []:
         raise ValueError("Do not record a current baseline with unresolved conflicts.")
-    rules = relative(config.get("paths", {}).get("rules", ".sdd/rules"))
+    rules = configured(config, "rules")
+    required = {CONFIG, configured(config, "stack"), configured(config, "conventions")}
     entries = {}
     for raw in managed:
         name = relative(raw)
-        allowed = name in {".sdd/config.json", ".sdd/stack.md", ".sdd/conventions.md"} or (
+        allowed = name in required or (
             under(name, rules) and name.endswith(".md") and name != f"{rules}/design.md")
         if not allowed:
             raise ValueError(f"Not an init/sync-owned contract: {name}")
@@ -114,9 +135,10 @@ def record(repo, config, inventory, baseline):
         # Do not adopt shared/symlinked contracts or read their targets as generated content.
         if any(parent.is_symlink() for parent in [path, *path.parents] if parent != repo):
             raise ValueError(f"Shared contract requires reconciliation in its owning checkout: {name}")
-        text = path.read_text()
-        entries[name] = {"fingerprint": fingerprint(path), "base": text}
-    required = {".sdd/config.json", ".sdd/stack.md", ".sdd/conventions.md"}
+        current, text = owned(path)
+        if text is None:
+            raise ValueError(f"Managed contract is missing: {name}")
+        entries[name] = {"fingerprint": current, "base": text}
     if not required <= entries.keys():
         raise ValueError("Inventory must include config, stack and conventions.")
     for name in baseline.get("managed", {}).keys() - entries.keys():
@@ -146,7 +168,9 @@ def main():
     save.add_argument("--inventory", required=True)
     args = parser.parse_args()
     repo = Path(git(Path(args.repo).resolve(), "rev-parse", "--show-toplevel"))
-    config = read_json(repo / ".sdd/config.json")
+    if not (repo / CONFIG).exists() and (repo / ".sdd/config.json").exists():
+        raise ValueError("Legacy .sdd/ contract; run /shipit:init to migrate it to docs/.")
+    config = read_json(repo / CONFIG)
     baseline = read_json(repo / STATE) if (repo / STATE).exists() else {}
     if baseline and baseline.get("version") != 1:
         raise ValueError("Unsupported sync baseline version; do not overwrite it.")

@@ -28,7 +28,7 @@ credit. Mere heading presence is insufficient.
   silently assume a clean baseline.
 - LABEL-1/2/3 cover tab/multiple whitespace, Unicode casefold, and blank strings;
   existing normalization still holds. Tests belong with label behavior and its
-  `.sdd/rules/tests/unit.md` rule.
+  `docs/code/rules/tests/unit.md` rule.
 - Delegating to `search_key` is a strong reuse option. A small justified alternative
   can earn full credit if it preserves every required behavior and the dirty edit.
   No requirement to introduce a new file, normalize null input, or touch orders.

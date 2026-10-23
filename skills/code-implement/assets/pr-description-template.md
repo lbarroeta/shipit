@@ -8,7 +8,7 @@ real risk harder to find.
 
 `<ISSUE-ID> <imperative summary under 60 chars>`
 
-Follow the repo's commit convention from `.sdd/conventions.md` when it has one
+Follow the repo's commit convention from `docs/code/conventions.md` when it has one
 (a `feat:`/`fix:` prefix, a scope). No convention recorded → plain imperative.
 Omit the issue ID when none is linked; never invent one.
 

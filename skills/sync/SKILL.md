@@ -1,6 +1,6 @@
 ---
 name: sync
-description: Reconcile an initialized repository's Shipit context with current sources before planning or after implementation. Update affected contracts and documentation, preserve human decisions, report conflicts, and migrate older configuration. Use init for first setup and design-system for design decisions.
+description: Reconcile an initialized repository's Shipit context with current sources before planning or after implementation. Update affected contracts and documentation, preserve human decisions, report conflicts, and migrate older configuration. Use init for setup and `.sdd/` migration, and design-system for design decisions.
 metadata:
   writes_product_code: false
   output: synchronized-contract
@@ -21,19 +21,21 @@ phase with issue, plan, implementation report and run-owned paths. Both phases u
 the `sync` route in `run/assets/models.json`; standalone execution uses the hosting
 session's model. Do not spawn a pipeline or invoke handoff.
 
-Read `.sdd/config.json`, then `references/reconciliation.md`. Load the init schema
+Read `docs/shipit/config.json`, then `references/reconciliation.md`. Load the init schema
 and only the affected recipes/templates from `../init/references/` and
 `../init/assets/`. These are shared evidence recipes, not instructions to initialize
-again. No config → stop with `/shipit:init`. Corrupt config or a newer schema →
-report the gap; never reset it from a template.
+again. No config → stop with `/shipit:init`; a legacy `.sdd/config.json` without
+`docs/shipit/config.json` → stop too: `/shipit:init` migrates it. Corrupt config or
+a newer schema → report the gap; never reset it from a template.
 
-- Own `.sdd/config.json`, `stack.md`, `conventions.md`, generated layer/test rules,
-  `.sdd/sync-state.json`, and the `shipit:contract` pointer blocks.
+- Own `docs/shipit/`, the `shipit:contract` block in `docs.pointer`, and the
+  generated stack, conventions and layer/test rules at their `paths.*`: the whole
+  file when shipit created it, only its `shipit:generated` section in a human doc.
 - Preserve user choices, explicit overrides and unknown extension keys. A default
   is for first setup; it must not reset existing preferences during sync.
 - Preserve all `shipit:design` blocks and design files. Report design drift to
   `shipit:design-system`; do not turn a new implementation into an approved design.
-- Human docs outside generated blocks are not owned. Correct a named factual
+- Human docs outside generated sections and blocks are not owned. Correct a named factual
   section when the request/approved plan authorizes it; otherwise propose its exact
   patch. Preserve deliberate policies and decisions even if code violates them.
 - No product code, dependencies, branch/commit/push, tracker write, permission
@@ -47,7 +49,7 @@ report the gap; never reset it from a template.
    unrelated edits. Run the stdlib helper (Python 3.10+):
    `python3 <plugin>/skills/sync/scripts/context_state.py --repo <repo> inspect`.
    It compares content hashes, file modes and symlink targets, including additions
-   and deletions. Read affected baseline entries from `.sdd/sync-state.json` only
+   and deletions. Read affected baseline entries from `docs/shipit/sync-state.json` only
    as needed. Missing baseline means legacy/unknown ownership, not pristine output.
    `--check` reports drift and exits without migration, writes or graph updates.
 2. **Determine scope.** Before planning, reconcile accumulated drift that affects
@@ -89,7 +91,8 @@ report the gap; never reset it from a template.
    inventory outside the repository with `managed` (all init/sync-owned generated
    file paths) and `unresolved: []`. Run
    `python3 <plugin>/skills/sync/scripts/context_state.py --repo <repo> record --inventory <json>`.
-   Include unchanged managed files; exclude design, human docs, plans and drafts.
+   Include unchanged managed files and human docs holding a shipit section (the
+   helper keeps only the section); exclude design, other human docs, plans and drafts.
    The helper saves exact accepted bases plus hashes; it does not infer ownership
    or approve content. If any scope remains unreviewed/conflicted, retain the old
    baseline and report partial/blocked. A scoped run must review/classify all

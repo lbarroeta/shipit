@@ -46,7 +46,7 @@ workspace — the rule is the same:
 ## Secrets
 
 - Never commit one. Never log one. Never put one in an error message, a test
-  fixture, or `.sdd/`.
+  fixture, or the repo contract.
 - Read them from wherever this repo already reads them. Do not introduce a second
   mechanism.
 - Never edit a credentials store, env file, or production config unless the plan

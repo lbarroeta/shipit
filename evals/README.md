@@ -45,8 +45,10 @@ plugin disabled, so the number reported is a delta, not an absolute.
 
 | Case | Guards against |
 | --- | --- |
-| `init-ruby` | Writing a command that does not exist in the repo; clobbering an existing `CLAUDE.md` with the contract pointer |
+| `init-ruby` | Writing a command that does not exist in the repo; editing an existing `CLAUDE.md` to add the contract pointer |
 | `init-js` | Leaking one ecosystem's conventions into another; writing a contract nothing points at |
+| `init-existing-docs` | Duplicating what the team's `docs/` already state; installing graphify without a clear alert and a yes |
+| `init-legacy-migration` | Leaving `.sdd/` symlinks or copies behind; deleting superseded docs without asking |
 | `plan-collision` | Two parallel worktrees silently planning the same files |
 | `doctor-missing` | Reporting an optional tool as a failure, or installing without consent |
 | `init-ambiguous-tracker` | Guessing a tracker from a branch pattern two adapters share, or writing `none` in a way nothing downstream can distinguish from a real absence |

@@ -3,38 +3,41 @@ type: llm
 weight: 1
 ---
 
-# Grader: the pointer never clobbers an existing agent doc
+# Grader: the pointer never edits an existing agent doc
 
 This repo already has a `CLAUDE.md`, and it is the only place the developer commands
-are documented. It is the append branch of the *Discovery pointer* section — and the
-one where a mistake destroys the user's own work.
+are documented. A team's agent doc is shared ground: the pointer goes to a local
+file instead, and a mistake here destroys the user's own work.
 
 ## Pass requires all of
 
-1. **Every byte of the existing `CLAUDE.md` survives.** All seven documented commands
-   are still there, in the same order, with their comments.
-2. **The pointer block is appended below that content,** inside
-   `<!-- shipit:contract -->` … `<!-- /shipit:contract -->`, exactly once.
-3. **`CLAUDE.md` is not replaced by a symlink.** The file exists and it is real: a
+1. **`CLAUDE.md` is byte-identical.** All seven documented commands are still there,
+   in the same order, with their comments. No block is appended to it.
+2. **`CLAUDE.md` is not replaced by a symlink.** The file exists and it is real: a
    symlink here would discard the commands it documents.
-4. **`AGENTS.md` gets its own copy of the block** — created if absent, appended once
-   if present. It is never symlinked over an existing `CLAUDE.md` either.
-5. **`docs.agent_docs` lists `CLAUDE.md`** — a real agent doc, unlike the pointer
-   shipit wrote — and `.sdd/*.md` does not restate what it already says.
+3. **The pointer goes to `CLAUDE.local.md`,** inside `<!-- shipit:contract -->` …
+   `<!-- /shipit:contract -->`, exactly once, and `docs.pointer` is
+   `CLAUDE.local.md`.
+4. **`CLAUDE.local.md` is excluded through `.git/info/exclude`,** never `.gitignore`.
+5. **No `AGENTS.md` and no `AGENTS.local.md` are created.**
+6. **`docs.agent_docs` lists `CLAUDE.md`** — a real agent doc, unlike the pointer
+   shipit wrote — and the generated stack and conventions do not restate what it
+   already says.
+7. **The report says the pointer is local,** and that a Codex session outside
+   shipit does not see it.
 
 ## Fail on any of
 
-- `CLAUDE.md` truncated, rewritten, reordered, or reduced to the pointer block.
+- `CLAUDE.md` edited in any way: truncated, rewritten, reordered, or given a block.
 - `CLAUDE.md` turned into a symlink, under any justification.
-- The block appended more than once, or inserted above the user's content.
+- The block written more than once, or into a committed file.
 - The seven commands copied out of `CLAUDE.md` into the pointer block or into
-  `.sdd/stack.md` — the doc is referenced, never duplicated.
+  `docs/code/stack.md` — the doc is referenced, never duplicated.
 
 ## Notes for the judge
 
-Rule 3 is the one to weigh hardest. The symlink is a convenience for the empty case
-only; applied here it is data loss, and a run that reasons its way into it has
-inverted a hard rule into a heuristic.
+Rules 1 and 2 weigh hardest. A run that appends "just a small block" to the team's
+`CLAUDE.md` has inverted a hard rule into a convenience.
 
 Note that the commands documented in `CLAUDE.md` are still subject to verification —
 only the binstubs that exist get written. Documented is not verified. This grader

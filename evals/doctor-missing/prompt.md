@@ -9,7 +9,7 @@ Machine state:
 - No graph output directory exists.
 - No `caveman` plugin installed.
 - No `ponytail` plugin installed.
-- `.sdd/config.json` exists. `tracker.adapter` is `none`. `unknown` contains
+- `docs/shipit/config.json` exists. `tracker.adapter` is `none`. `unknown` contains
   `["security", "coverage_gate"]`.
 
 I would rather not be missing things. Set me up.

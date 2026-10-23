@@ -2,17 +2,19 @@
 
 ## Baseline contract
 
-`.sdd/sync-state.json` is a versioned machine baseline, under the repo's existing
-`sdd_tracking` policy. It stores source fingerprints, contract fingerprints and
-accepted text for each generated file. It contains no source bodies or secrets
+`docs/shipit/sync-state.json` is a versioned machine baseline, committed with the
+contract. It stores source fingerprints, contract fingerprints and accepted text for
+each generated file — for a human doc, only its `shipit:generated` section, so an
+edit elsewhere in that doc is a contract change, never a managed edit. It contains no source bodies or secrets
 other than the already public contract text; never put secrets in that contract.
 The helper's `inspect` is read-only; `record` writes only this baseline atomically.
 Do not edit it by hand to make drift disappear. `generated_at` records creation,
 not ownership or freshness; preserve it on no-op sync.
 
 Source inventory covers tracked and non-ignored untracked files, excluding graph
-outputs, `.sdd/`, plans/tasks and generated rules; contract fingerprints cover
-config, stack, conventions, design and rule files separately. Ignored inputs,
+outputs, `docs/shipit/`, plans/tasks and the configured stack, conventions, design
+and rule paths; contract fingerprints cover those files separately. Other docs are
+sources: a changed human doc is drift worth reviewing. Ignored inputs,
 external docs, submodule internals, tracker state and graph semantic coverage need
 explicit inspection when relevant. An unchanged hash report alone is not proof
 those dependencies are current. A failed graph update never certifies the graph.
@@ -42,9 +44,8 @@ after reconciliation. Never replace
 an entire config from the template. Merge keys recursively; preserve extension keys.
 For config values, apply these policies even when a file looks wholly generated:
 
-- Preserve `sdd_tracking`, `language`, `handoff.allow`, `run.models`, `markers`,
-  custom `paths.plans/tasks/rules`, and explicit worktree enabled/root/base/link/setup
-  settings. Missing preferences use documented legacy defaults or a required
+- Preserve `language`, `handoff.allow`, `run.models`, `markers`, `docs.pointer`,
+  custom `paths.*`, and explicit worktree enabled/root/base/link/setup settings. Missing preferences use documented legacy defaults or a required
   question; do not rerun init's default-setting recipes on existing values.
 - Refresh evidence-derived stack, source/test roots, commands/proofs, CI, tests,
   layers and companion availability. A manual override identifiable against base
@@ -53,9 +54,9 @@ For config values, apply these policies even when a file looks wholly generated:
   Recheck unresolved or absent capabilities when reachable. Connection failure
   means unverified, not absent: preserve choices, record unknown, do not switch
   adapters. A connected tracker contradicting recorded identity requires resolution.
-- Read tracking mode against Git reality. A discrepancy does not authorize
-  untracking files or changing team policy. Maintain task/graph exclusions through
-  Git's resolved info/exclude path; do not assume `.git` is a directory in worktrees.
+- Maintain task, `CLAUDE.local.md` and graph exclusions through Git's resolved
+  info/exclude path; do not assume `.git` is a directory in worktrees. A contract
+  file that Git ignores is reported; never untrack files or change team policy.
 - `worktree.share_graph` follows actual graph location/exclusion; never overwrite
   an explicit decision or mutate a shared target to make detection pass.
 
@@ -68,9 +69,11 @@ Respect configured rules paths everywhere, including pointers and templates.
 
 ## Documentation and decisions
 
-Reuse the init pointer block, substituting configured paths. Replace only its
-markers; keep surrounding bytes and every design block. Repair a missing pointer;
-never create a second block or overwrite existing agent docs. Resolve symlinks
+Reuse the init pointer block, substituting configured paths, in `docs.pointer`.
+Replace only its markers; keep surrounding bytes and every design block. Repair a
+missing pointer per init's *Discovery pointer* — a missing `CLAUDE.local.md` is
+recreated in this checkout; never create a second block or add one to a team agent
+doc that has none. Resolve symlinks
 before writing: updates belong to their actual owning checkout.
 
 Record a doc contradiction persistently in `stack.md`'s discrepancy table with
@@ -93,7 +96,8 @@ bumps refresh the version text and stop there.
    `../../../references/docs-lookup.md`, asking for the upgrade/migration notes and
    deprecations between the old and new version. Budget per that file.
 3. Apply by ownership, through the normal base/current/candidate merge:
-   - `stack.md` — version value and evidence: owned, update with the citation.
+   - `stack.md` — version value and evidence: owned (whole file or its section),
+     update with the citation.
    - Generated rules and `conventions.md` that recommend an API now deprecated or
      removed at the installed version: owned, candidate cites the docs and the
      replacement. A human edit on that fact → conflict, never a silent rewrite.

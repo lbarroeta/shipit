@@ -7,9 +7,9 @@ weight: 1
 
 ## Pass requires all of
 
-1. **`.sdd/design-system.md` and `.sdd/rules/design.md` are not rewritten,
+1. **`docs/design-system/contract.md` and `docs/code/rules/design.md` are not rewritten,
    moved or deleted**, and D3 is untouched.
-2. **The regenerated `.sdd/rules/components.md` still ends with the same
+2. **The regenerated `docs/code/rules/components.md` still ends with the same
    `<!-- shipit:design -->` block**, byte-identical, exactly once.
 3. **The block alone does not make the file count as hand-edited** — the rule is
    rewritten without a diff-and-ask prompt triggered only by that block.

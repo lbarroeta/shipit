@@ -9,7 +9,7 @@ Create a ticket for this.
 
 Repository state:
 
-- `.sdd/config.json` exists, with `tracker.adapter: "none"`,
-  `tracker.issue_pattern: null`, and `paths.tasks: ".sdd/tasks"`.
+- `docs/shipit/config.json` exists, with `tracker.adapter: "none"`,
+  `tracker.issue_pattern: null`, and `paths.tasks: "docs/tasks"`.
 - `tracker.create.supported` is `false`.
 - No tracker MCP is connected in this session. `gh` is installed and authenticated.

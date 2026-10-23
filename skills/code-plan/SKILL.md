@@ -14,7 +14,7 @@ essential behavior. Consistency means the same verified requirements and essenti
 decisions across models, not identical prose or incidental choices.
 
 Write as a mid-senior dev handing work to a peer who already knows this repo. The
-implementer loads `.sdd/` itself. The plan carries only what it cannot derive from
+implementer loads the repo contract itself. The plan carries only what it cannot derive from
 the repo: the verified evidence, decisions, exact files, analogues, and AC-to-validation
 links. Reference repo rules rather than restating them.
 
@@ -25,11 +25,11 @@ This skill ends when the plan file is written. Branch, commit, push, PR —
 
 Read narrow. Bulk-loading is the single biggest token sink in this flow.
 
-- Required: the request, `.sdd/config.json`, and `.sdd/conventions.md`.
+- Required: the request, `docs/shipit/config.json`, and `docs/code/conventions.md`.
 - Required: `../task-next/references/readiness-policy.md` for Goal relevance and
   prerequisites; apply it before any Planning status transition.
-- Required: the `.sdd/rules/<layer>.md` for each layer touched, and the
-  `.sdd/rules/tests/<kind>.md` for each test planned. Only those.
+- Required: the `docs/code/rules/<layer>.md` for each layer touched, and the
+  `docs/code/rules/tests/<kind>.md` for each test planned. Only those.
 - Required: `references/input-baseline.md` for explicit inputs and repo state.
 - Required: `references/ambiguity-policy.md` for decision precedence and blockers.
 - Required: `references/output-contract.md`. It owns sections, detail budget, and
@@ -40,29 +40,29 @@ Read narrow. Bulk-loading is the single biggest token sink in this flow.
   owns the graph-before-`rg` order (graphify is the supported graph tool; its
   read commands come from `config.json`, never from its own skill or docs).
 - Required only when UI is touched and `<paths.rules>/design.md` exists: that
-  file, then the `.sdd/design-system.md` sections it points to for the surface and
+  file, then the `docs/design-system/contract.md` sections it points to for the surface and
   components involved. A layer rule's `shipit:design` block is the cue. Backend-only
   → never; not even a glance.
 - Optional: `references/worktree-protocol.md` **only when `worktree.enabled` is true**.
   Default is false — do not read it otherwise.
 - Never: every rule file at once, every agent doc, a whole graph report.
-- No `.sdd/` at all → stop and say: run `/shipit:init` first. Do not detect the
-  stack inline; that is `init`'s job and doing it here spends the same tokens
-  every single run.
+- No `docs/shipit/config.json` → stop and say: run `/shipit:init` first, which also
+  migrates a legacy `.sdd/`. Do not detect the stack inline; that is `init`'s job
+  and doing it here spends the same tokens every single run.
 
 ## Hard rules
 
 - No product code. No full implementation snippets.
-- **Prose language.** The plan and what this skill prints follow `language.plan` in `.sdd/config.json`. Legacy string `language` → that value for every key but `code`; absent → `en`. Identifiers, commit subjects and branch names always stay English.
+- **Prose language.** The plan and what this skill prints follow `language.plan` in `docs/shipit/config.json`. Legacy string `language` → that value for every key but `code`; absent → `en`. Identifiers, commit subjects and branch names always stay English.
 - Nothing not required by the acceptance criteria: no refactor, no dependency, no
   feature flag, no background job, no webhook, no abstraction.
-- Every planned test names its applicable `.sdd/rules/tests/*.md`, or the layer
+- Every planned test names its applicable `docs/code/rules/tests/*.md`, or the layer
   rule when no test rule exists.
 - Every new file cites an analogue with `path:line`, or documents why none exists.
-- If `.sdd/*` or an agent doc already states it, the plan references it and moves
+- If the repo contract or an agent doc already states it, the plan references it and moves
   on. Keep decision-bearing references and evidence.
 - **Verify before asserting.** Confirm an unfamiliar path, script, or command
-  exists before naming it. `.sdd/config.json` records verified commands — use
+  exists before naming it. `docs/shipit/config.json` records verified commands — use
   those, and never invent a sibling.
 - No verification commands and no red/green sequencing in the plan. `code-implement`
   owns both.
@@ -115,7 +115,7 @@ planner owns this same transition and returns a blocked result to the coordinato
 
 ## Workflow
 
-1. **Preflight.** Load `.sdd/config.json`. Parse the request: goal, acceptance
+1. **Preflight.** Load `docs/shipit/config.json`. Parse the request: goal, acceptance
    criteria, out-of-scope, layers touched. Derive the slug. A `task-create` draft at
    `<paths.tasks>/<slug>.md` is a valid request source — read it instead of asking
    the user to restate it, and take the issue id from its `## Created` block.
@@ -171,7 +171,7 @@ planner owns this same transition and returns a blocked result to the coordinato
 - Plan path. Name the worktree only if one was used.
 - Discovery source: graph, or the rg-only warning from `discovery-protocol.md` § 0
   when no graphify output is in the project. One line, never omitted.
-- Generated plan stays local in every tracking mode; `code-handoff` never commits it.
+- Generated plan stays local; `code-handoff` never commits it.
   When a PR can be created or updated, `code-handoff` carries the plan in its body.
 - Whether a tracker issue id was detected, and the slug produced.
 - Goal/relevance and prerequisite evidence: verified ready, or exact blockers.
