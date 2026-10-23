@@ -637,7 +637,7 @@ Run `/shipit:doctor` for your machine's actual state.
 | --- | --- | --- |
 | **0 — required** | `git` | shipit does not run. That is the whole tier. |
 | **1 — recommended** | `gh` authenticated; a tracker MCP if you use one | `code-handoff` cannot push or open a PR; without a tracker MCP it falls back on your branch convention. `task-create` still drafts, `code-plan` and `code-implement` are unaffected. |
-| **2 — accelerators** | graphify CLI + graph; caveman | Discovery falls back to `rg`. Same answers, more tokens. |
+| **2 — accelerators** | graphify CLI + graph; caveman; Context7 | Discovery falls back to `rg`: same answers, more tokens. Without Context7, library and framework API claims the repo cannot show come from model memory, marked unverified, with one notice line in the report. |
 | **3 — do not enable during a cycle** | the ponytail plugin | Nothing. The useful part is already vendored here. |
 
 Nothing is installed for you. `doctor --fix` offers the two safe installs after one
@@ -674,6 +674,7 @@ first:
 | `.sdd/config.json` | Re-detecting unchanged facts. Initialized once, reconciled by `sync` when sources change. |
 | Context budget | Wide reads. Rule files load only for layers actually touched. |
 | graphify | Grep dumps and whole-file reads, replaced by a scoped subgraph. |
+| Context7 | Guessed APIs. `code-implement` and `sync` check only the libraries a change actually touches, against the installed version — see [`references/docs-lookup.md`](references/docs-lookup.md). |
 | caveman | Prose. Non-developer QA steps stay exempt from compression; everything else, PR bodies included, is short by default. |
 
 Plans scale with behavioral complexity and uncertainty; there is no arbitrary line

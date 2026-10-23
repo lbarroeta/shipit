@@ -43,12 +43,16 @@ shipit produces the same answers without these. It spends more tokens doing it.
 | graphify CLI | `command -v graphify` | `uv tool install graphifyy` | fast, free. Needs `uv` or pip already present |
 | graphify graph | `test -f <graph.out>/graph.json` | `graphify .` in the main checkout | **minutes + extraction tokens.** Never run automatically, at any flag |
 | caveman | `claude plugin list` names it | `claude plugin marketplace add JuliusBrussee/caveman` then `claude plugin install caveman@caveman` | plugin install, ships hooks |
+| Context7 | MCP tools `resolve-library-id` / `query-docs` listed in the session, else `command -v ctx7` and `ctx7 whoami` printing `Logged in` | `claude mcp add --scope user --transport http context7 https://mcp.context7.com/mcp --header "Authorization: Bearer <key>"`; Codex: `[mcp_servers.context7]` in `~/.codex/config.toml`. Or `npm install -g ctx7` then `ctx7 login` | user-scope MCP config, or a global npm package. Never run by `--fix` |
 
 Notes:
 
 - Having the CLI without a graph changes nothing. They are two separate gaps.
 - Inside a worktree the graph is normally a symlink to the main checkout's — that is
   correct, not stale. `worktree.share_graph` controls it.
+- Context7 changes answers, not only tokens; `references/docs-lookup.md` owns when
+  it is used. The MCP is a session fact the script cannot see, and its key cannot be
+  read, so a connected MCP is reported `ok (login not verifiable)`.
 - caveman compresses prose. shipit exempts non-developer QA steps from compression
   either way, so installing it never degrades the deliverable.
 

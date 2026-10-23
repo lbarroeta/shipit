@@ -326,6 +326,10 @@ wins and the contradiction is reported.
 Report-only. See `skills/doctor/references/tiers.md` for the tier definitions and
 the exact commands. Fill `companions` with `present` / `absent` per entry.
 
+Context7 is not recorded here: it is a session fact `doctor` reports. Framework
+rows in `stack.md` carry the installed version from the lockfile, which is what
+`references/docs-lookup.md` queries against.
+
 ## 12 — Worktree defaults (first init only)
 
 - `enabled: false`. **Always false at init.** Worktrees are opt-in: the founder

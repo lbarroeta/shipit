@@ -26,6 +26,9 @@ and verified with commands that are known to run in this repo.
   jobs, webhooks), authorization, scoped data access, trust-boundary input, secret
   handling, or query/shell construction: `references/security-standards.md`.
   Apply these triggers to support changes discovered during implementation too.
+- `../../references/docs-lookup.md` only when one of its triggers fires — code
+  written against an external API that no cited analogue shows at the installed
+  version, or a check failing on an API assumption.
 - Never bulk-load every rule file or every agent doc. Resolve symlinked docs once.
 - If a rule was skipped, do not claim compliance with it.
 
@@ -96,7 +99,9 @@ and verified with commands that are known to run in this repo.
 4. **Implement.** The smallest correct change. Repo patterns over new structure —
    including their comment density. Apply the ladder as stance, not as licence to
    deviate from the plan. A deliberate shortcut leaves a debt marker with its
-   ceiling and upgrade trigger. UI work uses the components, tokens and states the
+   ceiling and upgrade trigger. External API not shown by a cited analogue, or a
+   check failing on one → `docs-lookup.md` first, never from memory; that lookup
+   is the new evidence the 3-attempt rule needs. UI work uses the components, tokens and states the
    plan's `Design` names, under `rules/design.md`; a value or component the
    contract lacks is not invented — no exception in the plan → stop and say which.
    A plan with no `Design` section dated before the contract's `Status` date gets

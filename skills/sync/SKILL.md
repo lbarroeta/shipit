@@ -66,6 +66,10 @@ report the gap; never reset it from a template.
    Rediscover affected facts with the shared detection recipes. Keep evidence per
    claim and honest command proof levels. Do not promote one changed file into a
    repo-wide convention; compare relevant peers and accepted decisions.
+   A dependency, framework or runtime moved a major/minor version → follow the
+   reference's **Dependency drift** with `../../references/docs-lookup.md`, so
+   versions, generated rules and conventions describe the installed versions
+   rather than the ones init saw.
 4. **Reconcile.** Compare last accepted generated content, current content and
    newly detected candidate. Follow ownership rules and deletion handling in the
    reference. Show meaningful diffs; apply unambiguous generated updates. Preserve
@@ -93,7 +97,8 @@ report the gap; never reset it from a template.
    rewrites, including dates. A failed/partial run never certifies freshness.
 7. **Report.** State phase, baseline status, changed/retired/preserved paths,
    documentation conflicts, separate structural/semantic graph state, exact
-   validation and remaining unknowns.
+   validation and remaining unknowns, including `docs-lookup.md`'s one-line
+   notice when a lookup could not be made.
    Use `language.plan`. Return `completed`, `blocked` or `failed`, with concrete
    scope; missing evidence is not success.
 
@@ -128,6 +133,7 @@ coordinator.
 
 - `--check`: local inspection and relevant read-only checks; no writes or baseline
   certification. Report `current`, `stale`, or `unknown`, and what remains to inspect.
+  Version drift is listed by package and versions; docs lookups wait for a normal sync.
 - `--upgrade`: migrate only config using `references/reconciliation.md`. It does
   not certify docs or graph freshness or record a new context baseline. Normal
   sync also applies needed migrations before rediscovery.
