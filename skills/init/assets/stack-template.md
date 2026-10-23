@@ -5,7 +5,8 @@
 
 One row per fact. A row without evidence does not belong here.
 
-Only what the agent docs listed in `docs.agent_docs` do **not** already state.
+Only what the repo's docs — `docs.agent_docs` and the doc inventory — do **not**
+already state; link them for the rest.
 Duplicating them creates a second source of truth that drifts.
 
 | Fact | Value | Evidence |

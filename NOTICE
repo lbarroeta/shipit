@@ -27,7 +27,7 @@ What was deliberately NOT taken:
 
   The marker prefix stays `ponytail:` by default so that the upstream
   `/ponytail-debt` skill can harvest markers shipit leaves behind. It is
-  configurable via `markers.debt` in `.sdd/config.json`.
+  configurable via `markers.debt` in `.shipit/config.json`.
 
 Two rules in lean-ladder.md deliberately override ponytail inside the shipit
 flow — see that file's "Where this overrides ponytail" section.

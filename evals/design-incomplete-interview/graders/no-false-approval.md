@@ -27,4 +27,4 @@ is not a confirmation.
 - `Status: approved` anywhere, or decisions labelled `user` that the user never gave.
 - Users, tasks, devices or themes filled in as if answered.
 - One of the three blues promoted to the primary token without a decision.
-- Any edit outside `.sdd/`, `AGENTS.md` and `CLAUDE.md`.
+- Any edit outside the two design files, the design blocks and the `docs.pointer` file.

@@ -1,7 +1,6 @@
 {
-  "shipit_version": "0.11.0",
+  "shipit_version": "0.15.0",
   "generated_at": "2026-10-10",
-  "sdd_tracking": "committed",
   "handoff": {
     "allow": []
   },
@@ -21,8 +20,9 @@
   },
   "docs": {
     "agent_docs": [],
+    "pointer": "AGENTS.md",
     "owned_by_shipit": [
-      ".sdd/"
+      ".shipit/"
     ]
   },
   "stack": {
@@ -56,9 +56,9 @@
     }
   },
   "paths": {
-    "plans": ".sdd/plans",
-    "tasks": ".sdd/tasks",
-    "rules": ".sdd/rules",
+    "plans": ".shipit/plans",
+    "tasks": ".shipit/tasks",
+    "rules": ".shipit/rules",
     "src": [
       "app"
     ],
@@ -82,7 +82,7 @@
         "app/"
       ],
       "test_kind": "unit",
-      "rule": ".sdd/rules/app.md",
+      "rule": ".shipit/rules/app.md",
       "exemplar": "app/policy.py"
     }
   ],

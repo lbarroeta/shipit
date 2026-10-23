@@ -6,7 +6,7 @@ business decision in an implementation task.
 
 ## Decision precedence
 
-Apply in order within the applicable `.sdd/` and security constraints:
+Apply in order within the applicable repo contract and security constraints:
 
 1. Explicit request, acceptance criteria, boundaries, and already accepted decisions.
 2. Reuse a verified existing solution that satisfies them.
@@ -71,7 +71,7 @@ Do not label facts or established conventions assumptions. Record accepted
 business decisions with their source; do not reopen them without new conflicting
 evidence.
 
-## When `.sdd/` says `unknown`
+## When the contract says `unknown`
 
 `unknown` records missing evidence, not permission to import another project's
 convention.
@@ -82,4 +82,4 @@ convention.
 - Tracker → treat as `none`, never guess an adapter. A referenced issue or
   prerequisite that cannot be resolved still blocks readiness.
 
-Recurring contract gaps warrant `/shipit:init`; do not silently rewrite `.sdd/`.
+Recurring contract gaps warrant `/shipit:init`; do not silently rewrite the contract.

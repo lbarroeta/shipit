@@ -56,7 +56,7 @@ A deliberate shortcut with a known ceiling leaves one comment naming the ceiling
 # <marker> global lock, per-account locks if throughput matters
 ```
 
-The marker prefix comes from `markers.debt` in `.sdd/config.json` (default
+The marker prefix comes from `markers.debt` in `.shipit/config.json` (default
 `ponytail:`, which keeps the upstream `/ponytail-debt` skill able to harvest
 them). A marker with no upgrade trigger is the kind that rots — do not write one.
 
@@ -80,7 +80,7 @@ break the SDD contract if carried over unchanged.
 
 **Tests.** Upstream says YAGNI applies to tests too — one `assert`-based
 self-check, no frameworks, no fixtures. **Inside shipit that rung is off.**
-`.sdd/config.json` `tests` and `.sdd/rules/*` own test policy: the repo's own
+`.shipit/config.json` `tests` and `.shipit/rules/*` own test policy: the repo's own
 framework, its own spec kinds, its own coverage gate. Writing a bare `assert` in
 a repo with a real suite leaves the coverage gate red and the change unshippable.
 

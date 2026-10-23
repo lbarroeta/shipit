@@ -40,10 +40,10 @@ No useful graph → continue with scoped `rg`. No graph output at all → say on
 the final report:
 
 > No graphify graph in this project — discovery was `rg`-only. Relationships were
-> checked in source; graph-assisted coverage was unavailable. To build one once:
-> `graphify .` (minutes + extraction tokens).
+> checked in source; graph-assisted coverage was unavailable. To build one:
+> `graphify update .` (code only, no tokens).
 
-If `command -v graphify` fails too, recommend `/shipit:doctor --fix` before building.
+If `command -v graphify` fails too, recommend `/shipit:init`, which offers the install.
 An unavailable graph is a disclosed limitation, not itself a blocker.
 
 ## 1 — Locate the behavior

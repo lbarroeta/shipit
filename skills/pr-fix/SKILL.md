@@ -18,9 +18,9 @@ user to post.
 
 ## Context budget
 
-- Required: `.sdd/config.json`, the PR's unresolved review threads, and its CI
+- Required: `.shipit/config.json`, the PR's unresolved review threads, and its CI
   status.
-- Required: the `.sdd/rules/*` files for the layers a fix actually touches. Only
+- Required: the `.shipit/rules/*` files for the layers a fix actually touches. Only
   those.
 - Required: `../../references/lean-ladder.md`, relative to this skill directory,
   for the pushback tag vocabulary.
@@ -82,7 +82,7 @@ it" on a thread, or "skip this one" on a failure.
 ## Hard rules
 
 - Minimal fix per item. No broad refactor, no new scope, no "while I'm here".
-- **Prose language.** Comments written in code follow `language.code` (default `en`); drafted thread replies follow `language.pr`; the report follows `language.plan` in `.sdd/config.json`. Legacy string `language` → that value for every key but `code`; absent → `en`. Identifiers, commit subjects and branch names always stay English.
+- **Prose language.** Comments written in code follow `language.code` (default `en`); drafted thread replies follow `language.pr`; the report follows `language.plan` in `.shipit/config.json`. Legacy string `language` → that value for every key but `code`; absent → `en`. Identifiers, commit subjects and branch names always stay English.
 - A comment requesting a **scope or design change is not implemented.** Mark it
   `pushback` with a one-line technical justification for the user to post. Use the
   ladder's tags where they fit — `yagni:` for an abstraction with one

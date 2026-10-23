@@ -13,7 +13,7 @@ One conversation owns the task. You are the coordinator: prepare Git, delegate,
 wait, checkpoint and explain QA. **Do not perform the synchronizer, planner, builder or delivery
 agent's work yourself.** Use real native subagents, not role-playing or new
 user-owned chats. Their model/effort pairs come from `assets/models.json`, with
-explicit per-repo overrides in `run.models` of `.sdd/config.json`.
+explicit per-repo overrides in `run.models` of `.shipit/config.json`.
 
 ## Inputs and authorization
 
@@ -30,7 +30,7 @@ when planning starts. This required startup transition is independent of
 `handoff.allow`; later delivery effects still follow that allow-list.
 Destructive work, publishing and messaging retain the existing skills' boundaries.
 
-Read only `.sdd/config.json`, `.sdd/conventions.md`, this skill's
+Read only `.shipit/config.json`, `.shipit/conventions.md`, this skill's
 `references/orchestration.md` and `references/runtime-adapters.md`. Before native
 dispatch, also read the applicable `../../agents/run-*.md` definition, or the
 explicit local agent definition selected by the runtime adapter, to verify its

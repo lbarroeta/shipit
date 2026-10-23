@@ -1,6 +1,6 @@
 ---
 name: sync
-description: Reconcile an initialized repository's Shipit context with current sources before planning or after implementation. Update affected contracts and documentation, preserve human decisions, report conflicts, and migrate older configuration. Use init for first setup and design-system for design decisions.
+description: Reconcile an initialized repository's Shipit context with current sources before planning or after implementation. Update affected contracts and documentation, preserve human decisions, report conflicts, and migrate older configuration. Use init for setup and `.sdd/` migration, and design-system for design decisions.
 metadata:
   writes_product_code: false
   output: synchronized-contract
@@ -21,14 +21,15 @@ phase with issue, plan, implementation report and run-owned paths. Both phases u
 the `sync` route in `run/assets/models.json`; standalone execution uses the hosting
 session's model. Do not spawn a pipeline or invoke handoff.
 
-Read `.sdd/config.json`, then `references/reconciliation.md`. Load the init schema
+Read `.shipit/config.json`, then `references/reconciliation.md`. Load the init schema
 and only the affected recipes/templates from `../init/references/` and
 `../init/assets/`. These are shared evidence recipes, not instructions to initialize
-again. No config → stop with `/shipit:init`. Corrupt config or a newer schema →
-report the gap; never reset it from a template.
+again. No config → stop with `/shipit:init`; a legacy `.sdd/config.json` without
+`.shipit/config.json` → stop too: `/shipit:init` migrates it. Corrupt config or
+a newer schema → report the gap; never reset it from a template.
 
-- Own `.sdd/config.json`, `stack.md`, `conventions.md`, generated layer/test rules,
-  `.sdd/sync-state.json`, and the `shipit:contract` pointer blocks.
+- Own `.shipit/config.json`, `stack.md`, `conventions.md`, generated layer/test
+  rules, `.shipit/sync-state.json`, and the `shipit:contract` block in `docs.pointer`.
 - Preserve user choices, explicit overrides and unknown extension keys. A default
   is for first setup; it must not reset existing preferences during sync.
 - Preserve all `shipit:design` blocks and design files. Report design drift to
@@ -47,7 +48,7 @@ report the gap; never reset it from a template.
    unrelated edits. Run the stdlib helper (Python 3.10+):
    `python3 <plugin>/skills/sync/scripts/context_state.py --repo <repo> inspect`.
    It compares content hashes, file modes and symlink targets, including additions
-   and deletions. Read affected baseline entries from `.sdd/sync-state.json` only
+   and deletions. Read affected baseline entries from `.shipit/sync-state.json` only
    as needed. Missing baseline means legacy/unknown ownership, not pristine output.
    `--check` reports drift and exits without migration, writes or graph updates.
 2. **Determine scope.** Before planning, reconcile accumulated drift that affects

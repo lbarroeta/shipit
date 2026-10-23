@@ -26,7 +26,7 @@ def hashes(directory):
         for path in sorted(directory.rglob("*"))
         if path.is_file() and ".git" not in path.relative_to(directory).parts
         and "__pycache__" not in path.relative_to(directory).parts
-        and not path.relative_to(directory).as_posix().startswith(".sdd/plans/")
+        and not path.relative_to(directory).as_posix().startswith(".shipit/plans/")
     }
 
 
@@ -87,7 +87,7 @@ def prepare(case, destination):
         "prompt_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
         "tool_profile": {
             "read": True, "search": True, "local_shell": True,
-            "write": "repo/.sdd/plans/ only", "network": False,
+            "write": "repo/.shipit/plans/ only", "network": False,
             "tracker": False, "delegation": False, "graph": "absent",
         },
     }

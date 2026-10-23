@@ -1,7 +1,6 @@
 {
   "shipit_version": "0.14.0",
   "generated_at": "YYYY-MM-DD",
-  "sdd_tracking": "committed",
   "handoff": {
     "allow": ["branch", "commit", "push", "pr_body", "pr_ready", "tracker_status"]
   },
@@ -21,7 +20,8 @@
   },
   "docs": {
     "agent_docs": [],
-    "owned_by_shipit": [".sdd/"]
+    "pointer": "AGENTS.md",
+    "owned_by_shipit": [".shipit/"]
   },
   "stack": {
     "languages": [],
@@ -41,9 +41,9 @@
   },
   "commands_verified": {},
   "paths": {
-    "plans": ".sdd/plans",
-    "tasks": ".sdd/tasks",
-    "rules": ".sdd/rules",
+    "plans": ".shipit/plans",
+    "tasks": ".shipit/tasks",
+    "rules": ".shipit/rules",
     "src": [],
     "tests": []
   },

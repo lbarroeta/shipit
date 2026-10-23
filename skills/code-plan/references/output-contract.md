@@ -13,7 +13,7 @@ contract needs its consumer, failure, and compatibility detail. There is no line
 cap. Remove repetition and generic advice, never evidence or required coverage to
 hit a length target.
 
-Reference `.sdd/` and agent rules rather than restating their content. The plan
+Reference the repo contract and agent rules rather than restating their content. The plan
 does not contain verification commands, red/green/refactor instructions, test
 framework conventions, token values, or generic implementation checklists.
 `code-implement` owns command selection and execution; the plan owns what must be

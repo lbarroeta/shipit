@@ -24,12 +24,12 @@ class RunStateTests(unittest.TestCase):
         self.git(self.directory, "init", "--bare", "--initial-branch=main", str(self.remote))
         self.git(self.directory, "init", "--initial-branch=main", str(self.seed))
         self.identity(self.seed)
-        (self.seed / ".sdd").mkdir()
-        self.config = {"sdd_tracking": "committed", "handoff": {
+        (self.seed / ".shipit").mkdir()
+        self.config = {"handoff": {
             "allow": ["branch", "commit", "push", "pr_body"]}}
-        (self.seed / ".sdd/config.json").write_text(json.dumps(self.config))
+        (self.seed / ".shipit/config.json").write_text(json.dumps(self.config))
         (self.seed / "product.txt").write_text("initial\n")
-        self.git(self.seed, "add", ".sdd/config.json", "product.txt")
+        self.git(self.seed, "add", ".shipit/config.json", "product.txt")
         self.git(self.seed, "commit", "-m", "Initial fixture")
         self.git(self.seed, "remote", "add", "origin", str(self.remote))
         self.git(self.seed, "push", "-u", "origin", "main")
@@ -147,7 +147,7 @@ class RunStateTests(unittest.TestCase):
 
     def test_withheld_branch_does_not_mutate_git(self):
         self.config["handoff"]["allow"] = []
-        (self.repo / ".sdd/config.json").write_text(json.dumps(self.config))
+        (self.repo / ".shipit/config.json").write_text(json.dumps(self.config))
         self.git(self.repo, "commit", "-am", "Restrict fixture")
         self.assertIn("handoff.allow", self.begin(success=False)["reason"])
         self.assertEqual(self.git(self.repo, "branch", "--show-current"), "main")
@@ -237,7 +237,7 @@ class RunStateTests(unittest.TestCase):
         self.git(self.repo, "switch", "-c", "other-route", "main")
         other_config = dict(self.config, run={"models": {"openai": {
             "plan": {"model": "other-branch-only", "effort": "high"}}}})
-        (self.repo / ".sdd/config.json").write_text(json.dumps(other_config))
+        (self.repo / ".shipit/config.json").write_text(json.dumps(other_config))
         self.git(self.repo, "commit", "-am", "Other branch routes")
         resumed = self.begin()
         self.assertEqual(resumed["routes"]["plan"]["model"], "gpt-6-astra")
@@ -319,8 +319,8 @@ class RunStateTests(unittest.TestCase):
 
     def test_verify_rejects_unrelated_committed_paths(self):
         state = self.implemented()
-        (self.repo / ".sdd/config.json").write_text("{}\n")
-        self.git(self.repo, "add", "product.txt", ".sdd/config.json")
+        (self.repo / ".shipit/config.json").write_text("{}\n")
+        self.git(self.repo, "add", "product.txt", ".shipit/config.json")
         self.git(self.repo, "commit", "-m", "Validated and unrelated changes")
         self.assertEqual(self.owned(state, "verify", success=False)["status"], "blocked")
 
@@ -351,10 +351,10 @@ class RunStateTests(unittest.TestCase):
         self.owned(state, "verify")
 
     def test_delivery_keeps_current_and_archived_plans_local(self):
-        first = self.repo / ".sdd/plans/first plan.md"
+        first = self.repo / ".shipit/plans/first plan.md"
         first.parent.mkdir(parents=True)
         first.write_text("Previously committed plan\n")
-        self.git(self.repo, "add", ".sdd/plans/first plan.md")
+        self.git(self.repo, "add", ".shipit/plans/first plan.md")
         self.git(self.repo, "commit", "-m", "Existing plan fixture")
         self.git(self.repo, "push")
         state = self.begin()
@@ -367,7 +367,7 @@ class RunStateTests(unittest.TestCase):
         state = self.checkpoint(state, "plan", self.result(state, "plan", artifact=str(current)))
         (self.repo / "product.txt").write_text("updated\n")
         result = self.result(state, "implement",
-                             files=["product.txt", ".sdd/plans/first plan.md", ".sdd/plans/next-plan.md"],
+                             files=["product.txt", ".shipit/plans/first plan.md", ".shipit/plans/next-plan.md"],
                              validation=[{"command": "git diff --check", "exit_code": 0}])
         state = self.synced(self.checkpoint(state, "implement", result))
         self.assertEqual(state["delivery_files"], ["product.txt"])
@@ -375,20 +375,20 @@ class RunStateTests(unittest.TestCase):
         first.write_text("Unvalidated archived plan edit\n")
         self.assertIn("Validated file changed", self.owned(state, "verify", success=False)["reason"])
         first.write_text("Revised local plan\n")
-        self.git(self.repo, "add", ".sdd/plans/next-plan.md")
+        self.git(self.repo, "add", ".shipit/plans/next-plan.md")
         staged_before = self.git(self.repo, "diff", "--cached", "--binary")
         self.assertIn("paths are staged", self.owned(state, "verify", success=False)["reason"])
         self.assertEqual(self.git(self.repo, "diff", "--cached", "--binary"), staged_before)
-        self.git(self.repo, "restore", "--staged", "--", ".sdd/plans/next-plan.md")
+        self.git(self.repo, "restore", "--staged", "--", ".shipit/plans/next-plan.md")
         self.git(self.repo, "add", "product.txt")
         self.git(self.repo, "commit", "-m", "Deliver product only")
         self.owned(state, "verify")
-        self.assertEqual(self.git(self.repo, "show", "HEAD:.sdd/plans/first plan.md"),
+        self.assertEqual(self.git(self.repo, "show", "HEAD:.shipit/plans/first plan.md"),
                          "Previously committed plan")
-        self.assertNotIn(".sdd/plans/next-plan.md", self.git(self.repo, "ls-tree", "-r", "--name-only", "HEAD"))
+        self.assertNotIn(".shipit/plans/next-plan.md", self.git(self.repo, "ls-tree", "-r", "--name-only", "HEAD"))
         self.assertEqual(first.read_text(), "Revised local plan\n")
         self.assertEqual(current.read_text(), "Replacement local plan\n")
-        self.git(self.repo, "add", ".sdd/plans/next-plan.md")
+        self.git(self.repo, "add", ".shipit/plans/next-plan.md")
         self.git(self.repo, "commit", "-m", "Incorrectly commit a generated plan")
         self.assertIn("Committed tree differs", self.owned(state, "verify", success=False)["reason"])
 
@@ -506,12 +506,12 @@ class RunStateTests(unittest.TestCase):
         self.assertEqual(state["stage"], "sync_before")
         result = self.result(state, "plan")
         self.assertIn("Expected stage", self.checkpoint(state, "plan", result, success=False)["reason"])
-        (self.repo / ".sdd/stack.md").write_text("Initial context\n")
+        (self.repo / ".shipit/stack.md").write_text("Initial context\n")
         state = self.synced(state)
-        self.assertIn(".sdd/stack.md", state["owned_files"])
+        self.assertIn(".shipit/stack.md", state["owned_files"])
         state = self.checkpoint(state, "plan", self.result(state, "plan"))
         (self.repo / "product.txt").write_text("updated\n")
-        result = self.result(state, "implement", files=["product.txt", ".sdd/stack.md"],
+        result = self.result(state, "implement", files=["product.txt", ".shipit/stack.md"],
                              validation=[{"command": "git diff --check", "exit_code": 0}])
         state = self.checkpoint(state, "implement", result)
         self.assertEqual(state["stage"], "sync_after")
@@ -519,11 +519,11 @@ class RunStateTests(unittest.TestCase):
         self.owned(state, "verify")
         result = self.result(state, "handoff", delivery_status="completed")
         self.assertIn("Expected stage", self.checkpoint(state, "handoff", result, success=False)["reason"])
-        (self.repo / ".sdd/stack.md").write_text("Final context\n")
+        (self.repo / ".shipit/stack.md").write_text("Final context\n")
         state = self.synced(state)
         self.assertEqual(state["stage"], "handoff")
         self.assertEqual(builder, Path(state["artifacts"]["implement"]["path"]).read_bytes())
-        self.assertIn(".sdd/stack.md", state["delivery_files"])
+        self.assertIn(".shipit/stack.md", state["delivery_files"])
         self.owned(state, "verify")
 
     def test_sync_conflicts_and_pending_validation_block_advancement(self):
@@ -540,10 +540,10 @@ class RunStateTests(unittest.TestCase):
 
     def test_sync_owned_edits_are_protected_on_resume(self):
         state = self.begin(sync=False)
-        (self.repo / ".sdd/stack.md").write_text("Synced context\n")
+        (self.repo / ".shipit/stack.md").write_text("Synced context\n")
         state = self.synced(state)
         self.owned(state, "pause", "--reason", "Interrupted before planning")
-        (self.repo / ".sdd/stack.md").write_text("New user edit\n")
+        (self.repo / ".shipit/stack.md").write_text("New user edit\n")
         self.assertIn("Run-owned files changed", self.begin(success=False)["reason"])
 
     def test_failed_post_sync_returns_to_builder_and_repeats_sync(self):
@@ -585,13 +585,13 @@ class RunStateTests(unittest.TestCase):
         result = self.result(state, "implement", files=["product.txt"],
                              validation=[{"command": "check", "exit_code": 0}])
         state = self.checkpoint(state, "implement", result)
-        (self.repo / ".sdd/stack.md").write_text("New evidence\n")
+        (self.repo / ".shipit/stack.md").write_text("New evidence\n")
         result = self.result(state, "sync_after", status="blocked",
-                             files=["product.txt", ".sdd/stack.md"], blockers=["Plan conflict"])
+                             files=["product.txt", ".shipit/stack.md"], blockers=["Plan conflict"])
         state = self.owned(state, "replan", "--reason", "Approved plan correction",
                            "--result-file", str(result))
         self.assertEqual(state["stage"], "sync_before")
-        self.assertEqual(set(state["revisions"][-1]["owned_files"]), {"product.txt", ".sdd/stack.md"})
+        self.assertEqual(set(state["revisions"][-1]["owned_files"]), {"product.txt", ".shipit/stack.md"})
         state = self.synced(state)
         self.assertEqual(state["stage"], "plan")
 
@@ -599,7 +599,7 @@ class RunStateTests(unittest.TestCase):
         self.config["run"] = {"models": {"openai": {
             "sync": {"model": "custom-sync", "effort": "high"},
             "implement": {"model": "custom-builder", "effort": "medium"}}}}
-        (self.repo / ".sdd/config.json").write_text(json.dumps(self.config))
+        (self.repo / ".shipit/config.json").write_text(json.dumps(self.config))
         routes = self.call("routes", "--provider", "openai")["routes"]
         self.assertEqual(routes["sync"]["model"], "custom-sync")
         self.assertEqual(routes["implement"]["model"], "custom-builder")
@@ -619,13 +619,17 @@ class RunStateTests(unittest.TestCase):
             "handoff": {"model": "claude-haiku-5-5", "effort": "high"},
         })
         self.config["run"] = {"models": {"openai": {"plan": {"model": "custom", "effort": "high"}}}}
-        (self.repo / ".sdd/config.json").write_text(json.dumps(self.config))
+        (self.repo / ".shipit/config.json").write_text(json.dumps(self.config))
         self.assertEqual(self.call("routes", "--provider", "openai")["routes"], {
             **default, "plan": {"model": "custom", "effort": "high"},
         })
         self.config["run"]["models"]["openai"]["plan"] = {"model": "custom"}
-        (self.repo / ".sdd/config.json").write_text(json.dumps(self.config))
+        (self.repo / ".shipit/config.json").write_text(json.dumps(self.config))
         self.assertIn("Invalid model/effort", self.call("routes", "--provider", "openai", success=False)["reason"])
+
+    def test_legacy_contract_points_to_init(self):
+        (self.repo / ".shipit").rename(self.repo / ".sdd")
+        self.assertIn("/shipit:init", self.call("routes", "--provider", "openai", success=False)["reason"])
 
 
 if __name__ == "__main__":

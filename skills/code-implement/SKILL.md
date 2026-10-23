@@ -1,6 +1,6 @@
 ---
 name: code-implement
-description: Use when an approved shipit plan must be executed, verified, and prepared for QA. Runs the repo's own verified commands from `.sdd/config.json`. Do not use to redesign scope, and not for git or PR delivery — that is `code-handoff`.
+description: Use when an approved shipit plan must be executed, verified, and prepared for QA. Runs the repo's own verified commands from `.shipit/config.json`. Do not use to redesign scope, and not for git or PR delivery — that is `code-handoff`.
 metadata:
   input: sdd-plan
   output: implemented-change
@@ -14,13 +14,13 @@ and verified with commands that are known to run in this repo.
 
 ## Context budget
 
-- Required: the full plan, `.sdd/config.json`, `.sdd/conventions.md`.
-- Required: the `.sdd/rules/<layer>.md` for each layer the plan touches, and the
-  `.sdd/rules/tests/<kind>.md` for each test it plans. Only those.
+- Required: the full plan, `.shipit/config.json`, `.shipit/conventions.md`.
+- Required: the `.shipit/rules/<layer>.md` for each layer the plan touches, and the
+  `.shipit/rules/tests/<kind>.md` for each test it plans. Only those.
 - Required: `../../references/lean-ladder.md`, relative to this skill directory.
 - Required: `references/validation-standards.md`. Every run validates.
 - Required only when the plan touches UI and `<paths.rules>/design.md` exists:
-  that file, and the `.sdd/design-system.md` sections the plan's `Design` names.
+  that file, and the `.shipit/design-system.md` sections the plan's `Design` names.
   Backend-only → never.
 - Required when the change creates or modifies entry points (routes, handlers,
   jobs, webhooks), authorization, scoped data access, trust-boundary input, secret
@@ -39,7 +39,7 @@ and verified with commands that are known to run in this repo.
   issue authorizes the plan within its acceptance criteria after the coordinator's
   contract check. Require that recorded request and scope in the delegation;
   never infer approval from the planner's output or claim human plan review.
-- **Prose language.** Report and QA guide follow `language.plan`; the PR description follows `language.pr`; comments written in code follow `language.code` (default `en`) — never `language.plan` — in `.sdd/config.json`. Legacy string `language` → that value for every key but `code`; absent → `en`. Identifiers, commit subjects and branch names always stay English.
+- **Prose language.** Report and QA guide follow `language.plan`; the PR description follows `language.pr`; comments written in code follow `language.code` (default `en`) — never `language.plan` — in `.shipit/config.json`. Legacy string `language` → that value for every key but `code`; absent → `en`. Identifiers, commit subjects and branch names always stay English.
 - No scope expansion. No redesign. No new abstraction. No dependency upgrade.
 - No behaviour change outside the plan.
 - No weakening of authorization, scoping, security, or existing tests.
@@ -83,7 +83,7 @@ and verified with commands that are known to run in this repo.
    touched, and no unresolved blockers. Missing → stop with
    `# Implementation Blocked`. Plans are deliberately terse: verification commands,
    red/green sequencing, and repo conventions are owned by this skill and by
-   `.sdd/*`, not by the plan. Their absence is correct, not a gap. Verify each AC
+   the repo contract, not by the plan. Their absence is correct, not a gap. Verify each AC
    has a change or already-met behavior and observable validation, including
    affected consumers/regressions. Missing new section names or explicit AC links
    in a legacy plan alone is not a blocker; unresolved essential behavior,
@@ -174,7 +174,7 @@ Touching the user's uncommitted work.
 Stop when: the plan is missing, has unresolved blockers, or lacks contract detail;
 acceptance criteria contradict each other; security or scoping is unspecified; the
 plan requires destructive data work without explicit approval; the plan conflicts
-with `.sdd/*`; user changes conflict with planned edits; a major decision is needed
+with the repo contract; user changes conflict with planned edits; a major decision is needed
 that the plan does not contain; or the same check failed 3 times without new
 evidence.
 

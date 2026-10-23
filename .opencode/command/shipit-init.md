@@ -1,5 +1,5 @@
 ---
-description: Initialize this repo's Shipit contract once
+description: Set up or migrate this repo's Shipit contract
 ---
 
 Load the shipit `init` skill and run it.

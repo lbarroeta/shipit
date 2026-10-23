@@ -25,7 +25,7 @@ In the checkout used for discovery, record:
 - Current tracked/untracked status, then relevant staged and unstaged diffs and
   relevant untracked content. Inspect file content when an index/worktree split
   matters. Unrelated dirty paths need not be read; state they were excluded.
-- Applicable `.sdd/config.json`, `.sdd/conventions.md`, layer/test rules, and
+- Applicable `.shipit/config.json`, `.shipit/conventions.md`, layer/test rules, and
   relevant agent rules. Design context only when required by the skill.
 
 Use `git status --short`, `git rev-parse HEAD`, and scoped diff/read operations;

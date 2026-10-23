@@ -1,6 +1,6 @@
 Set up the design system for this repository with shipit.
 
-`.sdd/` exists from a previous `/shipit:init`: a React + Vite admin panel, one UI
+`.shipit/config.json` exists from a previous `/shipit:init`: a React + Vite admin panel, one UI
 layer `components` (`src/components/`), no tokens file, and buttons in three
 slightly different blues across `src/components/Button.tsx`,
 `src/pages/Orders.tsx` and `src/pages/Customers.tsx`.

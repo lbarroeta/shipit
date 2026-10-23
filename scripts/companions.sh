@@ -8,7 +8,7 @@
 #   ./scripts/companions.sh --yes
 #
 # Never does, at any flag:
-#   - run `graphify .` (building a graph costs tokens — that is your call)
+#   - build a graph (`init` builds the code-only graph; a semantic `graphify .` costs tokens)
 #   - pipe curl into a shell
 #   - use sudo
 #   - install a package manager
@@ -64,9 +64,12 @@ if has graphify; then
 elif has uv; then
   miss "graphify cli" "discovery falls back to rg / git grep"
   run uv tool install graphifyy
+elif has pipx; then
+  miss "graphify cli" "discovery falls back to rg / git grep"
+  run pipx install graphifyy
 else
   miss "graphify cli" "discovery falls back to rg / git grep"
-  note "needs uv or pip first — this script will not install a package manager"
+  note "needs uv or pipx first — this script will not install a package manager"
   note "macOS: brew install uv    then: uv tool install graphifyy"
 fi
 
@@ -74,8 +77,8 @@ if [ -f graphify-out/graph.json ]; then
   ok "graphify graph" "graphify-out/graph.json"
 else
   miss "graphify graph" "having the CLI does not give you a graph"
-  note "build it once, in the main checkout: graphify ."
-  note "COST: minutes + extraction tokens. Never run automatically."
+  note "build it in the main checkout: graphify update ."
+  note "code only: no LLM, no tokens. /shipit:init runs it."
 fi
 
 if plugin_present caveman; then

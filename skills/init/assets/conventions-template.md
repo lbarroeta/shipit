@@ -11,7 +11,7 @@ Rules:
 - No convention without an exemplar at `path:line`.
 - A pattern followed by roughly half the files is not a convention. Write it in
   **Not conventions** below instead.
-- Nothing here restates an agent doc from `docs.agent_docs`.
+- Nothing here restates a doc from `docs.agent_docs` or the doc inventory; link it.
 
 ## Structure
 

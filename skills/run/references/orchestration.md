@@ -93,9 +93,8 @@ Each child saves a result JSON and returns its path plus a short summary:
 leave unknown values null. The planner and both sync stages must return empty `blockers` for completion.
 Builder adds `validation`: exact executed `{ "command": "...", "exit_code": 0 }`
 entries, plus `files`: repo-relative paths exactly matching the tracked diff and
-non-ignored untracked files. Exclude local-only `.sdd` artifacts from that manifest;
-retain non-ignored generated plans here for ownership validation, but omit them
-from the report's `Files Changed` delivery manifest. Record any skipped checks
+non-ignored untracked files. Retain non-ignored generated plans here for ownership
+validation, but omit them from the report's `Files Changed` delivery manifest. Record any skipped checks
 with reasons in the report.
 Sync adds `context_status` (`current` or `updated`), `requires_revalidation: false`,
 `validation` (non-empty successful executed context checks), and `files` (the full
