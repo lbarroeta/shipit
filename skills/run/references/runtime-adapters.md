@@ -5,7 +5,7 @@ routes; local Codex uses `openai`. Do not invoke another provider's CLI or use
 user-owned chat creation as a substitute. Load only the relevant section.
 
 The default route pairs are in `../assets/models.json`. The helper's `routes`
-command applies `docs/shipit/config.json` overrides at
+command applies `.shipit/config.json` overrides at
 `run.models.<anthropic|openai>.<sync|plan|implement|handoff>`, each a complete
 `{"model": "...", "effort": "..."}` pair. Do not modify global session settings.
 Route keys are `sync`, `plan`, `implement`, and `handoff`. Checkpoints are

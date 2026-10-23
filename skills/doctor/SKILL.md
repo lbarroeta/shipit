@@ -16,7 +16,7 @@ lose rather than implying breakage.
 ## Hard rules
 
 - **Default is report-only.** Nothing installed, nothing mutated, no file written.
-- **Prose language.** What this skill prints follows `language.plan` in `docs/shipit/config.json`. Legacy string `language` → that value for every key but `code`; absent → `en`. Identifiers, commit subjects and branch names always stay English.
+- **Prose language.** What this skill prints follows `language.plan` in `.shipit/config.json`. Legacy string `language` → that value for every key but `code`; absent → `en`. Identifiers, commit subjects and branch names always stay English.
 - `--fix` runs `../../scripts/companions.sh --yes`, relative to this skill
   directory, after **one** confirmation that lists what will run and what each
   command grants.
@@ -27,7 +27,7 @@ lose rather than implying breakage.
 - A missing optional tool is reported as `missing`, never as an error, and never with
   language implying shipit is broken.
 - `ponytail` present is reported as something to **turn off**, not as a success.
-- Do not write to `docs/shipit/config.json` or any agent doc. `init` owns the
+- Do not write to `.shipit/config.json` or any agent doc. `init` owns the
   `companions` block and the contract pointer, `design-system` the design pointer;
   this skill only reads and reports.
 
@@ -35,7 +35,7 @@ lose rather than implying breakage.
 
 1. Run `scripts/companions.sh` (no flags) and use its output as the source of truth.
    It is versioned and auditable; do not re-implement its checks inline.
-2. Add the repo-side checks the script cannot make: is `docs/shipit/config.json`
+2. Add the repo-side checks the script cannot make: is `.shipit/config.json`
    present, does it parse, is a legacy `.sdd/` still there, is `unknown[]`
    non-empty, does `commands.test_one` carry `{path}`, and does the
    `<!-- shipit:contract -->` block exist exactly once in `docs.pointer` (absent →
@@ -69,7 +69,7 @@ tier 2  graphify cli        ok       ~/.local/bin/graphify
 tier 3  ponytail            absent   correct — ladder is vendored
 
 contract
-        docs/shipit/        ok       generated 2026-07-28
+        .shipit/        ok       generated 2026-07-28
         legacy .sdd/        none
         unknown[]           2 keys   typecheck, security
         test_one            ok       carries {path}
@@ -91,7 +91,7 @@ reading this should know whether they can proceed, in one line.
 | --- | --- |
 | `git` | shipit cannot run. Only real blocker. |
 | `gh` | `code-handoff` cannot open or update PRs. Planning and implementing are unaffected. |
-| tracker `none` | Branch names come from `docs/code/conventions.md` instead. Everything else works. |
+| tracker `none` | Branch names come from `.shipit/conventions.md` instead. Everything else works. |
 | `handoff.allow` at its default | `code-handoff` does git and the PR body only. Tracker comments, status moves, thread replies and marking a PR ready are yours. Not a gap — a setting. |
 | `tracker.create.fields` key `null` | Verified absent. The draft still sets `Priority` and `Size`; a created issue does not carry that one in the tracker's own fields, and `code-handoff` reports it unmapped. Adapter `none` → `n/a`. |
 | `tracker.create.fields` key `"unknown"` | Not detected, so nothing is known yet. `code-handoff` tries the adapter's default field name, which may well work — report it as unverified, never as unmapped. |
@@ -100,7 +100,7 @@ reading this should know whether they can proceed, in one line.
 | graphify graph | Same as above — having the CLI without a graph changes nothing. |
 | Context7 (no MCP, no `ctx7`, or `ctx7` not logged in) | `code-implement` and `sync` cannot check library APIs or deprecations against the installed version; those claims are marked unverified, with one notice line in the report. Implementation still works. |
 | caveman | Chat prose and reports stay long. Note that shipit keeps PR bodies and reports short on its own, and exempts non-developer QA steps from compression either way. |
-| `docs/shipit/config.json` absent | `code-plan` and `code-implement` refuse to run. Fix: `/shipit:init`. |
+| `.shipit/config.json` absent | `code-plan` and `code-implement` refuse to run. Fix: `/shipit:init`. |
 | legacy `.sdd/` present | A pre-0.15.0 contract the current skills do not read. Fix: `/shipit:init` migrates it. |
 | pointer absent | shipit skills still read the contract by path, but every other agent working in this repo ignores it and codes to its own priors. Fix: `/shipit:init`. |
 | `unknown[]` non-empty | Those verification steps do not exist. Named in every implement report. |

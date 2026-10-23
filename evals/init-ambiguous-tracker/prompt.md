@@ -2,7 +2,7 @@ Run shipit init on this repo.
 
 Repository state:
 
-- No `docs/shipit/` and no `.sdd/` yet. This is a first `init`.
+- No `.shipit/` and no `.sdd/` yet. This is a first `init`.
 - `git branch --sort=-committerdate | head` shows `ENG-412-retry-webhooks`,
   `ENG-407-invoice-pdf`, `ENG-399-audit-log`.
 - `docs/engineering.md` contains the line

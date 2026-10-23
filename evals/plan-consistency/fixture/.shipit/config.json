@@ -22,7 +22,7 @@
     "agent_docs": [],
     "pointer": "AGENTS.md",
     "owned_by_shipit": [
-      "docs/shipit/"
+      ".shipit/"
     ]
   },
   "stack": {
@@ -56,12 +56,9 @@
     }
   },
   "paths": {
-    "stack": "docs/code/stack.md",
-    "conventions": "docs/code/conventions.md",
-    "rules": "docs/code/rules",
-    "design_system": "docs/design-system/contract.md",
-    "plans": "docs/plans",
-    "tasks": "docs/tasks",
+    "plans": ".shipit/plans",
+    "tasks": ".shipit/tasks",
+    "rules": ".shipit/rules",
     "src": [
       "app"
     ],
@@ -85,7 +82,7 @@
         "app/"
       ],
       "test_kind": "unit",
-      "rule": "docs/code/rules/app.md",
+      "rule": ".shipit/rules/app.md",
       "exemplar": "app/policy.py"
     }
   ],

@@ -15,7 +15,10 @@ Repository state:
   conventions.
 - `AGENTS.md` carries a `<!-- shipit:contract -->` block linking
   `docs/code/shipit.json` and `docs/code/git-conventions.md`, followed by a
-  `<!-- shipit:design -->` block. `CLAUDE.md` is a symlink to `AGENTS.md`.
+  `<!-- shipit:design -->` block. Outside those blocks its task table links
+  `docs/code/stack.md` and `docs/code/rules/README.md`. `CLAUDE.md` is a symlink to
+  `AGENTS.md`.
 - The `graphify` CLI is installed and `graphify-out/graph.json` exists.
 
-I approve the migration plan. I have not answered anything about deleting files.
+I approve the migration plan. I have not answered anything about deleting files or
+editing other docs.

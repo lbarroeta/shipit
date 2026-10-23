@@ -1,6 +1,6 @@
 ---
 name: init
-description: Use to set a repo up for shipit in whatever state it is in — new, already documented, initialized, or carrying a legacy `.sdd/` contract. Detects stack, verified commands, layers, test patterns, tracker and existing documentation from evidence, complements the repo's `docs/` without duplicating it, writes `docs/shipit/config.json`, sets up the code graph, and points agents at the contract. Do not use to plan or write product code.
+description: Use to set a repo up for shipit in whatever state it is in — new, already documented, initialized, or carrying a legacy `.sdd/` contract. Detects stack, verified commands, layers, test patterns, tracker and existing documentation from evidence, writes the `.shipit/` contract without duplicating the repo's own docs, sets up the code graph, and points agents at the contract. Do not use to plan or write product code.
 metadata:
   writes_product_code: false
   output: sdd-contract
@@ -11,21 +11,20 @@ metadata:
 Set up the repo context and write the contract the other skills depend on. Every
 other shipit skill is repo-agnostic *because* this one is not.
 
-Produces, at the repo root (defaults; `paths.*` can move them):
+Produces, at the repo root:
 
 | Path | For | Content |
 | --- | --- | --- |
-| `docs/shipit/config.json` | machines | Commands, paths, layers, tracker, worktree, companions |
-| `docs/shipit/sync-state.json` | sync | Accepted generated bases and source fingerprints |
-| `docs/code/stack.md` | agents and humans | Stack facts, one row per fact, each with evidence |
-| `docs/code/conventions.md` | agents and humans | Patterns this repo actually follows, each with an exemplar |
-| `docs/code/rules/<layer>.md` | agents and humans | Per-layer rules derived from real files |
-| `docs/code/rules/tests/<kind>.md` | agents and humans | Test shape per kind, extracted from a real test |
+| `.shipit/config.json` | machines | Commands, paths, layers, tracker, worktree, companions |
+| `.shipit/sync-state.json` | sync | Accepted generated bases and source fingerprints |
+| `.shipit/stack.md` | agents | Stack facts, one row per fact, each with evidence |
+| `.shipit/conventions.md` | agents | Patterns this repo actually follows, each with an exemplar |
+| `.shipit/rules/<layer>.md` | agents | Per-layer rules derived from real files |
+| `.shipit/rules/tests/<kind>.md` | agents | Test shape per kind, extracted from a real test |
 
-Only `docs/shipit/` is shipit's. Stack, conventions and rules are the repo's own
-documentation: shipit writes them when they do not exist and complements them when
-they do. Everything is committed except ticket drafts, `CLAUDE.local.md` and the
-graph output.
+The whole contract lives in `.shipit/` and is committed. Ticket drafts,
+`CLAUDE.local.md` and the graph output stay local, and generated plans are never
+committed. The repo's own docs are linked from the contract, never copied into it.
 
 `init` runs in any repo state and never sends the user elsewhere to finish:
 
@@ -34,7 +33,7 @@ graph output.
 | New — no contract, no docs | Detects and writes everything |
 | Documented — `docs/`, `AGENTS.md`, `CLAUDE.md` or other agent docs exist | Inventories them, writes only what they do not state |
 | Legacy — `.sdd/` exists (files or symlinks) | Migrates it per *Legacy migration*, then continues |
-| Initialized — `docs/shipit/config.json` exists | Re-inspects and reconciles with sync's merge; recorded answers are reused, never re-asked |
+| Initialized — `.shipit/config.json` exists | Re-inspects and reconciles with sync's merge; recorded answers are reused, never re-asked |
 
 ## Existing documentation
 
@@ -51,27 +50,11 @@ a fact is the drift this avoids.
   the exact doc patch and apply it only on yes; declined → record it in the stack
   discrepancy table. A decision (policy, architecture, design) → the human wins;
   current code violating it never supersedes it.
-- **Not covered** → shipit writes it.
+- **Not covered** → shipit writes it in `.shipit/`.
 
-Where shipit writes, for `paths.stack`, `paths.conventions` and each rule file:
-
-| Target | Action |
-| --- | --- |
-| Absent | Create it from its template in `assets/`. No markers: the file is shipit's as a whole |
-| Carries shipit's generated header, or is `managed` in the baseline | Shipit's: reconcile it with sync's merge |
-| Written by a human | Add one section at the end, replaced in place on later runs, holding only what the file does not state |
-
-The section, markers verbatim:
-
-````md
-<!-- shipit:generated -->
-## Detected by shipit
-
-<only what the rest of this file does not state, with evidence>
-<!-- /shipit:generated -->
-````
-
-Text outside the markers is never touched. `sync` tracks only the section.
+Each `.shipit/` file states only what the repo's docs do not, and links the doc
+that covers the rest: `.shipit/conventions.md` links the team's conventions doc
+instead of restating it. Human docs are never edited except by an approved patch.
 
 ## Discovery pointer
 
@@ -94,7 +77,7 @@ import matters: a `CLAUDE.local.md` makes Claude Code stop reading `AGENTS.md`
 unless it imports it. Never write `AGENTS.local.md` — no agent reads it. Codex has
 no local file that adds to `AGENTS.md`, so a Codex session outside shipit misses a
 `CLAUDE.local.md` pointer; shipit skills do not, since they read
-`docs/shipit/config.json` by path. Say so in the report.
+`.shipit/config.json` by path. Say so in the report.
 
 The block, verbatim, markers included, with the configured paths:
 
@@ -102,9 +85,9 @@ The block, verbatim, markers included, with the configured paths:
 <!-- shipit:contract -->
 ## Repository contract
 
-[Shipit configuration](docs/shipit/config.json) defines verified commands, layers and
-tracker. Read [stack](docs/code/stack.md), [conventions](docs/code/conventions.md) and
-the applicable [layer rule](docs/code/rules/) before writing code. Ask about any
+[Shipit configuration](.shipit/config.json) defines verified commands, layers and
+tracker. Read [stack](.shipit/stack.md), [conventions](.shipit/conventions.md) and
+the applicable [layer rule](.shipit/rules/) before writing code. Ask about any
 relevant entry in `unknown[]`; do not guess.
 <!-- /shipit:contract -->
 ````
@@ -218,8 +201,9 @@ linked worktree.
 10. **Contrast with the docs.** Each finding against the inventory: link, ask or
     write, per *Existing documentation*.
 11. **Write.** `config.json` from `assets/config-template.json`, or merged into the
-    existing one; the docs per *Existing documentation*; an existing contract through
-    sync's base/current/candidate merge (`../sync/references/reconciliation.md`).
+    existing one; the markdown files from their templates in `assets/`, holding only
+    what the repo's docs do not state; an existing contract through sync's
+    base/current/candidate merge (`../sync/references/reconciliation.md`).
 12. **Point at it.** Per *Discovery pointer*; record `docs.pointer`. Append
     `<paths.tasks>` and any `CLAUDE.local.md` to `.git/info/exclude` when nothing
     already covers them — check with `git check-ignore -q` first.
@@ -236,37 +220,37 @@ from step 1:
 
 1. Resolve every `.sdd/` entry to its real file: a symlink's target is the source,
    not the link.
-2. Config → `docs/shipit/config.json`, with `git mv` when tracked. Apply
-   `references/config-schema.md § Upgrades` from its `shipit_version`, row `0.15.0`
-   included. A legacy `sync-state.json` is read only to tell human edits from
-   generated text, then removed; the new baseline replaces it.
-3. Stack, conventions, rules, design contract, plans and drafts → their `paths.*`.
-   Target absent → move. Target is the real file already → leave it. Target written
-   by a human → the legacy content becomes its shipit section, minus what the file
-   already states.
-4. A real file left behind by step 3 — `docs/code/git-conventions.md` behind
-   `.sdd/conventions.md`, an old copy of the config — is superseded. Propose deleting
-   it, listing every link to it; delete only on yes.
+2. Move each real file to its `.shipit/` place with `git mv` when tracked: config,
+   stack, conventions, design contract, rules, plans and drafts. A file outside
+   `.sdd/` that a link pointed to — `docs/code/git-conventions.md` behind
+   `.sdd/conventions.md` — moves too: it was the contract.
+3. A target that already exists in `.shipit/` → compare. Identical → drop the
+   legacy copy. Different → show both and ask which wins; propose deleting the
+   other, and delete only on yes.
+4. Apply `references/config-schema.md § Upgrades` from the config's
+   `shipit_version`, row `0.15.0` included. A legacy `sync-state.json` is read only
+   to tell human edits from generated text, then removed; the new baseline
+   replaces it.
 5. Delete `.sdd/` entirely, links included. No compatibility symlinks: a
    collaborator on an older plugin must update it.
-6. Update the shipit blocks — contract and design — to the new paths. Links to moved
-   or deleted files elsewhere in human docs are listed as proposed patches.
+6. Update the shipit blocks — contract and design — to the new paths. Links to
+   moved files elsewhere in human docs are listed as proposed patches, applied
+   only on yes.
 
 ## Baseline
 
 After self-check, use `../sync/scripts/context_state.py` to record the exact files
 just generated or reconciled. Follow `../sync/references/reconciliation.md § Baseline contract`.
 Create a temporary JSON inventory outside the repo: `managed` lists config, stack,
-conventions and each generated layer/test rule (respect `paths.*`), and
+conventions and each generated layer/test rule (respect `paths.rules`), and
 `unresolved` is `[]`. Run:
 
 ```sh
 python3 <plugin>/skills/sync/scripts/context_state.py --repo <repo> record --inventory <inventory.json>
 ```
 
-The resulting `docs/shipit/sync-state.json` is committed with the contract. It
-stores accepted bases — for a human doc, only shipit's section — and source hashes,
-so sync can recognize human edits; a date is not an edit detector. Python 3.10+ is
+The resulting `.shipit/sync-state.json` is committed with the contract. It
+stores accepted bases and source hashes, so sync can recognize human edits; a date is not an edit detector. Python 3.10+ is
 required for this helper. If unavailable, report the baseline pending; never claim
 the context can be synchronized without that gap. Unknown detected capabilities may
 remain in `unknown[]`; unresolved ownership or contradictory decisions must not be
@@ -281,13 +265,13 @@ passed off as a completed baseline.
   correcting a detection in one command instead of hand-editing `config.json`. An
   unrecognised value is rejected, not coerced — `init` never invents an adapter.
 - `--upgrade` — retired here; use `/shipit:sync --upgrade` for config-only migration
-  of a contract already in `docs/shipit/`.
+  of a contract already in `.shipit/`.
 
 ## Report
 
 - Repo state detected, and the plan that was confirmed.
-- Paths created, complemented with a section, linked only, migrated, and proposed
-  for deletion — each with the user's answer.
+- Paths created, migrated and proposed for deletion — each with the user's answer —
+  and the repo docs linked instead of restated.
 - Where the pointer went and why; whether `CLAUDE.md` is a symlink, a real file or
   untouched; the Codex gap when `docs.pointer` is `CLAUDE.local.md`.
 - Graph: CLI present, installed, declined, or steps given; graph built, reused or
@@ -317,5 +301,5 @@ passed off as a completed baseline.
 - Companion tiers, in `doctor`'s format.
 - Every doc contradiction found, and how it was resolved.
 - Next step: `/shipit:task-create` for a need with no ticket yet, `/shipit:code-plan` for one
-  that has. UI layers found and no `paths.design_system` file → also
+  that has. UI layers found and no `.shipit/design-system.md` → also
   `/shipit:design-system`, once.

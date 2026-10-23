@@ -24,13 +24,13 @@ ticket, and implementing do not need them.
 
 The three tracker rows are not checked by `scripts/companions.sh` — it checks
 executables, and a tracker is reached through an MCP server or `gh`. They come from
-`docs/shipit/config.json` plus what is connected in the session.
+`.shipit/config.json` plus what is connected in the session.
 
 | Item | Check | Fix | Without it |
 | --- | --- | --- | --- |
 | `gh` | `command -v gh` | `brew install gh`, or see cli.github.com | `code-handoff` cannot open or update a PR |
 | `gh` auth | `gh auth status` | `gh auth login` | same as above |
-| tracker | adapter from `docs/shipit/config.json`, plus whether its mechanism is reachable this session | run `/shipit:sync` once the tracker is reachable | no tracker-supplied branch name — `docs/code/conventions.md` decides instead. Adapter `none` is a valid configuration, not a gap |
+| tracker | adapter from `.shipit/config.json`, plus whether its mechanism is reachable this session | run `/shipit:sync` once the tracker is reachable | no tracker-supplied branch name — `.shipit/conventions.md` decides instead. Adapter `none` is a valid configuration, not a gap |
 | tracker create | `tracker.create.supported` plus the target it names | run `/shipit:sync` with the tracker connected | the draft names no target to paste into. `task-create` still writes it; authorized handoff can publish when `issue_create` is allowed. With adapter `none` this is `n/a`, not a gap |
 | tracker fields | `tracker.create.fields.priority` and `.size`, each read on its own | `"unknown"` → run `/shipit:sync` with the tracker connected; on `github-issues` add `gh auth refresh -s project` when `unknown[]` shows the scope was the reason. `null` → verified absent: link a Project that has the field (`github-issues`), or set the name of a renamed field in `config.json` | `null`: a created issue does not carry that value in the tracker's own field; the draft still does. `"unknown"`: unverified, not missing — `code-handoff` tries the adapter's default name and may succeed. Adapter `none` → `n/a` |
 
@@ -95,7 +95,7 @@ same way.
 
 | Check | Meaning |
 | --- | --- |
-| `docs/shipit/config.json` present | Absent → `code-plan` and `code-implement` refuse. Fix: `/shipit:init` |
+| `.shipit/config.json` present | Absent → `code-plan` and `code-implement` refuse. Fix: `/shipit:init` |
 | no legacy `.sdd/` | Present → a pre-0.15.0 contract the current skills do not read. Fix: `/shipit:init` migrates it |
 | pointer | The `shipit:contract` block exists once in `docs.pointer`; a `CLAUDE.local.md` pointer is missing in this checkout → `/shipit:init` recreates it |
 | `config.json` parses | Corrupt → report the parse error; recover config without resetting preferences, then `/shipit:sync` |

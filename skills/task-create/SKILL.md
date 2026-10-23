@@ -19,7 +19,7 @@ workflow, not a blocker.
 
 ## Context budget
 
-- Required: the request, `docs/shipit/config.json` (`tracker`, `paths`, `language`),
+- Required: the request, `.shipit/config.json` (`tracker`, `paths`, `language`),
   `references/output-contract.md`, and `assets/task-template.md`.
 - Required in epic mode only: `references/split-policy.md`.
 - Optional when uncertainty needs classification:
@@ -30,7 +30,7 @@ workflow, not a blocker.
 - Live tracker reads only when validating referenced dependencies, existing labels,
   or project context. Never infer a dependency from ticket numbering.
 - Never bulk-read layer rules, stack docs, a whole graph report or the plan template.
-- No `docs/shipit/config.json` → say run `/shipit:init` first. Do not detect the tracker inline.
+- No `.shipit/config.json` → say run `/shipit:init` first. Do not detect the tracker inline.
 
 ## Hard rules
 
@@ -87,7 +87,7 @@ workflow, not a blocker.
    with `Blockers` if unanswered; mark it not ready. Known dependencies belong in
    `Dependencies` and do not invalidate a fully defined blocked task.
 7. **Self-check and write.** Apply output-contract checks, fix, then write
-   `<paths.tasks>/<slug>.md` (default `docs/tasks`). Local scratch; once published,
+   `<paths.tasks>/<slug>.md` (default `.shipit/tasks`). Local scratch; once published,
    the tracker is the source of truth. Preserve an existing Created ledger when
    refreshing the same draft; changed child scope/numbering needs explicit mapping
    reconciliation before reuse, never overwrite verified IDs.

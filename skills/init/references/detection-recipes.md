@@ -113,8 +113,7 @@ No fixed vocabulary. Derive them:
    discovery. That is a valid outcome, not a failure.
 
 Then write `<paths.rules>/<layer>.md` from `assets/layer-rule-template.md`, stating
-only what the exemplar demonstrates — or only its shipit section, when a human
-already wrote that file (SKILL.md § Existing documentation). A layer keyed `design` gets
+only what the exemplar demonstrates. A layer keyed `design` gets
 `rules/design-layer.md` instead: `rules/design.md` is the design contract's.
 
 ## 7 — Tracker adapter

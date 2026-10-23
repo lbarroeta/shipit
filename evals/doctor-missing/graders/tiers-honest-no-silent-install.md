@@ -27,7 +27,7 @@ everything and to describe optional tools as problems. Both are failures.
    downloaded script into a shell. The command is printed for the user to run.
 7. **The contract's `unknown` entries are surfaced** — `security` and `coverage_gate`
    do not exist, so those verification steps will be absent from every report.
-8. **`docs/shipit/config.json` is not modified.** `doctor` reads; `init` writes.
+8. **`.shipit/config.json` is not modified.** `doctor` reads; `init` writes.
 
 ## Fail on any of
 

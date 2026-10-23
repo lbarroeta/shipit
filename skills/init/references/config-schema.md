@@ -1,9 +1,9 @@
-# `docs/shipit/config.json` Schema
+# `.shipit/config.json` Schema
 
 The machine contract. Read by `run`, `task-create`, `task-next`, `code-plan`, `code-implement`, `pr-fix`, `code-handoff`,
 `status`, and `doctor`. Created by `init`, which also migrates a legacy `.sdd/`
 contract; maintained by `sync`. Its location is fixed: every skill reads it at
-`docs/shipit/config.json`, before any other path is known.
+`.shipit/config.json`, before any other path is known.
 
 Three values carry meaning, and they are not interchangeable:
 
@@ -33,18 +33,15 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `language.code` | string | Comments written in code. Default `en` |
 | `docs.agent_docs` | string[] | Agent instruction files and the local docs they link to. Symlinks resolved; each file listed once |
 | `docs.pointer` | string | File holding the `shipit:contract` and `shipit:design` blocks: `AGENTS.md` when `init` created it or it already carried a shipit block, otherwise `CLAUDE.local.md`. Read by `sync`, `doctor` and `design-system` to find the blocks. Absent → `AGENTS.md` |
-| `docs.owned_by_shipit` | string[] | Always `["docs/shipit/"]` |
+| `docs.owned_by_shipit` | string[] | Always `[".shipit/"]` |
 | `stack.languages` | string[] | With version pin files as evidence in `stack.md` |
 | `stack.frameworks` | string[] | Only from declared dependencies |
 | `stack.package_manager` | string \| null | Decided by lockfile |
 | `commands.*` | string \| null | Never written unverified. See placeholders below |
 | `commands_verified.<key>` | `{exit, at, proof, command}` | Exact proving command; proof is `resolve`, `version`, `help`, `dry-run`, or `real`. Only `real` proves execution of the operation |
-| `paths.stack` | string | Default `docs/code/stack.md` |
-| `paths.conventions` | string | Default `docs/code/conventions.md` |
-| `paths.rules` | string | Default `docs/code/rules`. Layer rules, plus `tests/<kind>.md` |
-| `paths.design_system` | string | Default `docs/design-system/contract.md`. Written by `design-system` only |
-| `paths.plans` | string | Default `docs/plans` |
-| `paths.tasks` | string | Default `docs/tasks`. Where `task-create` writes ticket drafts. Local scratch — `init` excludes it via `.git/info/exclude` |
+| `paths.plans` | string | Default `.shipit/plans` |
+| `paths.tasks` | string | Default `.shipit/tasks`. Where `task-create` writes ticket drafts. Local scratch — `init` excludes it via `.git/info/exclude` |
+| `paths.rules` | string | Default `.shipit/rules` |
 | `paths.src` | string[] | Roots that hold product code |
 | `paths.tests` | string[] | Roots that hold tests |
 | `tests.framework` | string \| null | |
@@ -77,11 +74,9 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `ci.required_jobs` | string[] | Jobs that gate the merge |
 | `unknown[]` | string[] | Every undetermined key |
 
-Stack, conventions, rules and the design contract are the repo's own documentation,
-not shipit's: a file a human already wrote stays theirs, and shipit adds only what
-it does not state, inside one `<!-- shipit:generated -->` … `<!-- /shipit:generated -->`
-section. A file shipit created holds no markers and is shipit's as a whole. Skill
-text names the default paths; always read the configured value.
+Everything under `.shipit/` is shipit's. The repo's own documentation — `docs/`,
+the README, agent docs — is linked from it, never copied into it, and edited only
+to apply a doc patch the user approved.
 
 ## Placeholders
 
@@ -116,8 +111,8 @@ it is written while executing a plan in `plan`'s language.
 Legacy string form (`"language": "es"`) → that value for `plan`, `task` and `pr`;
 `code` stays `en`. Absent → every key `en`. A missing key inside the object → `en`.
 
-Never applies to: identifiers, commit subjects, branch names, file paths, the
-config, and every file or section shipit generates — those stay English so the repo stays greppable and
+Never applies to: identifiers, commit subjects, branch names, file paths, and
+the `.shipit/` contract itself — those stay English so the repo stays greppable and
 portable across teams.
 
 ## Warning on `worktree.link[]`
@@ -178,8 +173,9 @@ Absent `run` is backward-compatible; no migration is needed to try the defaults.
 ## Reading it safely
 
 - Never assume a key exists. A config written by an older `shipit_version` may
-  lack fields; treat absent as `null` — except `paths.*` and `docs.pointer`, whose
-  absence means their documented default. A leftover `sdd_tracking` is ignored.
+  lack fields; treat absent as `null` — except `paths.plans/tasks/rules` and
+  `docs.pointer`, whose absence means their documented default. A leftover
+  `sdd_tracking` is ignored.
 - An absent `tracker.create.fields` reads as `"unknown"` for both keys: `code-handoff`
   tries the adapter's default field names, exactly as before the field existed.
 - A `tracker.create` block that is absent means the config predates the field.
@@ -196,12 +192,12 @@ Absent `run` is backward-compatible; no migration is needed to try the defaults.
 ## Upgrades
 
 Read by `init` (legacy migration), `sync` and `sync --upgrade`, top to bottom,
-every row after the config's `shipit_version`. A release that changes the config's shape adds a row; one that
-does not, adds nothing.
+every row after the config's `shipit_version`. A release that changes the config's
+shape adds a row; one that does not, adds nothing.
 
 | Version | Change | Action |
 | --- | --- | --- |
 | `0.8.0` | `language` became one language per action | String → ask the four keys, each prefilled: `plan`, `task`, `pr` with the string, `code` with `en`. Absent → ask, default `en` per key. Already an object → nothing |
 | `0.9.0` | `run.models` adds optional native subagent routing | Add `{ "models": {} }` under `run` only when absent; preserve any existing routes. Defaults are pinned in the plugin |
 | `0.10.0` | `tracker.create.fields` names where `Priority` and `Size` land | Absent → add `{ "priority": "unknown", "size": "unknown" }` and append both keys to `unknown[]`; adapter `none` → `null` for both, nothing appended. Upgrade does not detect — say `/shipit:sync` resolves them once the tracker is reachable |
-| `0.15.0` | The contract moved from `.sdd/` to `docs/`; `sdd_tracking` retired | Performed by `init` (see its *Legacy migration*): `sync` finding `.sdd/config.json` without `docs/shipit/config.json` stops and points to `/shipit:init`. On the moved config: drop `sdd_tracking`; replace `paths.*` that pointed inside `.sdd/` with the new defaults and keep the rest; add absent `paths.stack`, `paths.conventions`, `paths.design_system`; set `docs.owned_by_shipit` to `["docs/shipit/"]` and `docs.pointer` to the file that holds the `shipit:contract` block |
+| `0.15.0` | The contract moved from `.sdd/` to `.shipit/`; `sdd_tracking` retired | Performed by `init` (see its *Legacy migration*): `sync` finding `.sdd/config.json` without `.shipit/config.json` stops and points to `/shipit:init`. On the moved config: drop `sdd_tracking`; a `paths.*` value inside `.sdd/`, or reached through a `.sdd/` symlink, becomes its `.shipit/` default, and any other custom value is kept and reported; set `docs.owned_by_shipit` to `[".shipit/"]` and `docs.pointer` to the file that holds the `shipit:contract` block |

@@ -1,6 +1,6 @@
 ---
 name: code-handoff
-description: Use when shipit artifacts must be delivered — branch, commit, push, ready-for-review PRs and tracker review status by default; tracker comments, review-thread replies and issue creation only when `handoff.allow` in `docs/shipit/config.json` opts into them. Runs after `task-create`, `code-plan`, final `sync`, or `pr-fix`. Do not use to write plans, tickets, or product code.
+description: Use when shipit artifacts must be delivered — branch, commit, push, ready-for-review PRs and tracker review status by default; tracker comments, review-thread replies and issue creation only when `handoff.allow` in `.shipit/config.json` opts into them. Runs after `task-create`, `code-plan`, final `sync`, or `pr-fix`. Do not use to write plans, tickets, or product code.
 metadata:
   writes_product_code: false
 ---
@@ -12,7 +12,7 @@ Owns delivery side effects; `task-create`, `code-implement` and `pr-fix` produce
 This skill delivers their artifacts.
 
 **What it may do is configuration, not judgement.** `handoff.allow` in
-`docs/shipit/config.json` lists the permitted side effects. Its default is git and the PR
+`.shipit/config.json` lists the permitted side effects. Its default is git and the PR
 body, PR readiness and tracker review status. Tracker comments, review-thread
 replies and issue creation are opt-in. See **Permissions** below
 before doing anything.
@@ -35,7 +35,7 @@ state before performing them.
 
 ## Permissions
 
-Read `handoff.allow` from `docs/shipit/config.json`. **Absent → `["branch", "commit",
+Read `handoff.allow` from `.shipit/config.json`. **Absent → `["branch", "commit",
 "push", "pr_body", "pr_ready", "tracker_status"]`**, which is also what a repo
 gets from `/shipit:init`. Existing explicit allow-lists remain authoritative.
 
@@ -59,7 +59,7 @@ Rules:
   `tracker_status` or `issue_create` is listed.** Read its status rules on the
   default `allow`; skip comment/creation sections unless enabled.
 - An unknown entry is ignored: report the drift and suggest `/shipit:sync`. Never
-  patch `docs/shipit/config.json` yourself.
+  patch `.shipit/config.json` yourself.
 - `allow` present but empty, or a mode left with no permitted step, → do nothing and
   say which capability the run needed. Half a handoff is worse than none.
 - `allow` grants permission; it never creates capability. `tracker_comment` with
@@ -67,7 +67,7 @@ Rules:
 
 ## Context budget
 
-- Required: `docs/shipit/config.json` (for `tracker` and `repo`), and the report or plan
+- Required: `.shipit/config.json` (for `tracker` and `repo`), and the report or plan
   being delivered.
 - Required: `references/tracker-adapters.md` — only the section for the configured
   adapter. It covers branch naming and PR issue-linking, which are always allowed.
@@ -96,7 +96,7 @@ Rules:
   file list. `tracker-writes.md` owns the content; do not improvise it.
 - Never move a tracker issue backwards, and read its current status before any
   transition. `tracker-writes.md` lists the terminal states per adapter.
-- **Prose language.** PR title, PR body and review-thread replies follow `language.pr`; tracker comments and created issues follow `language.task`; what this skill prints follows `language.plan` in `docs/shipit/config.json`. Legacy string `language` → that value for every key but `code`; absent → `en`. Identifiers, commit subjects and branch names always stay English.
+- **Prose language.** PR title, PR body and review-thread replies follow `language.pr`; tracker comments and created issues follow `language.task`; what this skill prints follows `language.plan` in `.shipit/config.json`. Legacy string `language` → that value for every key but `code`; absent → `en`. Identifiers, commit subjects and branch names always stay English.
 - **Stage by explicit path.** Never `git add -A`, never `git add .`.
 - **Never stage or commit generated plans**, regardless of `handoff.allow`. Exclude the supplied plan, the report's `Plan` path and any
   archived run-owned plans from the delivery manifest; keep their local files.
@@ -214,7 +214,7 @@ exists before a branch does.
 ## Mode: plan
 
 - **Branch** — from the tracker adapter when it supplies one; otherwise the repo's
-  branch convention from `docs/code/conventions.md`; otherwise
+  branch convention from `.shipit/conventions.md`; otherwise
   `<user>/<issue-id>-<slug>`. Never invent a prefix. Usually `code-plan` already created
   it with the worktree; verify rather than re-create.
 - **Commit** — `skipped (generated plan stays local)`.

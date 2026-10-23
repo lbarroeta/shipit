@@ -61,7 +61,7 @@ results separately retain their full ownership manifest for validation.
 
 | Test | Rule | Proves |
 | --- | --- | --- |
-| `<path>` | `docs/code/rules/tests/<kind>.md` | <AC IDs/regression and behaviour> |
+| `<path>` | `.shipit/rules/tests/<kind>.md` | <AC IDs/regression and behaviour> |
 
 ## Validation Commands Run
 

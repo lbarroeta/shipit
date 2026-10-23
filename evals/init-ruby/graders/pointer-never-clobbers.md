@@ -32,7 +32,7 @@ file instead, and a mistake here destroys the user's own work.
 - `CLAUDE.md` turned into a symlink, under any justification.
 - The block written more than once, or into a committed file.
 - The seven commands copied out of `CLAUDE.md` into the pointer block or into
-  `docs/code/stack.md` — the doc is referenced, never duplicated.
+  `.shipit/stack.md` — the doc is referenced, never duplicated.
 
 ## Notes for the judge
 

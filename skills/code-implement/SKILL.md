@@ -1,6 +1,6 @@
 ---
 name: code-implement
-description: Use when an approved shipit plan must be executed, verified, and prepared for QA. Runs the repo's own verified commands from `docs/shipit/config.json`. Do not use to redesign scope, and not for git or PR delivery — that is `code-handoff`.
+description: Use when an approved shipit plan must be executed, verified, and prepared for QA. Runs the repo's own verified commands from `.shipit/config.json`. Do not use to redesign scope, and not for git or PR delivery — that is `code-handoff`.
 metadata:
   input: sdd-plan
   output: implemented-change
@@ -14,13 +14,13 @@ and verified with commands that are known to run in this repo.
 
 ## Context budget
 
-- Required: the full plan, `docs/shipit/config.json`, `docs/code/conventions.md`.
-- Required: the `docs/code/rules/<layer>.md` for each layer the plan touches, and the
-  `docs/code/rules/tests/<kind>.md` for each test it plans. Only those.
+- Required: the full plan, `.shipit/config.json`, `.shipit/conventions.md`.
+- Required: the `.shipit/rules/<layer>.md` for each layer the plan touches, and the
+  `.shipit/rules/tests/<kind>.md` for each test it plans. Only those.
 - Required: `../../references/lean-ladder.md`, relative to this skill directory.
 - Required: `references/validation-standards.md`. Every run validates.
 - Required only when the plan touches UI and `<paths.rules>/design.md` exists:
-  that file, and the `docs/design-system/contract.md` sections the plan's `Design` names.
+  that file, and the `.shipit/design-system.md` sections the plan's `Design` names.
   Backend-only → never.
 - Required when the change creates or modifies entry points (routes, handlers,
   jobs, webhooks), authorization, scoped data access, trust-boundary input, secret
@@ -39,7 +39,7 @@ and verified with commands that are known to run in this repo.
   issue authorizes the plan within its acceptance criteria after the coordinator's
   contract check. Require that recorded request and scope in the delegation;
   never infer approval from the planner's output or claim human plan review.
-- **Prose language.** Report and QA guide follow `language.plan`; the PR description follows `language.pr`; comments written in code follow `language.code` (default `en`) — never `language.plan` — in `docs/shipit/config.json`. Legacy string `language` → that value for every key but `code`; absent → `en`. Identifiers, commit subjects and branch names always stay English.
+- **Prose language.** Report and QA guide follow `language.plan`; the PR description follows `language.pr`; comments written in code follow `language.code` (default `en`) — never `language.plan` — in `.shipit/config.json`. Legacy string `language` → that value for every key but `code`; absent → `en`. Identifiers, commit subjects and branch names always stay English.
 - No scope expansion. No redesign. No new abstraction. No dependency upgrade.
 - No behaviour change outside the plan.
 - No weakening of authorization, scoping, security, or existing tests.

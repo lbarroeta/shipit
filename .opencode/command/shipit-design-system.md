@@ -1,5 +1,5 @@
 ---
-description: Interview the user and record the repo's design contract in docs/
+description: Interview the user and record the repo's design contract in .shipit/
 ---
 
 Load the shipit `design-system` skill and run it.

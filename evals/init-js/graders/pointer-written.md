@@ -14,8 +14,8 @@ This repo has no `AGENTS.md` and no `CLAUDE.md`. It is the clean-slate branch of
    heading and intro, exactly one `<!-- shipit:contract -->` …
    `<!-- /shipit:contract -->` block, and the closing reliability notes. The repo
    has no other docs, so the task table is omitted.
-2. **The block links, it does not restate.** It links `docs/shipit/config.json`,
-   `docs/code/stack.md`, `docs/code/conventions.md` and `docs/code/rules/`. It does
+2. **The block links, it does not restate.** It links `.shipit/config.json`,
+   `.shipit/stack.md`, `.shipit/conventions.md` and `.shipit/rules/`. It does
    **not** copy a stack fact, a command, a layer name, or a convention out of those
    files — that would be the second source of truth `init` exists to avoid.
 3. **`CLAUDE.md` is a symlink to `AGENTS.md`,** created with `ln -s AGENTS.md

@@ -5,7 +5,7 @@
 
 For any change a person can see. Backend-only work skips this file.
 
-Values live in `docs/design-system/contract.md` and the token location it names; this file
+Values live in `.shipit/design-system.md` and the token location it names; this file
 says how to use them. Contract status: <draft | approved>. A *Pending* decision
 is never presented as approved. Essential unresolved behavior blocks dependent
 planning; only a bounded nonessential choice may be an assumption labelled
@@ -103,7 +103,7 @@ run.
 - An exception — a value, component or pattern the contract does not cover — is a
   plan `Decisions` row with the reason and the alternative rejected. Approving the
   plan approves the exception for that change only.
-- Making it permanent updates `docs/design-system/contract.md` in the same change, listed in
+- Making it permanent updates `.shipit/design-system.md` in the same change, listed in
   the plan's `Docs impact`: the new component in § Components with its path, a new
   value in § Tokens with source `user` and the plan as reference.
 - A change to identity — palette, fonts, density, themes — is not an exception.

@@ -6,14 +6,14 @@ Plan this ticket.
 
 Repository state:
 
-- `docs/shipit/config.json` exists, with `worktree.enabled: true` and
+- `.shipit/config.json` exists, with `worktree.enabled: true` and
   `worktree.root: "../worktrees/shop"`, and `tracker.adapter: "none"`.
 - `git worktree list` reports two worktrees besides the main checkout:
   - `../worktrees/shop/kod-298` on branch `lb/kod-298-order-totals`
   - `../worktrees/shop/kod-305` on branch `lb/kod-305-checkout-copy`
-- `../worktrees/shop/kod-298/docs/plans/kod-298-order-totals.md` has a `Files` table
+- `../worktrees/shop/kod-298/.shipit/plans/kod-298-order-totals.md` has a `Files` table
   listing `app/models/order.rb` and `app/services/orders/calculate_total.rb`.
-- `../worktrees/shop/kod-305/docs/plans/kod-305-checkout-copy.md` has a `Files` table
+- `../worktrees/shop/kod-305/.shipit/plans/kod-305-checkout-copy.md` has a `Files` table
   listing `app/views/checkout/show.html.erb`.
 
 Your change will need to touch the order total calculation and the checkout view.

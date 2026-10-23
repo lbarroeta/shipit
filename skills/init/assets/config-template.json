@@ -21,7 +21,7 @@
   "docs": {
     "agent_docs": [],
     "pointer": "AGENTS.md",
-    "owned_by_shipit": ["docs/shipit/"]
+    "owned_by_shipit": [".shipit/"]
   },
   "stack": {
     "languages": [],
@@ -41,12 +41,9 @@
   },
   "commands_verified": {},
   "paths": {
-    "stack": "docs/code/stack.md",
-    "conventions": "docs/code/conventions.md",
-    "rules": "docs/code/rules",
-    "design_system": "docs/design-system/contract.md",
-    "plans": "docs/plans",
-    "tasks": "docs/tasks",
+    "plans": ".shipit/plans",
+    "tasks": ".shipit/tasks",
+    "rules": ".shipit/rules",
     "src": [],
     "tests": []
   },

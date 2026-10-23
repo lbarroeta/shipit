@@ -2,19 +2,18 @@
 
 ## Baseline contract
 
-`docs/shipit/sync-state.json` is a versioned machine baseline, committed with the
+`.shipit/sync-state.json` is a versioned machine baseline, committed with the
 contract. It stores source fingerprints, contract fingerprints and accepted text for
-each generated file — for a human doc, only its `shipit:generated` section, so an
-edit elsewhere in that doc is a contract change, never a managed edit. It contains no source bodies or secrets
+each generated file. It contains no source bodies or secrets
 other than the already public contract text; never put secrets in that contract.
 The helper's `inspect` is read-only; `record` writes only this baseline atomically.
 Do not edit it by hand to make drift disappear. `generated_at` records creation,
 not ownership or freshness; preserve it on no-op sync.
 
 Source inventory covers tracked and non-ignored untracked files, excluding graph
-outputs, `docs/shipit/`, plans/tasks and the configured stack, conventions, design
-and rule paths; contract fingerprints cover those files separately. Other docs are
-sources: a changed human doc is drift worth reviewing. Ignored inputs,
+outputs, `.shipit/`, plans/tasks and generated rules; contract fingerprints cover
+config, stack, conventions, design and rule files separately. The repo's own docs
+are sources: a changed human doc is drift worth reviewing. Ignored inputs,
 external docs, submodule internals, tracker state and graph semantic coverage need
 explicit inspection when relevant. An unchanged hash report alone is not proof
 those dependencies are current. A failed graph update never certifies the graph.
@@ -45,7 +44,8 @@ an entire config from the template. Merge keys recursively; preserve extension k
 For config values, apply these policies even when a file looks wholly generated:
 
 - Preserve `language`, `handoff.allow`, `run.models`, `markers`, `docs.pointer`,
-  custom `paths.*`, and explicit worktree enabled/root/base/link/setup settings. Missing preferences use documented legacy defaults or a required
+  custom `paths.plans/tasks/rules`, and explicit worktree enabled/root/base/link/setup
+  settings. Missing preferences use documented legacy defaults or a required
   question; do not rerun init's default-setting recipes on existing values.
 - Refresh evidence-derived stack, source/test roots, commands/proofs, CI, tests,
   layers and companion availability. A manual override identifiable against base
@@ -96,8 +96,7 @@ bumps refresh the version text and stop there.
    `../../../references/docs-lookup.md`, asking for the upgrade/migration notes and
    deprecations between the old and new version. Budget per that file.
 3. Apply by ownership, through the normal base/current/candidate merge:
-   - `stack.md` — version value and evidence: owned (whole file or its section),
-     update with the citation.
+   - `stack.md` — version value and evidence: owned, update with the citation.
    - Generated rules and `conventions.md` that recommend an API now deprecated or
      removed at the installed version: owned, candidate cites the docs and the
      replacement. A human edit on that fact → conflict, never a silent rewrite.

@@ -4,7 +4,7 @@ Spec-driven development for any repo. It detects your conventions instead of ass
 them.
 
 Most planning agents carry someone else's stack in their prompt. shipit carries none:
-`/shipit:init` reads your repository and writes a contract into `docs/`, and every
+`/shipit:init` reads your repository and writes a contract at `.shipit/`, and every
 other skill works from that. Nothing in this plugin knows what framework you use.
 
 ## Install
@@ -27,7 +27,7 @@ Start a new session and the ten skills are available. Codex matches them by
 description, and the same names work as slash commands — `/shipit:task-create`, `/shipit:task-next`,
 `/shipit:code-plan`, `/shipit:init`, `/shipit:sync`, `/shipit:design-system`, `/shipit:code-implement`, `/shipit:code-handoff`,
 `/shipit:pr-fix`, `/shipit:status`, `/shipit:doctor`, `/shipit:run` — exactly as in Claude Code. Same `skills/`
-directory and the same contract in `docs/`, so a repo initialized in one runtime
+directory and the same `.shipit/` contract, so a repo initialized in one runtime
 works in the others.
 
 Uninstall with `codex plugin remove shipit@shipit`. Updating is below.
@@ -54,7 +54,7 @@ Already have a checkout somewhere else? Skip the clone and run its
 lives in.
 
 Commands are flat here: `/shipit-code-plan`, not `/shipit:code-plan`. Same skills, same
-contract in `docs/`, so a repo initialized in one runtime works in the others.
+`.shipit/` contract, so a repo initialized in one runtime works in the others.
 
 Installing somewhere other than the default? Set `SHIPIT_ROOT` before running,
 and keep it exported — the commands read it to find the skills. Uninstall:
@@ -76,7 +76,7 @@ old command symlinks; user-authored legacy command files are preserved.
 
 One command per runtime: every runtime reads the same `skills/` directory, and a
 contract written by an older version keeps working — except a pre-0.15.0 `.sdd/`
-contract, which `/shipit:init` migrates to `docs/`. Then one command per
+contract, which `/shipit:init` migrates to `.shipit/`. Then one command per
 repo to adopt what the new version adds — see *Then, once per repository* below.
 Version 0.12.0 renames `plan`, `implement`, and `handoff` to `code-plan`,
 `code-implement`, and `code-handoff`. Every runtime change merged into `main`
@@ -159,12 +159,12 @@ with `claude --plugin-dir /absolute/path/to/shipit`.
 /shipit:sync --upgrade
 ```
 
-Brings `docs/shipit/config.json` up to the installed version: adds new keys, converts old
+Brings `.shipit/config.json` up to the installed version: adds new keys, converts old
 shapes, and asks only the decisions the new version introduced — nothing else is
 re-detected or re-asked. Already current → it says so and stops.
 
 Coming from `.sdd/` (before 0.15.0)? Run `/shipit:init` instead. It moves the
-contract to `docs/`, deletes `.sdd/` — links included — and asks before deleting
+contract to `.shipit/`, deletes `.sdd/` — links included — and asks before deleting
 any other file. Collaborators update the plugin before their next shipit command.
 
 Repos with a UI then run `/shipit:design-system` once — see
@@ -182,7 +182,7 @@ The old `init --upgrade` invocation redirects without modifying files.
 
 Sync preserves preferences, human edits, explicit permissions and design decisions.
 Generated facts update from evidence; human-doc corrections need the request/plan's
-authorization, and conflicts remain visible. `docs/shipit/sync-state.json` stores accepted
+authorization, and conflicts remain visible. `.shipit/sync-state.json` stores accepted
 contract bases and source hashes, and is committed with the contract; dates never
 decide whether an edit is human. Legacy contracts without that baseline are reconciled
 conservatively. No-change sync does not rewrite files. Python 3.10+ is needed for
@@ -220,7 +220,7 @@ native subagent stages then sync context, plan, implement/validate, sync context
 again and deliver
 under `handoff.allow`. The coordinator waits for each result; missing models,
 blocked criteria or failed validation stop the pipeline. Pending user changes are
-never stashed or discarded. Your repo must already have `docs/shipit/config.json`, Python
+never stashed or discarded. Your repo must already have `.shipit/config.json`, Python
 3.10+, a clean checkout and `main` tracking a remote `main`.
 
 At the start of `code-plan`, the issue moves to `In Progress` or the tracker's equivalent
@@ -353,7 +353,7 @@ provider's available capabilities for parent and blocking relations. Unsupported
 relations stay explicit in issue prose and are reported as requiring manual
 linking; a text reference is never claimed as a native relation.
 
-The draft lands at `docs/tasks/<slug>.md` and is excluded from git — once the issue
+The draft lands at `.shipit/tasks/<slug>.md` and is excluded from git — once the issue
 exists, the tracker is the source of truth, and a stale copy
 in the repo is worse than none. Re-running the delivery on a draft that already
 carries ids creates nothing: the `Created` block is the idempotency ledger, which is
@@ -416,26 +416,26 @@ Full QA and supporting evidence stay in a details block or a verified link the
 team can access. `code-implement` drafts the body, `sync` reconciles it with final
 evidence, and `code-handoff` checks it before delivery and publishes it verbatim.
 
-## The contract in `docs/`
+## The `.shipit/` contract
 
 `init` writes the contract and a synchronization baseline, and factual claims carry
-evidence — a `path:line`, or the exact command output that proved it. Only
-`docs/shipit/` belongs to shipit; the rest is your repo's own documentation, which
-shipit writes when it is missing and complements when it exists.
+evidence — a `path:line`, or the exact command output that proved it. Everything
+lives in `.shipit/`; your own documentation in `docs/`, the README or agent docs is
+linked from it, never copied into it.
 
 | File | For | Content |
 | --- | --- | --- |
-| `docs/shipit/config.json` | machines | Verified commands, paths, layers, tracker, worktree |
-| `docs/shipit/sync-state.json` | sync | Accepted generated bases and source hashes |
-| `docs/code/stack.md` | agents and humans | Stack facts, one row per fact, each with evidence |
-| `docs/code/conventions.md` | agents and humans | Patterns this repo follows, each with an exemplar |
-| `docs/code/rules/<layer>.md` | agents and humans | Layer rules derived from real files |
-| `docs/code/rules/tests/<kind>.md` | agents and humans | Test shape, extracted from a real test |
+| `.shipit/config.json` | machines | Verified commands, paths, layers, tracker, worktree |
+| `.shipit/sync-state.json` | sync | Accepted generated bases and source hashes |
+| `.shipit/stack.md` | agents | Stack facts, one row per fact, each with evidence |
+| `.shipit/conventions.md` | agents | Patterns this repo follows, each with an exemplar |
+| `.shipit/rules/<layer>.md` | agents | Layer rules derived from real files |
+| `.shipit/rules/tests/<kind>.md` | agents | Test shape, extracted from a real test |
 
-Every path but the config's is a default under `paths.*`. The config always lives at
-`docs/shipit/config.json`: it is how every skill finds the rest.
+The config always lives at `.shipit/config.json`: it is how every skill finds the
+rest. `paths.plans`, `paths.tasks` and `paths.rules` can move those three.
 
-Plus `docs/tasks/`, where `/shipit:task-create` writes ticket drafts. It is scratch, not
+Plus `.shipit/tasks/`, where `/shipit:task-create` writes ticket drafts. It is scratch, not
 contract: excluded from git through `.git/info/exclude`.
 Generated plans also stay local: `code-handoff` excludes them from commits, including
 inside `run`. Planning handoff carries a short proposal summary and the complete
@@ -443,8 +443,8 @@ plan in a collapsed PR-body block when a PR exists or the branch has commits ahe
 of its base; otherwise the local plan is the deliverable, with no empty commit to
 create a PR.
 
-And, once `/shipit:design-system` has run, `docs/design-system/contract.md` and
-`docs/code/rules/design.md` — see *A design contract for UI* below. `init` never
+And, once `/shipit:design-system` has run, `.shipit/design-system.md` and
+`.shipit/rules/design.md` — see *A design contract for UI* below. `init` never
 rewrites them, and sync carries their `<!-- shipit:design -->` blocks over
 untouched.
 
@@ -461,9 +461,9 @@ Three rules make it trustworthy:
   verification is `null`, and its key is reported in `unknown[]`.
 - **It complements your docs, never duplicates them.** Agent docs, the files they
   link to and the headings of `docs/**/*.md` are inventoried first. A topic they cover
-  is linked; a file a human wrote gets one `<!-- shipit:generated -->` section holding
-  only what it does not state, and sync tracks only that section. When a doc and the
-  repo disagree, `init` asks: on a fact the repo wins, on a decision you do.
+  is linked from `.shipit/`; only what they do not state is written there. Your docs
+  are never edited except by a patch you approve. When a doc and the repo disagree,
+  `init` asks: on a fact the repo wins, on a decision you do.
 
 `init` and `sync` own context accuracy: a bad detection poisons every later
 plan. That is why the evidence rules are hard rules and why `unknown[]` is printed
@@ -472,7 +472,7 @@ loudly rather than buried in JSON.
 ### Output language
 
 `init` asks once which language shipit should write in, one per action, and records
-them under `language` in `docs/shipit/config.json` (`en` by default):
+them under `language` in `.shipit/config.json` (`en` by default):
 
 ```json
 "language": { "plan": "es", "task": "es", "pr": "en", "code": "en" }
@@ -496,9 +496,9 @@ the files that do get loaded, so `init` writes a short pointer between
 <!-- shipit:contract -->
 ## Repository contract
 
-[Shipit configuration](docs/shipit/config.json) defines verified commands, layers and
-tracker. Read [stack](docs/code/stack.md), [conventions](docs/code/conventions.md) and
-the applicable [layer rule](docs/code/rules/) before writing code. ...
+[Shipit configuration](.shipit/config.json) defines verified commands, layers and
+tracker. Read [stack](.shipit/stack.md), [conventions](.shipit/conventions.md) and
+the applicable [layer rule](.shipit/rules/) before writing code. ...
 <!-- /shipit:contract -->
 ```
 
@@ -518,7 +518,7 @@ replaces the block in place — everything outside the markers is yours.
 That is what makes the contract portable across runtimes: Claude Code, Codex,
 OpenCode, Cursor and anything else reading `AGENTS.md` find the contract without
 shipit installed. One gap: Codex reads no local file, so a `CLAUDE.local.md` pointer
-reaches Claude Code only. Shipit's own skills read `docs/shipit/config.json` by path
+reaches Claude Code only. Shipit's own skills read `.shipit/config.json` by path
 either way.
 
 ### The code graph
@@ -556,8 +556,8 @@ It writes two files and two pointers:
 
 | Path | Content |
 | --- | --- |
-| `docs/design-system/contract.md` | Product and surfaces, color roles, typography, spacing, radii, themes, responsive, the catalog of components that **exist** (path, parameters, variants, a valid example), screen patterns, and a ledger of decisions — each labelled `existing`, `user`, `delegated` or `proposed` |
-| `docs/code/rules/design.md` | How agents pick patterns and components, when to reuse or create, token use without invented values, loading/empty/error/success/disabled, forms, keyboard and focus, responsive, and the checks that verify a change |
+| `.shipit/design-system.md` | Product and surfaces, color roles, typography, spacing, radii, themes, responsive, the catalog of components that **exist** (path, parameters, variants, a valid example), screen patterns, and a ledger of decisions — each labelled `existing`, `user`, `delegated` or `proposed` |
+| `.shipit/rules/design.md` | How agents pick patterns and components, when to reuse or create, token use without invented values, loading/empty/error/success/disabled, forms, keyboard and focus, responsive, and the checks that verify a change |
 | `<!-- shipit:design -->` | Appended to each UI layer's rule file, and to `AGENTS.md` next to the contract pointer |
 
 Existing UI is the starting point: its identity is kept unless you choose
@@ -599,7 +599,7 @@ the one `init` wrote; it does not replace it.
    UI is inspected first, so most questions arrive with a suggested answer taken
    from your code. Stop halfway and you get a draft, never an approved contract.
 4. **Review and commit** what it wrote — it never commits:
-   - `docs/design-system/contract.md` and `docs/code/rules/design.md`, new.
+   - `.shipit/design-system.md` and `.shipit/rules/design.md`, new.
    - A `<!-- shipit:design -->` block at the end of each UI layer's rule file.
    - The same block in the `docs.pointer` file, right after the contract block.
 5. **Plans already in flight keep working.** A plan written before the contract
@@ -610,7 +610,7 @@ the one `init` wrote; it does not replace it.
    style, a component the contract proposes — as ordinary work:
 
    ```
-   /shipit:task-create "Apply the design tokens from docs/design-system/contract.md"
+   /shipit:task-create "Apply the design tokens from .shipit/design-system.md"
    ```
 
    then `/shipit:code-plan` and `/shipit:code-implement` as usual. Nothing changes in the
@@ -619,7 +619,7 @@ the one `init` wrote; it does not replace it.
 Later, re-run `/shipit:design-system` whenever identity changes or pending
 decisions are settled; it updates the same files. `/shipit:sync` keeps
 the design files and blocks untouched. One edge case: a repo whose `init`
-created a layer keyed `design` already has its rule at `docs/code/rules/design.md` —
+created a layer keyed `design` already has its rule at `.shipit/rules/design.md` —
 `design-system` stops and reports it; rename that layer rule to
 `design-layer.md` (and its `rule` entry in `config.json`) before running it.
 
@@ -630,7 +630,7 @@ A fresh worktree does not inherit untracked local config — `.env`, credentials
 build caches — so enabling it before you know what your repo needs to boot from a
 clean checkout buys friction, not parallelism.
 
-Turn it on in `docs/shipit/config.json` when you actually want several tasks in flight:
+Turn it on in `.shipit/config.json` when you actually want several tasks in flight:
 
 ```json
 "worktree": { "enabled": true, "setup": "<the command that makes a clean checkout runnable>" }
@@ -700,7 +700,7 @@ first:
 
 | Lever | Attacks |
 | --- | --- |
-| `docs/shipit/config.json` | Re-detecting unchanged facts. Initialized once, reconciled by `sync` when sources change. |
+| `.shipit/config.json` | Re-detecting unchanged facts. Initialized once, reconciled by `sync` when sources change. |
 | Context budget | Wide reads. Rule files load only for layers actually touched. |
 | graphify | Grep dumps and whole-file reads, replaced by a scoped subgraph. |
 | Context7 | Guessed APIs. `code-implement` and `sync` check only the libraries a change actually touches, against the installed version — see [`references/docs-lookup.md`](references/docs-lookup.md). |
@@ -761,8 +761,8 @@ replaced by a scoped subgraph. Measure that with
 | `sdd-pr-fix` | `/shipit:pr-fix` |
 | `sdd-handoff` | `/shipit:code-handoff` |
 | — | `/shipit:init`, `/shipit:design-system`, `/shipit:task-create`, `/shipit:task-next`, `/shipit:doctor`, `/shipit:status` |
-| Conventions hardcoded in the skill | The contract in `docs/`, generated from your repo |
-| `.claude/plans/` | `<paths.plans>`, default `docs/plans/` |
+| Conventions hardcoded in the skill | `.shipit/`, generated from your repo |
+| `.claude/plans/` | `<paths.plans>`, default `.shipit/plans/` |
 
 ## License
 

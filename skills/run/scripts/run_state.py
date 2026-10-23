@@ -135,11 +135,11 @@ def require_clean(repo):
 
 
 def config_at(repo):
-    if not (repo / "docs/shipit/config.json").exists() and (repo / ".sdd/config.json").exists():
-        raise Blocked("Legacy .sdd/ contract; run /shipit:init to migrate it to docs/.")
-    config = read_json(repo / "docs/shipit/config.json")
+    if not (repo / ".shipit/config.json").exists() and (repo / ".sdd/config.json").exists():
+        raise Blocked("Legacy .sdd/ contract; run /shipit:init to migrate it to .shipit/.")
+    config = read_json(repo / ".shipit/config.json")
     if not isinstance(config, dict):
-        raise Blocked("docs/shipit/config.json must be an object; run /shipit:init first.")
+        raise Blocked(".shipit/config.json must be an object; run /shipit:init first.")
     return config
 
 

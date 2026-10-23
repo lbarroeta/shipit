@@ -7,10 +7,10 @@ weight: 1
 
 ## Pass requires all of
 
-1. **The files read do not include `docs/design-system/contract.md`,
-   `docs/code/rules/design.md`, or `docs/code/rules/components.md`.**
+1. **The files read do not include `.shipit/design-system.md`,
+   `.shipit/rules/design.md`, or `.shipit/rules/components.md`.**
 2. **The plan has no `Design` and no `Manual QA` section.**
-3. **The plan reads `docs/code/rules/jobs.md`** (or says it is absent).
+3. **The plan reads `.shipit/rules/jobs.md`** (or says it is absent).
 
 ## Fail on any of
 

@@ -93,7 +93,7 @@ States: <the `<paths.rules>/design.md` § 4 states this change renders>
 
 | Test | Rule | Proves |
 | --- | --- | --- |
-| `<path>` + <scenario> | `docs/code/rules/tests/<kind>.md` | <AC IDs/regression and observable expected result> |
+| `<path>` + <scenario> | `.shipit/rules/tests/<kind>.md` | <AC IDs/regression and observable expected result> |
 
 <Each AC links through Files (or Evidence for already-met behavior) to Tests or
 Manual QA. Include affected consumers and negative paths when relevant.>

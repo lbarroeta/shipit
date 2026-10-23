@@ -1,6 +1,6 @@
 # Tracker Writes — status by default, comments and creation opt-in
 
-**Do not read this file unless `handoff.allow` in `docs/shipit/config.json` enables a
+**Do not read this file unless `handoff.allow` in `.shipit/config.json` enables a
 tracker write.** The default includes `tracker_status`: read the transition
 rules and the configured adapter. Comments and issue creation remain opt-in.
 
@@ -329,7 +329,7 @@ match → the workflow's default unstarted state, and say so.
 
 **Mechanism:** none. Delivery is git and the PR host only.
 
-- Branch from `docs/code/conventions.md`, else ask.
+- Branch from `.shipit/conventions.md`, else ask.
 - No comment step. Everything the tracker comment would have carried goes in the PR
   body instead — including the QA steps.
 - No status step.

@@ -15,9 +15,9 @@ docs → delete this section.>
 <!-- shipit:contract -->
 ## Repository contract
 
-[Shipit configuration](docs/shipit/config.json) defines verified commands, layers and
-tracker. Read [stack](docs/code/stack.md), [conventions](docs/code/conventions.md) and
-the applicable [layer rule](docs/code/rules/) before writing code. Ask about any
+[Shipit configuration](.shipit/config.json) defines verified commands, layers and
+tracker. Read [stack](.shipit/stack.md), [conventions](.shipit/conventions.md) and
+the applicable [layer rule](.shipit/rules/) before writing code. Ask about any
 relevant entry in `unknown[]`; do not guess.
 <!-- /shipit:contract -->
 

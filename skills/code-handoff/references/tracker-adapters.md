@@ -1,6 +1,6 @@
 # Tracker Adapters
 
-Read only the section for `tracker.adapter` in `docs/shipit/config.json`. The others are
+Read only the section for `tracker.adapter` in `.shipit/config.json`. The others are
 noise.
 
 This reference covers branch naming and PR issue linking. Tracker writes follow
@@ -10,12 +10,12 @@ while comments and issue creation are opt-in.
 ## Universal rules
 
 - **Never invent a branch prefix.** Either the adapter supplies the name, or
-  `docs/code/conventions.md` has the repo's shape, or you ask.
+  `.shipit/conventions.md` has the repo's shape, or you ask.
 - **Separate reads from writes.** Fetching an issue for branch naming or linking
   is read-only. Use `tracker-writes.md` for each allowed tracker mutation.
 - **Name the missing capability, not the tool.** "Linear MCP not connected" is
   actionable; "tracker unavailable" is not. A tracker you cannot read costs you a
-  branch name — fall back to `docs/code/conventions.md` and say so. It is not a blocked
+  branch name — fall back to `.shipit/conventions.md` and say so. It is not a blocked
   branch lookup. This fallback does not waive access required for an enabled
   review-status transition.
 
@@ -25,7 +25,7 @@ while comments and issue creation are opt-in.
 
 Branch: fetch the issue and use its own `gitBranchName` — Linear's convention,
 `<username>/<issue-id>-<slug>` lowercase. Unavailable → fall back to
-`docs/code/conventions.md`, and say which you used.
+`.shipit/conventions.md`, and say which you used.
 
 `issue_pattern`: the workspace's key prefix, e.g. `ENG-\d+`.
 
@@ -36,7 +36,7 @@ branch up on its own.
 
 **Mechanism:** the `gh` CLI — read calls only.
 
-Branch: no tracker-supplied name. Use `docs/code/conventions.md`, else
+Branch: no tracker-supplied name. Use `.shipit/conventions.md`, else
 `<user>/<issue-number>-<slug>`.
 
 PR link: reference the issue from the PR body — `Closes #<n>` when the merge should
@@ -48,7 +48,7 @@ that, or a human does.
 
 **Mechanism:** the Jira MCP server, in this session — read calls only (get issue).
 
-Branch: Jira supplies no branch name. Use `docs/code/conventions.md`, else
+Branch: Jira supplies no branch name. Use `.shipit/conventions.md`, else
 `<user>/<ISSUE-KEY>-<slug>`. Keep the key uppercase — Jira's smart-commit and branch
 detection is case-sensitive.
 
@@ -71,7 +71,7 @@ PR link: the `sc-<n>` id in the branch name is what Shortcut matches on.
 
 **Mechanism:** none. Delivery is git and the PR host only.
 
-- Branch from `docs/code/conventions.md`, else ask.
+- Branch from `.shipit/conventions.md`, else ask.
 - Keep issue context and complete QA/evidence available in the PR using the
   description template's visible-summary/detail split. No tracker does not mean
   copying the entire implementation report into the body.

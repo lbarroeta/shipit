@@ -46,7 +46,7 @@ Then exactly one of:
 
 Branch name: from the tracker adapter when `tracker.branch_from_tracker` is true
 (the adapter's own convention — never invent a prefix), otherwise the repo's
-dominant branch shape from `docs/code/conventions.md`, otherwise
+dominant branch shape from `.shipit/conventions.md`, otherwise
 `<user>/<issue-id>-<slug>`.
 
 Never force. Never `--detach`. Never delete or move an existing worktree here —

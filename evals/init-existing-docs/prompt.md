@@ -7,7 +7,7 @@ This is a Rails app. Repository state:
 - `docs/code/conventions.md` was written by the team. It covers service objects
   (`app/services/`, each returns a `Result`) and thin controllers. It says nothing
   about branch names, commit subjects or test shape.
-- There is no `docs/code/stack.md`.
+- Neither `.shipit/` nor `.sdd/` exists.
 - `bin/rspec` and `bin/rubocop` exist, and CI runs both.
 - `git log --format=%s -50` shows Conventional Commits in 46 of 50 subjects.
 - `uv` is installed. The `graphify` CLI is not.

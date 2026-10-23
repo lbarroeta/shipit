@@ -4,7 +4,7 @@ max_turns: 20
 
 Use shipit:task-next to recommend what to work on next in the Payments project.
 
-Repository state: `docs/shipit/config.json` selects Linear team Billing, project Payments.
+Repository state: `.shipit/config.json` selects Linear team Billing, project Payments.
 The connected read tools return these live issues in this order:
 
 - BILL-21, P0, Backlog: enable customer refunds. Blocked by BILL-24; required output

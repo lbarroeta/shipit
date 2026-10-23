@@ -1,6 +1,6 @@
 ---
 name: design-system
-description: Use to bootstrap or update a repo's design contract — interviews the user in plain language, inspects existing styles, tokens and components, proposes a design, and records the approved decisions in `docs/design-system/contract.md` and `docs/code/rules/design.md` so agents know which colors, components and behaviours UI work must use. Run after `init`. Does not change product code, install libraries, or touch git or trackers.
+description: Use to bootstrap or update a repo's design contract — interviews the user in plain language, inspects existing styles, tokens and components, proposes a design, and records the approved decisions in `.shipit/design-system.md` and `.shipit/rules/design.md` so agents know which colors, components and behaviours UI work must use. Run after `init`. Does not change product code, install libraries, or touch git or trackers.
 metadata:
   input: interview
   output: sdd-design-contract
@@ -15,7 +15,7 @@ records one — from the user's answers and the repo's evidence — so `code-pla
 
 | Path | For | Content |
 | --- | --- | --- |
-| `<paths.design_system>` | agents and humans | Product context, foundations, component catalog, screen patterns, decision ledger |
+| `.shipit/design-system.md` | agents and humans | Product context, foundations, component catalog, screen patterns, decision ledger |
 | `<paths.rules>/design.md` | agents | Operational rules for UI work, with observable checks |
 | `<!-- shipit:design -->` block | discovery | In each UI layer rule, and in the `docs.pointer` file |
 
@@ -24,7 +24,7 @@ refactored button — is a later `/shipit:task-create` or `/shipit:code-plan`.
 
 ## Context budget
 
-- Required: `docs/shipit/config.json` (`layers`, `paths`, `language`, `graph`,
+- Required: `.shipit/config.json` (`layers`, `paths`, `language`, `graph`,
   `stack`, `docs.pointer`), the pointer file, and both design files when they exist.
 - Required: `references/interview.md` — owns the questions, their order, and how
   answers are handled. `references/inspection.md` — owns where to look and how
@@ -33,7 +33,7 @@ refactored button — is a later `/shipit:task-create` or `/shipit:code-plan`.
   `assets/design-rules-template.md`.
 - Optional: `assets/preview-template.html`, only when producing a visual preview.
 - Never: backend layer rules, test rules, plans, a whole graph report.
-- No `docs/shipit/config.json` → stop. Say the design contract lives inside the one
+- No `.shipit/config.json` → stop. Say the design contract lives inside the one
   `init` writes (layers, paths, the pointer), and that `/shipit:init` followed by
   `/shipit:design-system` resolves it. Do not detect the stack inline.
 
@@ -69,8 +69,8 @@ refactored button — is a later `/shipit:task-create` or `/shipit:code-plan`.
   the whole set, or a delegation covers what was not confirmed. Anything short of
   that is `Status: draft` with every pending decision and what depends on it.
 - **Never touch product code.** No edit outside the two design files, the marked
-  blocks, and a preview file outside the repo. No install, no git, no tracker, no write to
-  `docs/shipit/config.json`.
+  blocks, and a preview file outside the repo. No install, no git, no tracker, no
+  write to `.shipit/config.json`.
 - **Language.** Interview and report follow `language.plan`. The design files stay
   English, like the rest of the contract; a user's own words may be quoted.
 - **Idempotent.** Each file exists once and each block once per file, replaced in
@@ -111,7 +111,7 @@ Layer rule, appended once at the end of the file:
 <!-- shipit:design -->
 ## Design
 
-UI in this layer follows `docs/code/rules/design.md` and the `docs/design-system/contract.md`
+UI in this layer follows `.shipit/rules/design.md` and the `.shipit/design-system.md`
 sections it points to. Read both before planning or implementing UI here.
 <!-- /shipit:design -->
 ````
@@ -122,16 +122,15 @@ sections it points to. Read both before planning or implementing UI here.
 <!-- shipit:design -->
 ## Design contract (shipit)
 
-Before planning or implementing UI, read `docs/code/rules/design.md`, then the sections
-of `docs/design-system/contract.md` it points to. Backend-only work does not need them.
+Before planning or implementing UI, read `.shipit/rules/design.md`, then the sections
+of `.shipit/design-system.md` it points to. Backend-only work does not need them.
 Pending decisions are listed there; never treat them as approved.
 <!-- /shipit:design -->
 ````
 
 Text outside the markers is never touched. A layer whose rule file is missing gets
-no block; `layers: []` → the pointer block alone. `docs/code/rules/` and
-`docs/design-system/contract.md` in a block or a template stand for `paths.rules` and
-`paths.design_system`: write the configured values.
+no block; `layers: []` → the pointer block alone. `.shipit/rules/` in a block or a
+template stands for `paths.rules`: write the configured value.
 
 ## Update mode
 
