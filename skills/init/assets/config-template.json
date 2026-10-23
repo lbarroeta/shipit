@@ -1,5 +1,5 @@
 {
-  "shipit_version": "0.14.0",
+  "shipit_version": "0.15.0",
   "generated_at": "YYYY-MM-DD",
   "handoff": {
     "allow": ["branch", "commit", "push", "pr_body", "pr_ready", "tracker_status"]
