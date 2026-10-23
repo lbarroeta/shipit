@@ -2,7 +2,7 @@
 name: run-delivery
 description: Deliver a validated shipit run report and reconcile interrupted delivery, under the repository handoff allow-list.
 model: claude-haiku-5-5
-effort: high
+effort: medium
 disallowedTools: Agent
 ---
 

@@ -15,8 +15,9 @@ their existing skill paths. Native agent names are `run-sync`, `run-planner`,
 `run-builder`, and `run-delivery`. Public skill names are not checkpoint keys.
 Check availability and restrictions through the runtime's exposed capabilities;
 if access cannot be proven until spawn, the spawn failure is a blocker, not
-permission to switch model. Recheck returned routes after Git preparation because
-pulling `main` may update the repo contract.
+permission to switch model. `begin` returns routes after pulling `main`, so they
+already reflect the synced contract; re-resolve only when a later sync changes
+`.shipit/config.json`.
 
 ## Claude Code
 
@@ -24,15 +25,15 @@ The plugin ships native definitions under its root `agents/`:
 
 | Stage | Scoped agent | Default model | Effort |
 | --- | --- | --- | --- |
-| sync_before / sync_after | `shipit:run-sync` | `claude-sonnet-5-5` | `high` |
+| sync_before / sync_after | `shipit:run-sync` | `claude-sonnet-5-5` | `medium` |
 | plan | `shipit:run-planner` | `claude-opus-5-5` | `high` |
 | implement | `shipit:run-builder` | `claude-sonnet-5-5` | `high` |
-| handoff | `shipit:run-delivery` | `claude-haiku-5-5` | `high` |
+| handoff | `shipit:run-delivery` | `claude-haiku-5-5` | `medium` |
 
 Use the native Agent tool with the corresponding scoped subagent type. Give it
 the absolute checkout, skill path and message contract; each definition instructs
-the child to read that skill. Read the selected definition before dispatch and
-check its model/effort against the resolved route. Explicit local overrides need
+the child to read that skill. Read each selected definition once, before its
+first dispatch, and check its model/effort against the resolved route. Explicit local overrides need
 a matching native agent definition with the requested model and `effort`; if the
 runtime cannot apply that pair, stop rather than use the packaged default.
 
@@ -47,10 +48,10 @@ substitute or cap values. Do not ask the model to certify its own identity.
 
 | Stage | Default model | Effort |
 | --- | --- | --- |
-| sync_before / sync_after | `gpt-6.1-sol` | `high` |
+| sync_before / sync_after | `gpt-6.1-sol` | `medium` |
 | plan | `gpt-6-astra` | `high` |
 | implement | `gpt-6.1-sol` | `high` |
-| handoff | `gpt-6-luna` | `high` |
+| handoff | `gpt-6-luna` | `medium` |
 
 Use the exposed native spawn, message/follow-up and wait controls. Depending on
 the host these are `spawn_agent` / `send_message` / `wait` or the collaboration

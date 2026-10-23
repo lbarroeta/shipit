@@ -64,7 +64,12 @@ Every child receives: stage; absolute repo and task branch; absolute assigned
 SKILL.md path (resolve its references relative to that path); saved task/plan/report
 paths; run owner/state path; model/effort pair; user-authorized scope; run-owned
 paths; result/artifact destination; allowed effects; and the concrete outcome it
-must return. Use unique report/result names for each dispatch or repair so saved
+must return. Also pass what earlier stages already verified, inline: the planner
+gets the sync report's stack/command evidence and context status; the builder gets
+the plan's `Files`, `Sequence` and `Tests` sections and the same command evidence.
+A child reads source only for the files those sections name and does not
+rediscover the stack, the commands or the graph. Use unique report/result names
+for each dispatch or repair so saved
 reports remain available. Do not flood children with the entire conversation.
 
 Synchronizer: execute `shipit:sync` in the supplied phase, no product code or

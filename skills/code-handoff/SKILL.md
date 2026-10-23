@@ -98,11 +98,14 @@ Rules:
   transition. `tracker-writes.md` lists the terminal states per adapter.
 - **Prose language.** PR title, PR body and review-thread replies follow `language.pr`; tracker comments and created issues follow `language.task`; what this skill prints follows `language.plan` in `.shipit/config.json`. Legacy string `language` → that value for every key but `code`; absent → `en`. Identifiers, commit subjects and branch names always stay English.
 - **Stage by explicit path.** Never `git add -A`, never `git add .`.
-- **Never stage or commit generated plans**, regardless of `handoff.allow`. Exclude the supplied plan, the report's `Plan` path and any
-  archived run-owned plans from the delivery manifest; keep their local files.
-  Before committing, verify none is staged. If one is already staged, stop and
-  name it without changing the user's index. An empty filtered manifest skips the
-  commit; never make an empty commit to deliver a plan.
+- **Never stage or commit generated plans or graph outputs**, regardless of
+  `handoff.allow`. Exclude the supplied plan, the report's `Plan` path, any
+  archived run-owned plans and the graph output directory (`graph.out` in
+  `.shipit/config.json`, `graphify-out/` when `graph` is null) from the delivery
+  manifest; keep their local files. Before committing, verify none is staged. If
+  one is already staged, stop and name it without changing the user's index. An
+  empty filtered manifest skips the commit; never make an empty commit to deliver
+  a plan.
 - `plan` mode stages nothing. `implementation` and `review` modes use the
   report's `Files Changed`, minus excluded artifacts, as the manifest: every
   staged path must appear there **and** in the current diff. A listed path absent
@@ -241,8 +244,8 @@ exists before a branch does.
 
 ## Mode: implementation
 
-- **Commit** — the report's `Files Changed`, excluding generated plans and any
-  other artifacts excluded by the hard rules.
+- **Commit** — the report's `Files Changed`, excluding generated plans, graph
+  outputs and any other artifacts excluded by the hard rules.
 - **Push** — normally.
 - **PR** — replace the plan PR's body on this branch with the report's
   `PR Preparation` body verbatim. Verbatim means no re-wording, no added preamble,
@@ -321,7 +324,7 @@ recap of the change — a `completed` line needs no explanation:
 - Hierarchy/dependency relations: verified native, pending failed write, or
   unsupported/manual with exact endpoints. Text references are reported separately.
 - Branch.
-- Commit hash, and the files staged — plus the generated plans excluded.
+- Commit hash, and the files staged — plus the generated plans and graph outputs excluded.
 - Push.
 - PR url, and whether the body was created or replaced; whether it is still a draft.
 - Review thread replies and resolutions — `review` mode, one line per thread.
