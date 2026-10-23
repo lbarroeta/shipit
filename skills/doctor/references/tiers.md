@@ -50,14 +50,9 @@ Notes:
 - Having the CLI without a graph changes nothing. They are two separate gaps.
 - Inside a worktree the graph is normally a symlink to the main checkout's — that is
   correct, not stale. `worktree.share_graph` controls it.
-- Context7 is the one tier-2 item that changes answers, not only tokens: without
-  it, library/framework API claims come from model memory and are marked
-  `unverified (no docs source)`. `references/docs-lookup.md` owns when it is used.
-  The MCP is a session fact `scripts/companions.sh` cannot see; doctor reads it
-  from the session, like a tracker. Its key cannot be read without exposing it,
-  so a connected MCP is reported `ok (login not verifiable)`. Installed but not
-  logged in, or missing, leaves API claims unverified and one notice line in the
-  report of the run that needed them.
+- Context7 changes answers, not only tokens; `references/docs-lookup.md` owns when
+  it is used. The MCP is a session fact the script cannot see, and its key cannot be
+  read, so a connected MCP is reported `ok (login not verifiable)`.
 - caveman compresses prose. shipit exempts non-developer QA steps from compression
   either way, so installing it never degrades the deliverable.
 

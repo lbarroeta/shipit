@@ -2,8 +2,8 @@
 
 How shipit checks library, framework, runtime and language behaviour against
 current, version-matched documentation instead of model memory. Context7 is the
-supported source. Read by `code-implement`, where code is written, and by `sync`,
-where versions drift. `code-plan` does not look up docs: the plan names files,
+supported source. Read by `code-implement` and `pr-fix`, where code is written, and by
+`sync`, where versions drift. `code-plan` does not look up docs: the plan names files,
 symbols and analogues, and the implementer verifies the API at the moment it
 writes the call. Read only when a trigger fires.
 
@@ -32,17 +32,17 @@ proves otherwise.
 
 Only when a trigger fired and no source answered. One line, first in the
 implementation report's `Known Risks or Follow-ups` (or `sync`'s remaining
-unknowns), in `language.plan` with the commands verbatim:
+unknowns), in `language.plan`:
 
 ```
-⚠ Context7 <missing | not logged in | failing>: <n> library/framework API claim(s) in this change are `unverified (no docs source)`. Fix once per machine: `claude mcp add --scope user --transport http context7 https://mcp.context7.com/mcp --header "Authorization: Bearer <key>"` or `npm install -g ctx7 && ctx7 login`; check with /shipit:doctor.
+⚠ Context7 <missing | not logged in | failing>: <n> library/framework API claim(s) in this change are `unverified (no docs source)`. Run /shipit:doctor for the fix.
 ```
 
 `not logged in` is `ctx7` on PATH with `ctx7 whoami` printing `Not logged in`
 (`CONTEXT7_API_KEY` counts as logged in). The line never blocks and never fixes:
 no install, no `ctx7 login` (it opens a browser and is the user's account), no key
-requested or written. No trigger, no line — `doctor` is where availability is
-reported on its own.
+requested or written. The install commands live in `skills/doctor/references/tiers.md`
+only. No trigger, no line — `doctor` is where availability is reported on its own.
 
 ## Triggers
 

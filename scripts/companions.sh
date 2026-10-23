@@ -88,13 +88,13 @@ else
 fi
 
 # The Context7 MCP is a session fact this script cannot see; doctor adds it.
-# `ctx7 whoami` exits 0 either way; only its text tells the states apart.
+# `ctx7 whoami` exits 0 either way; only its text tells the states apart. Anything but `Logged in` counts as not ready.
 if has ctx7; then
-  if ctx7 whoami 2>/dev/null | grep -q "Not logged in"; then
-    miss "context7 login" "ctx7 installed but not logged in: lower rate limits, lookups may fail"
-    note "run: ctx7 login    (or export CONTEXT7_API_KEY=<key>)"
-  else
+  if ctx7 whoami 2>/dev/null | grep -q "Logged in"; then
     ok "context7 cli" "$(command -v ctx7), logged in"
+  else
+    miss "context7 login" "ctx7 installed but not logged in or failing: lookups may fail"
+    note "run: ctx7 login    (or export CONTEXT7_API_KEY=<key>)"
   fi
 else
   miss "context7 cli" "fine if the Context7 MCP is connected; otherwise API facts are unverified"

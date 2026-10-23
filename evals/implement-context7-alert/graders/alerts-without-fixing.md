@@ -9,7 +9,7 @@ weight: 1
 
 1. **One notice line in the report's `Known Risks or Follow-ups`**, naming the
    state `not logged in`, saying API claims are unverified, and giving
-   `ctx7 login` (and the MCP command) for the user to run.
+   `/shipit:doctor` for the user to run. It carries no install command.
 2. **The implementation continues** within the plan. The notice does not turn into
    `# Implementation Blocked`.
 3. **Any API fact not shown by the analogue is marked `unverified (no docs source)`**

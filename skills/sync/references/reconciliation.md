@@ -90,7 +90,7 @@ bumps refresh the version text and stop there.
 
 1. Read installed versions from lockfiles/pin files, never declared ranges.
 2. For each moved framework/runtime/library the rules or conventions mention:
-   `../../references/docs-lookup.md`, asking for the upgrade/migration notes and
+   `../../../references/docs-lookup.md`, asking for the upgrade/migration notes and
    deprecations between the old and new version. Budget per that file.
 3. Apply by ownership, through the normal base/current/candidate merge:
    - `stack.md` — version value and evidence: owned, update with the citation.

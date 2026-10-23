@@ -24,6 +24,9 @@ user to post.
   those.
 - Required: `../../references/lean-ladder.md`, relative to this skill directory,
   for the pushback tag vocabulary.
+- `../../references/docs-lookup.md` only when one of its triggers fires — a fix
+  that calls a library API no cited analogue shows at the installed version, or a
+  red check on an unknown method, signature or deprecation.
 - Never bulk-load rules or docs. A three-line fix does not justify reading the
   layer's whole rule set.
 
