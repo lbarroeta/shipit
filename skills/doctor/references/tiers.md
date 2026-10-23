@@ -56,8 +56,8 @@ Notes:
   The MCP is a session fact `scripts/companions.sh` cannot see; doctor reads it
   from the session, like a tracker. Its key cannot be read without exposing it,
   so a connected MCP is reported `ok (login not verifiable)`. Installed but not
-  logged in, or missing, raises the readiness alert in every `code-implement` and
-  `sync` run until fixed.
+  logged in, or missing, leaves API claims unverified and one notice line in the
+  report of the run that needed them.
 - caveman compresses prose. shipit exempts non-developer QA steps from compression
   either way, so installing it never degrades the deliverable.
 

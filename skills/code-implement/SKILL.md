@@ -26,11 +26,10 @@ and verified with commands that are known to run in this repo.
   jobs, webhooks), authorization, scoped data access, trust-boundary input, secret
   handling, or query/shell construction: `references/security-standards.md`.
   Apply these triggers to support changes discovered during implementation too.
-- Required every run: `../../references/docs-lookup.md` § Readiness alert. The
-  rest of that file only when one of its triggers fires — code written against an
-  external API that no cited analogue shows at the installed version, or a check
-  failing on an API assumption. This skill is the
-  only one in the cycle that looks up API docs; the plan does not.
+- `../../references/docs-lookup.md` only when one of its triggers fires — code
+  written against an external API that no cited analogue shows at the installed
+  version, or a check failing on an API assumption. This skill is the only one in
+  the cycle that looks up API docs; the plan does not.
 - Never bulk-load every rule file or every agent doc. Resolve symlinked docs once.
 - If a rule was skipped, do not claim compliance with it.
 
@@ -79,8 +78,7 @@ and verified with commands that are known to run in this repo.
    Legacy plans may omit these sections: verify equivalent behavior/coverage during
    preflight rather than rejecting their format. Search for more when the plan
    lacks detail or relevant drift needs checking; a graph query
-   before `rg` when `graph` is set and its output is present. Check Context7
-   readiness per `docs-lookup.md`; not `ready` → print its alert now, continue.
+   before `rg` when `graph` is set and its output is present.
 2. **Contract gate.** The plan must have a goal, acceptance criteria, a `Files`
    table with analogues, tests mapped to rule files, `Manual QA` when UI is
    touched, and no unresolved blockers. Missing → stop with
@@ -107,7 +105,7 @@ and verified with commands that are known to run in this repo.
    failing check on an unknown method, signature or deprecation → look it up
    before the next attempt, which is the new evidence the 3-attempt rule needs.
    Cite a lookup in the report's `Known Risks or Follow-ups` only when it changed
-   the code or left a follow-up. UI work uses the components, tokens and states the
+   the code, left a follow-up, or could not be made (its one-line notice). UI work uses the components, tokens and states the
    plan's `Design` names, under `rules/design.md`; a value or component the
    contract lacks is not invented — no exception in the plan → stop and say which.
    A plan with no `Design` section dated before the contract's `Status` date gets
@@ -210,7 +208,7 @@ Include the exact failing command output when the stop came from repeated failur
 Use `assets/implementation-report-template.md`. Sections in that order: QA Handoff,
 QA Steps For Non-Developer, Plan, Summary, Files Changed, Tests Added/Updated,
 Validation Commands Run, Security Notes, Handoff, Known Risks or Follow-ups,
-PR Preparation. A Context7 readiness alert from preflight goes above QA Handoff.
+PR Preparation.
 
 ## Flag
 

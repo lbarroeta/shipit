@@ -50,8 +50,6 @@ report the gap; never reset it from a template.
    and deletions. Read affected baseline entries from `.sdd/sync-state.json` only
    as needed. Missing baseline means legacy/unknown ownership, not pristine output.
    `--check` reports drift and exits without migration, writes or graph updates.
-   Check Context7 readiness per `../../references/docs-lookup.md` § Readiness
-   alert; not `ready` → print its alert now and continue.
 2. **Determine scope.** Before planning, reconcile accumulated drift that affects
    the task, plus shared configuration. After implementation, use the actual diff,
    plan and report to find affected contracts/docs; check for additional external
@@ -99,7 +97,8 @@ report the gap; never reset it from a template.
    rewrites, including dates. A failed/partial run never certifies freshness.
 7. **Report.** State phase, baseline status, changed/retired/preserved paths,
    documentation conflicts, separate structural/semantic graph state, exact
-   validation and remaining unknowns. A Context7 alert from preflight leads it.
+   validation and remaining unknowns, including `docs-lookup.md`'s one-line
+   notice when a lookup could not be made.
    Use `language.plan`. Return `completed`, `blocked` or `failed`, with concrete
    scope; missing evidence is not success.
 

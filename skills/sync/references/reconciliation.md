@@ -99,10 +99,11 @@ bumps refresh the version text and stop there.
      replacement. A human edit on that fact → conflict, never a silent rewrite.
    - Human docs (README, agent docs, ADRs) stating the old behaviour: proposed
      patch with the citation, not an edit, unless the approved plan names it.
-   - Product code still using the deprecated API: report as pending follow-up
-     with paths and the replacement. Sync never edits product code.
-4. No docs source → update versions from lockfiles only, and report the
-   deprecation review as `unknown`, not done.
+   - The exemplar paths those rules cite, when they still use the deprecated
+     API: pending follow-up with paths and the replacement. No repo-wide scan;
+     sync never edits product code.
+4. No docs source → update versions from lockfiles only, report the deprecation
+   review as `unknown`, not done, and add `docs-lookup.md`'s one-line notice.
 
 A newer upstream version than the installed one is never a reason to change the
 contract; it is at most a line in the report.

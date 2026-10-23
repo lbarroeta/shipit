@@ -326,9 +326,7 @@ wins and the contradiction is reported.
 Report-only. See `skills/doctor/references/tiers.md` for the tier definitions and
 the exact commands. Fill `companions` with `present` / `absent` per entry.
 
-`context7` is `present` when the Context7 MCP tools (`resolve-library-id`,
-`query-docs`) are listed in this session or `command -v ctx7` succeeds. Never call
-them here and never fall back to `npx`: init only records availability. Framework
+Context7 is not recorded here: it is a session fact `doctor` reports. Framework
 rows in `stack.md` carry the installed version from the lockfile, which is what
 `references/docs-lookup.md` queries against.
 

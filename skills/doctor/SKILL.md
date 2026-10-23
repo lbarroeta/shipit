@@ -98,7 +98,7 @@ reading this should know whether they can proceed, in one line.
 | `tracker.create.supported` false | The draft carries no paste target. `task-create` drafts either way — publishing requires authorized `code-handoff` with `issue_create` — and with adapter `none` this is the expected state, not a gap. |
 | graphify CLI | Discovery falls back to `rg`/`git grep`. Same answers, more tokens. |
 | graphify graph | Same as above — having the CLI without a graph changes nothing. |
-| Context7 (no MCP, no `ctx7`, or `ctx7` not logged in) | Every `code-implement` and `sync` run opens with a readiness alert. They cannot check library APIs or deprecations against the installed version; those claims are marked unverified. Implementation still works. |
+| Context7 (no MCP, no `ctx7`, or `ctx7` not logged in) | `code-implement` and `sync` cannot check library APIs or deprecations against the installed version; those claims are marked unverified, with one notice line in the report. Implementation still works. |
 | caveman | Chat prose and reports stay long. Note that shipit keeps PR bodies and reports short on its own, and exempts non-developer QA steps from compression either way. |
 | `.sdd/` absent | `code-plan` and `code-implement` refuse to run. Fix: `/shipit:init`. |
 | pointer absent | shipit skills still read `.sdd/` by path, but every other agent working in this repo ignores it and codes to its own priors. Fix: `/shipit:sync`. |
