@@ -31,10 +31,11 @@ when planning starts. This required startup transition is independent of
 Destructive work, publishing and messaging retain the existing skills' boundaries.
 
 Read only `.shipit/config.json`, `.shipit/conventions.md`, this skill's
-`references/orchestration.md` and `references/runtime-adapters.md`. Before native
-dispatch, also read the applicable `../../agents/run-*.md` definition, or the
-explicit local agent definition selected by the runtime adapter, to verify its
-model/effort pair. Each child reads its assigned skill and that skill's conditional
+`references/orchestration.md` and `references/runtime-adapters.md`. Before the
+first dispatch of each route, also read the applicable `../../agents/run-*.md`
+definition, or the explicit local agent definition selected by the runtime
+adapter, to verify its model/effort pair; later dispatches of the same route reuse
+that check unless the routes changed. Each child reads its assigned skill and that skill's conditional
 references itself. Missing contract → `/shipit:init` first. Missing native
 delegation, stage model/effort, Python 3.10+
 or required tracker access → stop with the exact gap. Never install a runtime or
@@ -77,10 +78,15 @@ and passes `--no-worktree` to its planner.
    token and state path.
 4. **Context before planning.** Delegate `shipit:sync` in `before-plan` phase
    using route `sync` and the absolute `skills/sync/SKILL.md` path. Pass issue,
-   checkout, ownership and report/result paths. Wait; verify source evidence,
+   checkout, ownership and report/result paths. The synchronizer inspects first
+   and reconciles only drift that touches shared configuration or the issue's
+   scope; `current` with no relevant drift is a complete result, not a shortcut.
+   Wait; verify source evidence,
    conflicts, actual context validation and full owned-file manifest. Checkpoint
    `sync_before` only when context is current/updated with no unresolved blockers.
-   Re-read config after sync; resolve routes/capabilities again before later stages.
+   Re-resolve routes/capabilities only when the sync report lists
+   `.shipit/config.json` among its changed paths; otherwise the routes from
+   `begin` stand for the rest of the run.
    If tracker identity changed, re-resolve the issue rather than keeping a stale
    target. No planning from an unverified sync result.
 5. **Planner.** Delegate `shipit:code-plan --no-worktree` with the issue snapshot,

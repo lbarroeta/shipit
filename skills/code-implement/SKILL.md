@@ -77,7 +77,10 @@ and verified with commands that are known to run in this repo.
    Legacy plans may omit these sections: verify equivalent behavior/coverage during
    preflight rather than rejecting their format. Search for more when the plan
    lacks detail or relevant drift needs checking; a graph query
-   before `rg` when `graph` is set and its output is present.
+   before `rg` when `graph` is set and its output is present. In a coordinated
+   `shipit:run`, the delegation's inline `Files`/`Sequence`/`Tests` and command
+   evidence are that detail: start from them and do not re-verify commands or
+   re-query the graph for files the plan already names.
 2. **Contract gate.** The plan must have a goal, acceptance criteria, a `Files`
    table with analogues, tests mapped to rule files, `Manual QA` when UI is
    touched, and no unresolved blockers. Missing → stop with

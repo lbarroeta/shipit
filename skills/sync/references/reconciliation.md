@@ -143,6 +143,9 @@ pending. After reconciliation and final source/doc edits, choose the update path
   extraction without a new API key. Preserve corpus exclusions, graph direction
   and output settings; do not expand indexing to excluded contracts or secrets.
 - No indexed drift and verified coverage: leave graph outputs unchanged.
+- Inside a coordinated `run`, at both checkpoints: run only the structural update
+  when code changed and report semantic coverage as `stale` for the next
+  standalone sync. The semantic `/graphify --update` stays outside the pipeline.
 
 Normal sync authorizes this local incremental maintenance. Never install or upgrade
 tools or perform a full graph rebuild as an implicit fallback. Missing semantic

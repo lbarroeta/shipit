@@ -2,7 +2,7 @@
 name: run-sync
 description: Reconcile Shipit context before planning or after implementation and return evidence to the run coordinator.
 model: claude-sonnet-5-5
-effort: high
+effort: medium
 disallowedTools: Agent
 ---
 

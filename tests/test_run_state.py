@@ -607,16 +607,16 @@ class RunStateTests(unittest.TestCase):
     def test_default_routes_and_complete_override(self):
         default = self.call("routes", "--provider", "openai")["routes"]
         self.assertEqual(default, {
-            "sync": {"model": "gpt-6.1-sol", "effort": "high"},
+            "sync": {"model": "gpt-6.1-sol", "effort": "medium"},
             "plan": {"model": "gpt-6-astra", "effort": "high"},
             "implement": {"model": "gpt-6.1-sol", "effort": "high"},
-            "handoff": {"model": "gpt-6-luna", "effort": "high"},
+            "handoff": {"model": "gpt-6-luna", "effort": "medium"},
         })
         self.assertEqual(self.call("routes", "--provider", "anthropic")["routes"], {
-            "sync": {"model": "claude-sonnet-5-5", "effort": "high"},
+            "sync": {"model": "claude-sonnet-5-5", "effort": "medium"},
             "plan": {"model": "claude-opus-5-5", "effort": "high"},
             "implement": {"model": "claude-sonnet-5-5", "effort": "high"},
-            "handoff": {"model": "claude-haiku-5-5", "effort": "high"},
+            "handoff": {"model": "claude-haiku-5-5", "effort": "medium"},
         })
         self.config["run"] = {"models": {"openai": {"plan": {"model": "custom", "effort": "high"}}}}
         (self.repo / ".shipit/config.json").write_text(json.dumps(self.config))

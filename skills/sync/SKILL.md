@@ -126,7 +126,12 @@ artifacts outside the checkout in the run directory. Return the full non-ignored
 ownership manifest, including pre-sync edits and generated plans; omit plans from
 any delivery manifest. No external effects.
 
-Before planning, return the sync report and owned paths for the planner/builder.
+Before planning, run the read-only `inspect` and step 5's context validation
+first. No drift in shared configuration or in sources the issue touches → return
+`current` with the existing baseline and the ownership manifest; skip
+rediscovery, docs lookups and graph work. Otherwise continue the full workflow
+for the affected scope only. Return the sync report and owned paths for the
+planner/builder.
 After implementation, return the separate delivery report described above to the
 coordinator.
 
