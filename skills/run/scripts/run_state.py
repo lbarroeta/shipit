@@ -268,7 +268,10 @@ def begin(repo, args):
             if state["stage"] != "preparing":
                 resume(repo, state, task, args, run_dir)
                 write_json(path, state)
-                return {"mode": "resume", "state_path": str(path), **state}
+                output = {"mode": "resume", "state_path": str(path), **state}
+                if state["stage"] in {"qa", "done"}:
+                    output["qa_guide"] = qa_guide(state)
+                return output
             if args.replan_reason:
                 state["source_digest"] = source_digest(task)
                 write_json(run_dir / "task.json", task)
@@ -382,6 +385,21 @@ def verify_validation(repo, state):
             raise Blocked("HEAD no longer contains the validated commit; history was rewritten. Reconcile delivery.")
         if git(repo, "rev-parse", "HEAD^{tree}") != state["validated_tree"]:
             raise Blocked("Committed tree differs from the validated manifest. Reconcile delivery.")
+
+
+def qa_guide(state):
+    """QA sections of the final delivery report, so a delivered run never reruns to find them."""
+    artifact = state["artifacts"].get("sync_after") or state["artifacts"].get("implement")
+    if not artifact:
+        return None
+    path = Path(artifact["path"])
+    lines, keep = [], False
+    for line in path.read_text().splitlines() if path.is_file() else []:
+        if line.startswith("## "):
+            keep = line[3:].strip().upper().startswith("QA")
+        if keep:
+            lines.append(line)
+    return {"report": str(path), "steps": "\n".join(lines).strip() or None}
 
 
 def checkpoint(repo, state, args):
@@ -541,6 +559,8 @@ def main():
             if args.command == "pause":
                 release(locks, args.owner)
         output = {"state_path": str(state_path), **state}
+        if state["stage"] in {"qa", "done"}:
+            output["qa_guide"] = qa_guide(state)
     print(json.dumps(output, ensure_ascii=False))
 
 

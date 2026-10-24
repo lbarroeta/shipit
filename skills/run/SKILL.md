@@ -64,7 +64,8 @@ and passes `--no-worktree` to its planner.
    provider and branch chosen from the tracker or repo conventions. If neither
    supplies one, use `codex/<issue-id>-<slug>` in Codex or ask in Claude Code.
    First query `status`: a saved qa/done result with no new human feedback is
-   displayed without switching branches or acquiring locks. Otherwise the
+   displayed without switching branches or acquiring locks: show its `qa_guide`
+   and the PR link, then stop. Never dispatch a stage to rebuild them. Otherwise the
    helper locks the issue **and** checkout. For a new task it requires a clean tree,
    switches to literal `main`, fetches its remote and merges the fetched upstream
    SHA with `--ff-only --no-overwrite-ignore`, then creates the task branch from
@@ -119,7 +120,11 @@ and passes `--no-worktree` to its planner.
    `handoff` only when permitted steps finished or were deliberately skipped.
    Partial delivery stays at `handoff`; reconcile effects before retrying.
 9. **Human QA.** Present what changed, where to test, plain-language steps with
-   expected results, and what remains. Reachable environment/account/setup available
+   expected results, and what remains. The steps are the `qa_guide.steps` returned
+   by the `handoff` checkpoint, copied verbatim: the QA sections of the
+   checkpointed final delivery report. `steps` null → read those sections from
+   `qa_guide.report`; still none → report the missing QA guide as a gap. Never
+   re-run sync, planning, building or delivery to regenerate QA steps. Reachable environment/account/setup available
    → "Ready for QA". Missing environment → "Implemented; QA blocked", with the
    missing prerequisite, never terminal instructions for the non-developer. Backend
    only → report what automated validation covered and any applicable non-UI checks.
