@@ -82,19 +82,15 @@ def changed(previous, current):
 def inspect(repo, config, baseline):
     sources = source_snapshot(repo, config)
     contracts = contract_snapshot(repo, config)
-    modified = []
-    for name, entry in baseline.get("managed", {}).items():
-        if fingerprint(repo / relative(name)) != entry["fingerprint"]:
-            modified.append(name)
+    modified = sorted(name for name, entry in baseline.get("managed", {}).items()
+                      if fingerprint(repo / relative(name)) != entry["fingerprint"])
     return {"status": "uninitialized" if not baseline else "changed" if (
                 sources != baseline.get("sources") or contracts != baseline.get("contracts")
                 or modified) else "unchanged",
             "source_changes": changed(baseline.get("sources", {}), sources),
             "contract_changes": changed(baseline.get("contracts", {}), contracts),
-            "edited_managed": sorted(modified),
-            "head_changed": bool(baseline) and baseline.get("head") != git(repo, "rev-parse", "HEAD"),
-            "baseline": STATE,
-            "sources": sources, "contracts": contracts}
+            "edited_managed": modified,
+            "baseline": STATE}
 
 
 def record(repo, config, inventory, baseline):
@@ -155,8 +151,6 @@ def main():
         raise ValueError("Unsupported sync baseline version; do not overwrite it.")
     if args.command == "inspect":
         result = inspect(repo, config, baseline)
-        result.pop("sources")
-        result.pop("contracts")
     else:
         result = record(repo, config, read_json(Path(args.inventory)), baseline)
     print(json.dumps(result))
