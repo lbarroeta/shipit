@@ -521,6 +521,29 @@ class RunStateTests(unittest.TestCase):
         self.assertEqual(set(state["artifacts"]), {"sync_before", "plan"})
         self.assertEqual(state["qa"][0]["outcome"], "fail")
 
+    def test_delivered_run_returns_qa_steps_from_final_report(self):
+        state = self.begin()
+        state = self.checkpoint(state, "plan", self.result(state, "plan"))
+        (self.repo / "product.txt").write_text("updated\n")
+        result = self.result(state, "implement", files=["product.txt"],
+                             validation=[{"command": "git diff --check", "exit_code": 0}])
+        state = self.checkpoint(state, "implement", result)
+        self.assertNotIn("qa_guide", state)
+        result = self.result(state, "sync_after", files=["product.txt"], context_status="current",
+                             requires_revalidation=False,
+                             validation=[{"command": "git diff --check", "exit_code": 0}])
+        report = Path(state["state_path"]).parent / "sync_after.md"
+        qa = "## QA Handoff\n\nEnvironment: staging\n\n## QA Steps For Non-Developer\n\n1. Open the page\n   - Expected: updated text"
+        report.write_text(f"# Report\n\n{qa}\n\n## Plan\n\nplan.md\n")
+        state = self.checkpoint(state, "sync_after", result)
+        self.git(self.repo, "add", "product.txt")
+        self.git(self.repo, "commit", "-m", "Delivered fixture change")
+        state = self.checkpoint(state, "handoff", self.result(state, "handoff", delivery_status="completed"))
+        self.assertEqual(state["qa_guide"], {"report": str(report), "steps": qa})
+        self.owned(state, "pause", "--reason", "Waiting for human QA")
+        self.assertEqual(self.call("status", "--issue-key", self.task["key"])["qa_guide"]["steps"], qa)
+        self.assertEqual(self.begin()["qa_guide"]["steps"], qa)
+
     def test_sync_stages_cannot_be_skipped_and_changes_reach_delivery(self):
         state = self.begin(sync=False)
         self.assertEqual(state["stage"], "sync_before")

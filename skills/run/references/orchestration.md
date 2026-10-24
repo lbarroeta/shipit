@@ -26,7 +26,9 @@ python3 /plugin/skills/run/scripts/run_state.py --repo /repo pause --issue-key '
 ```
 
 `begin` returns `owner`, `state_path`, `repo`, `branch`, `base_sha`, `routes`,
-`stage` and `mode` (`new`/`resume`). Store artifacts and results in the parent of
+`stage` and `mode` (`new`/`resume`). At `qa`/`done`, `begin`, `status` and the
+`handoff` checkpoint also return `qa_guide`: `report` (the checkpointed final
+delivery report) and `steps` (its `## QA…` sections verbatim, or null). Store artifacts and results in the parent of
 `state_path`. State/locks live under the Git common directory's `shipit/`, excluded
 from commits without editing gitignore or the repo contract. Issue locks are shared
 across linked worktrees; checkout locks also prevent two different issues editing
@@ -174,7 +176,9 @@ does not dispatch sync or delivery internally.
 
 ## Human QA
 
-After handoff, wait for the user's actual test results; release locks while waiting.
+After handoff, present `qa_guide.steps` verbatim with the PR link, then wait for
+the user's actual test results; release locks while waiting. The QA guide already
+exists in the final delivery report: never dispatch a stage to produce it again.
 On the next invocation reacquire through `begin`, then record:
 
 ```sh
