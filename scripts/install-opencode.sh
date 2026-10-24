@@ -35,9 +35,10 @@ here=$(CDPATH= cd -- "$(dirname -- "$0")/.." 2>/dev/null && pwd)
 if [ -d "${here:-/nonexistent}/.opencode/command" ]; then
   ROOT=$here
   info "using this checkout: $ROOT"
-elif [ -d "$ROOT/.git" ]; then
-  git -C "$ROOT" pull --ff-only --quiet || die "pull failed in $ROOT"
-  ok "updated $ROOT"
+fi
+if [ -d "$ROOT/.git" ]; then
+  if git -C "$ROOT" pull --ff-only --quiet; then ok "updated $ROOT"
+  else info "not updated (local changes or another branch); linking current files"; fi
 else
   mkdir -p "$(dirname "$ROOT")" || die "cannot create $(dirname "$ROOT")"
   git clone --quiet --depth 1 "$REPO" "$ROOT" ||

@@ -1,5 +1,6 @@
 """Exercise context baselines against real disposable Git repositories."""
 
+import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -129,6 +130,30 @@ class ContextStateTests(unittest.TestCase):
         (self.repo / ".shipit/stack.md").symlink_to(outside)
         self.assertIn("Shared contract", self.call("record", success=False)["reason"])
         self.assertEqual(outside.read_text(), "Shared context\n")
+
+    def test_baseline_hashes_only_uncommitted_sources_and_reads_legacy(self):
+        (self.repo / "draft.py").write_text("draft = True\n")
+        self.call("record")
+        state = self.repo / ".shipit/sync-state.json"
+        saved = json.loads(state.read_text())
+        self.assertEqual((saved["version"], list(saved["dirty"])), (2, ["draft.py"]))
+        self.assertNotIn("source.py", json.dumps(saved))
+        (self.repo / "source.py").write_text("committed = True\n")
+        self.git("commit", "-am", "Change source")
+        self.assertEqual(self.call("inspect")["source_changes"], ["source.py"])
+        (self.repo / "source.py").write_text("original = True\n")
+        self.assertEqual(self.call("inspect")["source_changes"], [])
+        self.git("add", "draft.py")
+        self.git("commit", "-m", "Commit the draft unchanged")
+        self.assertEqual(self.call("inspect")["status"], "unchanged")
+        self.assertEqual(self.call("record")["status"], "unchanged")
+        legacy = {key: saved[key] for key in ("head", "contracts", "managed")}
+        legacy.update(version=1, sources={"source.py": saved["dirty"]["draft.py"] | {
+            "sha256": hashlib.sha256(b"original = True\n").hexdigest()}})
+        state.write_text(json.dumps(legacy))
+        self.assertEqual(self.call("inspect")["source_changes"], ["draft.py"])
+        self.assertEqual(self.call("record")["status"], "recorded")
+        self.assertEqual(json.loads(state.read_text())["version"], 2)
 
     def test_legacy_contract_points_to_init(self):
         (self.repo / ".shipit").rename(self.repo / ".sdd")

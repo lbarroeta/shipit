@@ -23,7 +23,7 @@ codex plugin marketplace add KodimTech/shipit
 codex plugin add shipit@shipit
 ```
 
-Start a new session and the ten skills are available. Codex matches them by
+Start a new session and the twelve skills are available. Codex matches them by
 description, and the same names work as slash commands — `/shipit:task-create`, `/shipit:task-next`,
 `/shipit:code-plan`, `/shipit:init`, `/shipit:sync`, `/shipit:design-system`, `/shipit:code-implement`, `/shipit:code-handoff`,
 `/shipit:pr-fix`, `/shipit:status`, `/shipit:doctor`, `/shipit:run` — exactly as in Claude Code. Same `skills/`
@@ -183,7 +183,7 @@ The old `init --upgrade` invocation redirects without modifying files.
 Sync preserves preferences, human edits, explicit permissions and design decisions.
 Generated facts update from evidence; human-doc corrections need the request/plan's
 authorization, and conflicts remain visible. `.shipit/sync-state.json` stores accepted
-contract bases and source hashes, and is committed with the contract; dates never
+contract bases, the baseline commit and hashes of uncommitted sources, and is committed with the contract; dates never
 decide whether an edit is human. Legacy contracts without that baseline are reconciled
 conservatively. No-change sync does not rewrite files. Python 3.10+ is needed for
 the baseline helper. Graph queries guide discovery; existing graphs receive local
@@ -426,7 +426,7 @@ linked from it, never copied into it.
 | File | For | Content |
 | --- | --- | --- |
 | `.shipit/config.json` | machines | Verified commands, paths, layers, tracker, worktree |
-| `.shipit/sync-state.json` | sync | Accepted generated bases and source hashes |
+| `.shipit/sync-state.json` | sync | Accepted generated bases, baseline commit and uncommitted-source hashes |
 | `.shipit/stack.md` | agents | Stack facts, one row per fact, each with evidence |
 | `.shipit/conventions.md` | agents | Patterns this repo follows, each with an exemplar |
 | `.shipit/rules/<layer>.md` | agents | Layer rules derived from real files |

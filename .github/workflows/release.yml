@@ -30,8 +30,8 @@ jobs:
           git fetch origin main --tags
           git checkout -B main origin/main
 
-      - name: Check versioning rules
-        run: python3 -m unittest discover -s tests -p 'test_release_version.py'
+      - name: Run tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
 
       - name: Calculate and write version
         id: version

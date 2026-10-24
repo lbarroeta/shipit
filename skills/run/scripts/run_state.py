@@ -161,18 +161,96 @@ def routes(repo, provider):
     return {"provider": provider, "routes": selected}
 
 
-def begin(repo, args):
-    task = read_json(args.task_file)
+ALLOW_DEFAULT = ["branch", "commit", "push", "pr_body", "pr_ready", "tracker_status"]
+
+
+def read_task(path):
+    task = read_json(path)
     for field in ("key", "id", "url", "title", "description"):
         if not isinstance(task.get(field), str) or not task[field].strip():
             raise Blocked(f"Resolved task needs non-empty {field}.")
     if (not isinstance(task.get("acceptance_criteria"), list) or not task["acceptance_criteria"]
             or any(not isinstance(item, str) or not item.strip() for item in task["acceptance_criteria"])):
         raise Blocked("Task lacks acceptance criteria; clarify before preparing Git.")
+    return task
+
+
+def source_digest(task):
+    return digest({key: task[key] for key in (
+        "key", "id", "url", "title", "description", "acceptance_criteria")})
+
+
+def require_branch_allowed(repo, message):
+    if "branch" not in config_at(repo).get("handoff", {}).get("allow", ALLOW_DEFAULT):
+        raise Blocked(message)
+
+
+def new_state(repo, task, args, owner):
+    require_branch_allowed(repo, "Preparing a task branch requires branch in handoff.allow.")
+    if not args.branch or args.branch == "main":
+        raise Blocked("A task branch distinct from main is required.")
+    git(repo, "check-ref-format", "--branch", args.branch)
+    if git(repo, "branch", "--list", args.branch):
+        raise Blocked("Task branch already exists without a run record; inspect it before adopting it.")
+    return {"version": 2, "issue_key": task["key"], "issue_url": task["url"],
+            "repo": str(repo), "branch": args.branch, "source_digest": source_digest(task),
+            "provider": args.provider, "routes": routes(repo, args.provider)["routes"],
+            "owner": owner, "stage": "preparing", "status": "active",
+            "base_sha": None, "artifacts": {}, "agents": [], "qa": []}
+
+
+def resume(repo, state, task, args, run_dir):
+    """Restore a saved run on its branch, optionally replanning; mutates state."""
+    if (state["stage"] != "done" or args.replan_reason) and git(repo, "branch", "--show-current") != state["branch"]:
+        require_clean(repo)
+        git(repo, "switch", "--no-overwrite-ignore", state["branch"])
+    if args.replan_reason:
+        verify_pending(repo, state)
+        reset_plan(state, args.replan_reason)
+        state["source_digest"] = source_digest(task)
+        write_json(run_dir / "task.json", task)
+    if state["stage"] != "done":
+        state["routes"] = routes(repo, args.provider)["routes"]
+    verify_artifacts(state)
+    verify_pending(repo, state)
+    state["status"] = "active"
+
+
+def prepare(repo, state, args, path):
+    """Sync main and create the task branch; also finishes an interrupted preparation."""
+    require_clean(repo)
+    if state["base_sha"] is None:
+        git(repo, "show-ref", "--verify", "refs/heads/main")
+        upstream = git(repo, "for-each-ref", "--format=%(upstream:remotename) %(upstream:remoteref)",
+                       "refs/heads/main").split()
+        if len(upstream) != 2 or upstream[1] != "refs/heads/main":
+            raise Blocked("main needs an upstream tracking a remote main branch.")
+        git(repo, "fetch", "--", upstream[0])
+        incoming = git(repo, "rev-parse", "main@{upstream}")
+        local = git(repo, "rev-parse", "refs/heads/main")
+        if git(repo, "merge-base", local, incoming) != local:
+            raise Blocked("main has local commits absent from upstream or has diverged; "
+                          "no switch, merge or reset was performed.")
+        # shortcut: a merge refused by --no-overwrite-ignore still leaves the checkout on main; switch back if that bites.
+        git(repo, "switch", "--no-overwrite-ignore", "main")
+        git(repo, "merge", "--ff-only", "--no-overwrite-ignore", incoming)
+        state["base_sha"] = incoming
+        write_json(path, state)
+    require_branch_allowed(repo, "Updated contract withholds branch in handoff.allow.")
+    state["routes"] = routes(repo, args.provider)["routes"]
+    if git(repo, "branch", "--list", state["branch"]):
+        if git(repo, "rev-parse", state["branch"]) != state["base_sha"]:
+            raise Blocked("An interrupted preparation left an unexpected task branch tip.")
+        git(repo, "switch", "--no-overwrite-ignore", state["branch"])
+    else:
+        git(repo, "switch", "--no-overwrite-ignore", "-c", state["branch"], state["base_sha"])
+    state.update(version=2, stage="sync_before", status="active")
+
+
+def begin(repo, args):
+    task = read_task(args.task_file)
     run_dir, locks = locations(repo, task["key"])
     path = run_dir / "state.json"
-    source_digest = digest({key: task[key] for key in (
-        "key", "id", "url", "title", "description", "acceptance_criteria")})
     owner = uuid.uuid4().hex
     acquire(locks, owner)
     state = None
@@ -180,83 +258,25 @@ def begin(repo, args):
         state = read_json(path) if path.exists() else None
         if state and state["repo"] != str(repo):
             raise Blocked(f"Run belongs to checkout {state['repo']}.")
-        if state and state["source_digest"] != source_digest and not args.replan_reason:
+        if state and state["source_digest"] != source_digest(task) and not args.replan_reason:
             raise Blocked("Task scope changed. Reconcile the saved plan with the user before resuming.")
-        if state and state.get("version", 1) < 2 and state["stage"] not in {"qa", "done", "preparing"}:
-            if not args.replan_reason:
-                raise Blocked("Legacy run lacks sync checkpoints. Reconcile existing delivery effects, then resume with --replan-reason.")
+        if (state and state.get("version", 1) < 2 and state["stage"] not in {"qa", "done", "preparing"}
+                and not args.replan_reason):
+            raise Blocked("Legacy run lacks sync checkpoints. Reconcile existing delivery effects, then resume with --replan-reason.")
         if state:
-            state["owner"] = owner
-            state["provider"] = args.provider
+            state.update(owner=owner, provider=args.provider)
             if state["stage"] != "preparing":
-                if (state["stage"] != "done" or args.replan_reason) and git(repo, "branch", "--show-current") != state["branch"]:
-                    require_clean(repo)
-                    git(repo, "switch", "--no-overwrite-ignore", state["branch"])
-                if args.replan_reason:
-                    verify_pending(repo, state)
-                    reset_plan(state, args.replan_reason)
-                    state["source_digest"] = source_digest
-                    write_json(run_dir / "task.json", task)
-                if state["stage"] != "done":
-                    state["routes"] = routes(repo, args.provider)["routes"]
-                verify_artifacts(state)
-                verify_pending(repo, state)
-                state["status"] = "active"
+                resume(repo, state, task, args, run_dir)
                 write_json(path, state)
                 return {"mode": "resume", "state_path": str(path), **state}
             if args.replan_reason:
-                state["source_digest"] = source_digest
+                state["source_digest"] = source_digest(task)
                 write_json(run_dir / "task.json", task)
         else:
-            config = config_at(repo)
-            if "branch" not in config.get("handoff", {}).get(
-                "allow", ["branch", "commit", "push", "pr_body", "pr_ready", "tracker_status"]
-            ):
-                raise Blocked("Preparing a task branch requires branch in handoff.allow.")
-            if not args.branch or args.branch == "main":
-                raise Blocked("A task branch distinct from main is required.")
-            git(repo, "check-ref-format", "--branch", args.branch)
-            if git(repo, "branch", "--list", args.branch):
-                raise Blocked("Task branch already exists without a run record; inspect it before adopting it.")
-            state = {"version": 2, "issue_key": task["key"], "issue_url": task["url"],
-                     "repo": str(repo), "branch": args.branch, "source_digest": source_digest,
-                     "provider": args.provider, "routes": routes(repo, args.provider)["routes"],
-                     "owner": owner, "stage": "preparing", "status": "active",
-                     "base_sha": None, "artifacts": {}, "agents": [], "qa": []}
+            state = new_state(repo, task, args, owner)
             write_json(run_dir / "task.json", task)
             write_json(path, state)
-
-        require_clean(repo)
-        if state["base_sha"] is None:
-            git(repo, "show-ref", "--verify", "refs/heads/main")
-            upstream = git(repo, "for-each-ref", "--format=%(upstream:remotename) %(upstream:remoteref)",
-                           "refs/heads/main").split()
-            if len(upstream) != 2 or upstream[1] != "refs/heads/main":
-                raise Blocked("main needs an upstream tracking a remote main branch.")
-            git(repo, "switch", "--no-overwrite-ignore", "main")
-            git(repo, "fetch", "--", upstream[0])
-            incoming = git(repo, "rev-parse", "main@{upstream}")
-            git(repo, "merge", "--ff-only", "--no-overwrite-ignore", incoming)
-            base = git(repo, "rev-parse", "HEAD")
-            if base != git(repo, "rev-parse", "main@{upstream}"):
-                raise Blocked("main contains local commits absent from upstream; no reset was performed.")
-            state["base_sha"] = base
-            write_json(path, state)
-        config = config_at(repo)
-        if "branch" not in config.get("handoff", {}).get(
-            "allow", ["branch", "commit", "push", "pr_body", "pr_ready", "tracker_status"]
-        ):
-            raise Blocked("Updated contract withholds branch in handoff.allow.")
-        state["routes"] = routes(repo, args.provider)["routes"]
-        if git(repo, "branch", "--list", state["branch"]):
-            if git(repo, "rev-parse", state["branch"]) != state["base_sha"]:
-                raise Blocked("An interrupted preparation left an unexpected task branch tip.")
-            git(repo, "switch", "--no-overwrite-ignore", state["branch"])
-        else:
-            git(repo, "switch", "--no-overwrite-ignore", "-c", state["branch"], state["base_sha"])
-        state["version"] = 2
-        state["stage"] = "sync_before"
-        state["status"] = "active"
+        prepare(repo, state, args, path)
         write_json(path, state)
         return {"mode": "new", "state_path": str(path), **state}
     except BaseException:
@@ -358,7 +378,8 @@ def verify_validation(repo, state):
         if digest(git(repo, "diff", "--binary", "HEAD")) != state.get("validated_diff"):
             raise Blocked("Validated diff changed. Return to implementation.")
     else:
-        git(repo, "merge-base", "--is-ancestor", state["validated_head"], "HEAD")
+        if git(repo, "merge-base", state["validated_head"], "HEAD") != state["validated_head"]:
+            raise Blocked("HEAD no longer contains the validated commit; history was rewritten. Reconcile delivery.")
         if git(repo, "rev-parse", "HEAD^{tree}") != state["validated_tree"]:
             raise Blocked("Committed tree differs from the validated manifest. Reconcile delivery.")
 
@@ -393,18 +414,17 @@ def checkpoint(repo, state, args):
             raise Blocked("Sync needs current or updated context; partial/unknown context cannot advance.")
         if result.get("requires_revalidation") is not False:
             raise Blocked("Sync must resolve required revalidation before advancing.")
-        if not isinstance(result.get("files"), list) or set(result["files"]) != changed_paths(repo):
+        if result.get("files") is None or set(result["files"]) != changed_paths(repo):
             raise Blocked("Sync manifest must exactly match current changes, including prior run-owned files.")
         checks = result.get("validation", [])
         if not checks or any(check["exit_code"] != 0 for check in checks):
             raise Blocked("Sync needs successful executed context validation.")
     if args.stage in {"implement", "sync_after"}:
         checks = result.get("validation", [])
-        if not checks or any(not check.get("command") or type(check.get("exit_code")) is not int
-                             or check["exit_code"] != 0 for check in checks):
+        if not checks or any(check["exit_code"] != 0 for check in checks):
             raise Blocked("Implementation needs executed validation commands with exit code 0.")
         files = result.get("files")
-        if not isinstance(files, list) or any(not isinstance(name, str) for name in files):
+        if files is None:
             raise Blocked("Implementation result needs a files manifest.")
         if set(files) != changed_paths(repo):
             raise Blocked("Implementation manifest must exactly match the current diff and untracked files.")
