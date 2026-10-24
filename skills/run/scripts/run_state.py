@@ -233,14 +233,16 @@ def begin(repo, args):
                            "refs/heads/main").split()
             if len(upstream) != 2 or upstream[1] != "refs/heads/main":
                 raise Blocked("main needs an upstream tracking a remote main branch.")
-            git(repo, "switch", "--no-overwrite-ignore", "main")
             git(repo, "fetch", "--", upstream[0])
             incoming = git(repo, "rev-parse", "main@{upstream}")
+            local = git(repo, "rev-parse", "refs/heads/main")
+            if git(repo, "merge-base", local, incoming) != local:
+                raise Blocked("main has local commits absent from upstream or has diverged; "
+                              "no switch, merge or reset was performed.")
+            # shortcut: a merge refused by --no-overwrite-ignore still leaves the checkout on main; switch back if that bites.
+            git(repo, "switch", "--no-overwrite-ignore", "main")
             git(repo, "merge", "--ff-only", "--no-overwrite-ignore", incoming)
-            base = git(repo, "rev-parse", "HEAD")
-            if base != git(repo, "rev-parse", "main@{upstream}"):
-                raise Blocked("main contains local commits absent from upstream; no reset was performed.")
-            state["base_sha"] = base
+            state["base_sha"] = incoming
             write_json(path, state)
         config = config_at(repo)
         if "branch" not in config.get("handoff", {}).get(

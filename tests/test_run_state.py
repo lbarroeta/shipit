@@ -136,14 +136,17 @@ class RunStateTests(unittest.TestCase):
         self.git(self.repo, "add", "local.txt")
         self.git(self.repo, "commit", "-m", "Local-only commit")
         original = self.git(self.repo, "rev-parse", "HEAD")
+        self.git(self.repo, "switch", "-c", "user-task")
         self.assertIn("local commits", self.begin(success=False)["reason"])
-        self.assertEqual(self.git(self.repo, "rev-parse", "HEAD"), original)
+        self.assertEqual(self.git(self.repo, "rev-parse", "main"), original)
+        self.assertEqual(self.git(self.repo, "branch", "--show-current"), "user-task")
         (self.seed / "remote.txt").write_text("remote\n")
         self.git(self.seed, "add", "remote.txt")
         self.git(self.seed, "commit", "-m", "Remote-only commit")
         self.git(self.seed, "push")
-        self.assertIn("merge --ff-only", self.begin(success=False)["reason"])
-        self.assertEqual(self.git(self.repo, "rev-parse", "HEAD"), original)
+        self.assertIn("diverged", self.begin(success=False)["reason"])
+        self.assertEqual(self.git(self.repo, "rev-parse", "main"), original)
+        self.assertEqual(self.git(self.repo, "branch", "--show-current"), "user-task")
 
     def test_withheld_branch_does_not_mutate_git(self):
         self.config["handoff"]["allow"] = []
