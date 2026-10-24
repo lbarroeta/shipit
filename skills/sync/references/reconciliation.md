@@ -3,8 +3,9 @@
 ## Baseline contract
 
 `.shipit/sync-state.json` is a versioned machine baseline, committed with the
-contract. It stores source fingerprints, contract fingerprints and accepted text for
-each generated file. It contains no source bodies or secrets
+contract. It stores the baseline commit, fingerprints of sources uncommitted at that time,
+contract fingerprints and accepted text for each generated file; committed source
+content is compared through Git, so the file stays small. It contains no source bodies or secrets
 other than the already public contract text; never put secrets in that contract.
 The helper's `inspect` is read-only; `record` writes only this baseline atomically.
 Do not edit it by hand to make drift disappear. `generated_at` records creation,

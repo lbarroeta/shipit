@@ -378,7 +378,8 @@ def verify_validation(repo, state):
         if digest(git(repo, "diff", "--binary", "HEAD")) != state.get("validated_diff"):
             raise Blocked("Validated diff changed. Return to implementation.")
     else:
-        git(repo, "merge-base", "--is-ancestor", state["validated_head"], "HEAD")
+        if git(repo, "merge-base", state["validated_head"], "HEAD") != state["validated_head"]:
+            raise Blocked("HEAD no longer contains the validated commit; history was rewritten. Reconcile delivery.")
         if git(repo, "rev-parse", "HEAD^{tree}") != state["validated_tree"]:
             raise Blocked("Committed tree differs from the validated manifest. Reconcile delivery.")
 

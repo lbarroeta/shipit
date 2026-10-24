@@ -16,7 +16,7 @@ Produces, at the repo root:
 | Path | For | Content |
 | --- | --- | --- |
 | `.shipit/config.json` | machines | Commands, paths, layers, tracker, worktree, companions |
-| `.shipit/sync-state.json` | sync | Accepted generated bases and source fingerprints |
+| `.shipit/sync-state.json` | sync | Accepted generated bases, baseline commit and uncommitted-source fingerprints |
 | `.shipit/stack.md` | agents | Stack facts, one row per fact, each with evidence |
 | `.shipit/conventions.md` | agents | Patterns this repo actually follows, each with an exemplar |
 | `.shipit/rules/<layer>.md` | agents | Per-layer rules derived from real files |
@@ -250,7 +250,7 @@ python3 <plugin>/skills/sync/scripts/context_state.py --repo <repo> record --inv
 ```
 
 The resulting `.shipit/sync-state.json` is committed with the contract. It
-stores accepted bases and source hashes, so sync can recognize human edits; a date is not an edit detector. Python 3.10+ is
+stores accepted bases, the baseline commit and hashes of uncommitted sources, so sync can recognize human edits; a date is not an edit detector. Python 3.10+ is
 required for this helper. If unavailable, report the baseline pending; never claim
 the context can be synchronized without that gap. Unknown detected capabilities may
 remain in `unknown[]`; unresolved ownership or contradictory decisions must not be

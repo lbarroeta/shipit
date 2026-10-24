@@ -410,6 +410,23 @@ class RunStateTests(unittest.TestCase):
         self.git(self.repo, "commit", "-m", "Unvalidated symlink target")
         self.assertIn("Validated tree changed", self.owned(state, "verify", success=False)["reason"])
 
+    def test_verify_names_rewritten_history(self):
+        state = self.begin()
+        state = self.checkpoint(state, "plan", self.result(state, "plan"))
+        (self.repo / "setup.txt").write_text("setup\n")
+        self.git(self.repo, "add", "setup.txt")
+        self.git(self.repo, "commit", "-m", "Earlier commit on the task branch")
+        (self.repo / "product.txt").write_text("updated\n")
+        result = self.result(state, "implement", files=["product.txt"],
+                             validation=[{"command": "check", "exit_code": 0}])
+        state = self.synced(self.checkpoint(state, "implement", result))
+        self.git(self.repo, "add", "product.txt")
+        self.git(self.repo, "commit", "-m", "Delivered")
+        self.owned(state, "verify")
+        self.git(self.repo, "reset", "--soft", state["base_sha"])
+        self.git(self.repo, "commit", "-m", "Squashed delivery")
+        self.assertIn("history was rewritten", self.owned(state, "verify", success=False)["reason"])
+
     def test_snapshot_preserves_racy_index_detection(self):
         state = self.begin()
         state = self.checkpoint(state, "plan", self.result(state, "plan"))
