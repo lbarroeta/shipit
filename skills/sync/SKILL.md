@@ -96,6 +96,9 @@ a newer schema → report the gap; never reset it from a template.
    baseline and report partial/blocked. A scoped run must review/classify all
    outstanding drift before advancing the global baseline. No differences → no
    rewrites, including dates. A failed/partial run never certifies freshness.
+   In a linked worktree `record` returns `deferred` and writes nothing: parallel
+   PRs would all conflict on the committed baseline. Report it as deferred to the
+   main checkout, not as a failure; context edits still belong to the branch.
 7. **Report.** State phase, baseline status, changed/retired/preserved paths,
    documentation conflicts, separate structural/semantic graph state, exact
    validation and remaining unknowns, including `docs-lookup.md`'s one-line

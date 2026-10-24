@@ -7,7 +7,9 @@ contract. It stores the baseline commit, fingerprints of sources uncommitted at 
 contract fingerprints and accepted text for each generated file; committed source
 content is compared through Git, so the file stays small. It contains no source bodies or secrets
 other than the already public contract text; never put secrets in that contract.
-The helper's `inspect` is read-only; `record` writes only this baseline atomically.
+The helper's `inspect` is read-only; `record` writes only this baseline atomically,
+and only from the main checkout: in a linked worktree it returns `deferred`. A later
+sync on main reviews what merged since and records it there.
 Do not edit it by hand to make drift disappear. `generated_at` records creation,
 not ownership or freshness; preserve it on no-op sync.
 
@@ -60,6 +62,8 @@ For config values, apply these policies even when a file looks wholly generated:
   file that Git ignores is reported; never untrack files or change team policy.
 - `worktree.share_graph` follows actual graph location/exclusion; never overwrite
   an explicit decision or mutate a shared target to make detection pass.
+- `worktree.setup` null → derive it with init's detection recipe 12; an explicit
+  value is kept.
 
 A disappeared layer/test kind retires its generated rule and corresponding config
 entry only when its last accepted base matches current bytes and no human/design

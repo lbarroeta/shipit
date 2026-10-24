@@ -39,9 +39,10 @@ that check unless the routes changed. Each child reads its assigned skill and th
 references itself. Missing contract → `/shipit:init` first. Missing native
 delegation, stage model/effort, Python 3.10+
 or required tracker access → stop with the exact gap. Never install a runtime or
-fall back to another model silently. Workflows requiring independent worktrees
-remain `/shipit:code-plan --worktree`; this first `run` flow owns one existing checkout
-and passes `--no-worktree` to its planner.
+fall back to another model silently. Each session owns one checkout. Parallel
+tasks run in separate sessions, each opened in its own linked worktree; `run`
+prepares that worktree and passes `--no-worktree` to its planner, which still
+checks collisions with the other worktrees' plans.
 
 ## Workflow
 
@@ -63,9 +64,11 @@ and passes `--no-worktree` to its planner.
 3. **Begin or resume.** Run `scripts/run_state.py`'s `begin` with the task file,
    provider and branch chosen from the tracker or repo conventions. If neither
    supplies one, use `codex/<issue-id>-<slug>` in Codex or ask in Claude Code.
-   First query `status`: a saved qa/done result with no new human feedback is
+   First query `status`; it reads the run from any checkout. A saved qa/done result
+   with no new human feedback and no conflict with main (step 9) is
    displayed without switching branches or acquiring locks: show its `qa_guide`
-   and the PR link, then stop. Never dispatch a stage to rebuild them. Otherwise the
+   and the PR link, then stop. Never dispatch a stage to rebuild them. A run whose
+   `repo` is another checkout continues only from a session there; say which. Otherwise the
    helper locks the issue **and** checkout. For a new task it requires a clean tree,
    switches to literal `main`, fetches its remote and merges the fetched upstream
    SHA with `--ff-only --no-overwrite-ignore`, then creates the task branch from
@@ -76,7 +79,15 @@ and passes `--no-worktree` to its planner.
    checkout; it never pulls `main` again. If another task's branch is selected,
    it switches to the saved branch only when clean. Resolve and verify availability
    of all four returned model/effort routes before any child runs. Retain owner
-   token and state path.
+   token and state path. In a linked worktree `main` is never checked out: the
+   branch starts from the fetched upstream SHA, so the main checkout may stay
+   dirty. `begin` then returns `worktree` (null in the main checkout) after copying
+   ignored `.env*` files, `CLAUDE.local.md` and linking `worktree.link[]` and the
+   shared graph from the main checkout; only paths ignored here, never overwriting.
+   Report those names, never contents. On `mode: new` in a worktree, run
+   `worktree.setup` there before the first child; a non-zero exit blocks with its
+   output. Null `setup` with a lockfile present → warn that the builder may lack
+   dependencies and point to `/shipit:sync` on main, which fills it.
 4. **Context before planning.** Delegate `shipit:sync` in `before-plan` phase
    using route `sync` and the absolute `skills/sync/SKILL.md` path. Pass issue,
    checkout, ownership and report/result paths. The synchronizer inspects first
@@ -132,6 +143,13 @@ and passes `--no-worktree` to its planner.
    results. On failure, attach the failed step/expected/actual evidence, invalidate
    implementation/final-sync/delivery checkpoints and delegate repair to the builder on the
    same branch, followed by final sync before delivery. A scope change returns to the user and planner.
+   **Updating with main.** A delivered (qa/done) task whose PR conflicts with main
+   (`gh pr view --json mergeable` → `CONFLICTING`), or whose user asks to update
+   it: `begin`, then `update --reason`. It merges the fetched main without
+   committing, lists `conflicts` and returns to implement. The builder resolves them
+   within the card's criteria and revalidates; final sync and delivery follow, and
+   delivery's commit completes the merge on the same PR. A conflict that changes
+   what the card must do goes to the user and `replan`. Never rebase or force-push.
 10. **Pause cleanly.** After children finish, pause the run to release both locks
    while waiting for QA, a decision or after any failure. For incomplete work,
    persist the verified child result and full run-owned manifest using

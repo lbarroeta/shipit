@@ -105,6 +105,19 @@ class RunStateTests(unittest.TestCase):
                              validation=[{"command": "git diff --check", "exit_code": 0}])
         return self.synced(self.checkpoint(state, "implement", result))
 
+    def delivered(self):
+        state = self.implemented()
+        self.git(self.repo, "add", "product.txt")
+        self.git(self.repo, "commit", "-m", "Delivered fixture change")
+        self.git(self.repo, "push", "-u", "origin", "codex/42-product")
+        return self.checkpoint(state, "handoff", self.result(state, "handoff", delivery_status="completed"))
+
+    def worktree(self):
+        """Move the fixture into a linked worktree, as a separate session would; return the main checkout."""
+        main, self.repo = self.repo, self.directory / "session"
+        self.git(main, "worktree", "add", "--detach", str(self.repo))
+        return main
+
     def test_new_task_pulls_main_before_branching(self):
         self.git(self.repo, "switch", "-c", "old-task")
         (self.seed / "product.txt").write_text("latest remote\n")
@@ -171,6 +184,97 @@ class RunStateTests(unittest.TestCase):
         self.git(self.repo, "worktree", "add", "-b", "other-task", str(other), "main")
         self.assertIn("already active", self.begin(success=False, repo=other)["reason"])
         self.owned(state, "pause", "--reason", "fixture pause")
+
+    def test_linked_worktree_branches_from_upstream_and_leaves_main_alone(self):
+        (self.seed / "product.txt").write_text("latest remote\n")
+        self.git(self.seed, "commit", "-am", "Remote update")
+        self.git(self.seed, "push")
+        main = self.worktree()
+        local_main = self.git(main, "rev-parse", "main")
+        (main / "product.txt").write_text("user edit in main\n")
+        state = self.begin(sync=False)
+        self.assertEqual(state["base_sha"], self.git(self.seed, "rev-parse", "HEAD"))
+        self.assertEqual(self.git(self.repo, "branch", "--show-current"), "codex/42-product")
+        self.assertEqual((self.repo / "product.txt").read_text(), "latest remote\n")
+        self.assertEqual(self.git(main, "rev-parse", "main"), local_main)
+        self.assertEqual((main / "product.txt").read_text(), "user edit in main\n")
+        self.assertEqual(state["worktree"]["main"], str(main.resolve()))
+        self.owned(state, "pause", "--reason", "fixture pause")
+        status = self.call("status", "--issue-key", self.task["key"], repo=main)
+        self.assertEqual(Path(status["repo"]), self.repo.resolve())
+        self.assertIn("continue from a session there", self.begin(success=False, repo=main)["reason"])
+
+    def test_worktree_receives_ignored_env_files_without_overwrite(self):
+        (self.repo / ".gitignore").write_text(".env*\n!.env.example\nvendor/\nshared\ngraph-out/\n")
+        (self.repo / ".env.example").write_text("TOKEN=\n")
+        self.config["worktree"] = {"link": ["shared", "missing"], "share_graph": True}
+        self.config["graph"] = {"out": "graph-out"}
+        (self.repo / ".shipit/config.json").write_text(json.dumps(self.config))
+        self.git(self.repo, "add", ".gitignore", ".env.example", ".shipit/config.json")
+        self.git(self.repo, "commit", "-m", "Ignore local files")
+        self.git(self.repo, "push")
+        for name, text in {".env": "TOKEN=main\n", "apps/web/.env.local": "PORT=3000\n",
+                           "vendor/.env": "vendored\n", "shared": "key\n", "graph-out/graph.json": "{}\n"}.items():
+            (self.repo / name).parent.mkdir(parents=True, exist_ok=True)
+            (self.repo / name).write_text(text)
+        (self.repo / ".env").chmod(0o600)
+        self.worktree()
+        (self.repo / "apps/web").mkdir(parents=True)
+        (self.repo / "apps/web/.env.local").write_text("PORT=3001\n")
+        prepared = self.begin(sync=False)["worktree"]
+        self.assertEqual(prepared["copied"], [".env"])
+        self.assertEqual(prepared["linked"], ["shared"])
+        self.assertEqual(prepared["skipped"], [
+            {"path": "missing", "reason": "missing in the main checkout"},
+            {"path": "graph-out", "reason": "not ignored in this worktree"}])
+        self.assertEqual((self.repo / ".env").read_text(), "TOKEN=main\n")
+        self.assertEqual((self.repo / ".env").stat().st_mode & 0o777, 0o600)
+        self.assertEqual((self.repo / "apps/web/.env.local").read_text(), "PORT=3001\n")
+        self.assertFalse((self.repo / "vendor/.env").exists())
+        self.assertTrue((self.repo / "shared").is_symlink())
+        self.assertFalse(os.path.lexists(self.repo / "graph-out"))
+        self.assertEqual(self.git(self.repo, "status", "--porcelain", "--untracked-files=all"), "")
+
+    def test_update_merges_main_and_blocks_unresolved_conflicts(self):
+        state = self.delivered()
+        (self.seed / "product.txt").write_text("main changed too\n")
+        (self.seed / "other.txt").write_text("from main\n")
+        self.git(self.seed, "add", "product.txt", "other.txt")
+        self.git(self.seed, "commit", "-m", "Another card merged")
+        self.git(self.seed, "push")
+        state = self.owned(state, "update", "--reason", "PR conflicts with main")
+        self.assertEqual(state["stage"], "implement")
+        self.assertEqual(state["updates"][-1]["conflicts"], ["product.txt"])
+        self.assertEqual(set(state["artifacts"]), {"sync_before", "plan"})
+        files = ["other.txt", "product.txt"]
+        result = self.result(state, "implement", files=files,
+                             validation=[{"command": "git diff --check", "exit_code": 0}])
+        self.assertIn("Unresolved merge conflict", self.checkpoint(state, "implement", result, success=False)["reason"])
+        (self.repo / "product.txt").write_text("updated and main changed too\n")
+        state = self.synced(self.checkpoint(state, "implement", result))
+        self.owned(state, "verify")
+        self.git(self.repo, "add", "--", *files)
+        self.git(self.repo, "commit", "-m", "Merge main into the task branch")
+        state = self.checkpoint(state, "handoff", self.result(state, "handoff", delivery_status="completed"))
+        self.assertEqual(state["stage"], "qa")
+        self.assertEqual(self.git(self.repo, "rev-parse", "HEAD^2"), self.git(self.seed, "rev-parse", "HEAD"))
+        self.assertIn("already contains", self.owned(state, "update", "--reason", "Again", success=False)["reason"])
+
+    def test_update_refuses_when_remote_task_branch_moved(self):
+        state = self.delivered()
+        self.git(self.seed, "fetch", "origin", "codex/42-product")
+        self.git(self.seed, "switch", "-c", "elsewhere", "FETCH_HEAD")
+        (self.seed / "remote.txt").write_text("pushed elsewhere\n")
+        self.git(self.seed, "add", "remote.txt")
+        self.git(self.seed, "commit", "-m", "Branch updated on the remote")
+        self.git(self.seed, "push", "origin", "HEAD:codex/42-product")
+        self.git(self.seed, "switch", "main")
+        (self.seed / "other.txt").write_text("from main\n")
+        self.git(self.seed, "add", "other.txt")
+        self.git(self.seed, "commit", "-m", "Another card merged")
+        self.git(self.seed, "push")
+        self.assertIn("remote task branch", self.owned(state, "update", "--reason", "Stale", success=False)["reason"])
+        self.assertFalse((Path(self.git(self.repo, "rev-parse", "--absolute-git-dir")) / "MERGE_HEAD").exists())
 
     def test_resume_does_not_pull_main_again(self):
         state = self.begin()

@@ -64,12 +64,12 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `graph` | object \| null | `{tool, out, query, path, explain, update}`. Null unless CLI **and** graph exist |
 | `markers.debt` | string | Default `ponytail:` |
 | `companions.*` | `present` \| `absent` | `ponytail`, `graphify_cli`, `graphify_graph`, `caveman` |
-| `worktree.enabled` | boolean | **Default `false`.** Opt-in: `code-plan` works in the current checkout unless the user turns this on |
+| `worktree.enabled` | boolean | **Default `false`.** Opt-in: `code-plan` works in the current checkout unless the user turns this on. `run` needs no flag: it detects a linked worktree |
 | `worktree.root` | string | Default `../worktrees/<repo.name>` |
 | `worktree.base` | string | Branch new worktrees fork from |
 | `worktree.link[]` | string[] | **Empty at init.** Opt-in only. See warning below |
 | `worktree.share_graph` | boolean | Symlink the main checkout's graph into worktrees |
-| `worktree.setup` | string \| null | Runs once after a worktree is created |
+| `worktree.setup` | string \| null | Runs once after a worktree is created, and when `run` starts a task in one. Detected by init recipe 12; never rewrites a lockfile |
 | `ci.config` | string \| null | The CI file |
 | `ci.required_jobs` | string[] | Jobs that gate the merge |
 | `unknown[]` | string[] | Every undetermined key |
@@ -118,12 +118,15 @@ portable across teams.
 ## Warning on `worktree.link[]`
 
 Every entry becomes a symlink from a worktree to an untracked file in the main
-checkout — in practice `.env` files and signing keys. Those worktrees live outside
-the repo, so no `.gitignore` in the repo covers them, and any tool that runs in
-the worktree root can read them.
+checkout — in practice signing keys such as `config/master.key`. Any tool that
+runs in the worktree root can read them. The worktree's own `.gitignore` applies,
+but a symlink is ignored only by a pattern that matches a file (`shared`, not
+`shared/`); `run` removes and reports any link or copy that would show up as
+untracked, so it never reaches a commit.
 
-`init` always writes `[]`. Filling it is a deliberate user decision. The safe
-alternative is `worktree.setup`, which regenerates what the worktree needs.
+`init` always writes `[]`. Filling it is a deliberate user decision. Ignored
+`.env*` files need no entry: `run` copies them into its worktree, never
+overwriting one already there. `worktree.setup` regenerates the rest.
 
 ## `handoff.allow`
 

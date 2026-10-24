@@ -43,8 +43,9 @@ Read narrow. Bulk-loading is the single biggest token sink in this flow.
   file, then the `.shipit/design-system.md` sections it points to for the surface and
   components involved. A layer rule's `shipit:design` block is the cue. Backend-only
   → never; not even a glance.
-- Optional: `references/worktree-protocol.md` **only when `worktree.enabled` is true**.
-  Default is false — do not read it otherwise.
+- Optional: `references/worktree-protocol.md` **only when `worktree.enabled` is true**,
+  or just its *Collision check* section when other worktrees exist. Default is
+  false — do not read the rest otherwise.
 - Never: every rule file at once, every agent doc, a whole graph report.
 - No `.shipit/config.json` → stop and say: run `/shipit:init` first, which also
   migrates a legacy `.sdd/`. Do not detect the stack inline; that is `init`'s job
@@ -80,8 +81,8 @@ Read narrow. Bulk-loading is the single biggest token sink in this flow.
   `git worktree add` is local and allowed when worktrees are enabled; commit,
   push, PR writes, tracker comments and issue creation are not.
 - Never create a worktree unless asked: `worktree.enabled` true, or `--worktree` in
-  the request. Otherwise plan in the current checkout and say nothing about
-  worktrees. `--no-worktree` overrides `enabled: true`.
+  the request. Otherwise plan in the current checkout and mention worktrees only
+  for step 3's collisions. `--no-worktree` overrides `enabled: true`.
 
 ## Planning status
 
@@ -132,11 +133,12 @@ planner owns this same transition and returns a blocked result to the coordinato
    checkout revision, relevant dirty state and applicable rules for discovery.
 2. **Worktree — skip unless opted in.** A `--worktree` / `--no-worktree` flag in the
    request wins over the config; otherwise read `worktree.enabled`. Off (the
-   default), key absent, or not a git repo → plan in the current checkout, skip step
-   3, do not read the protocol. On → `references/worktree-protocol.md`: create or reuse
+   default), key absent, or not a git repo → plan in the current checkout; read no
+   protocol section beyond step 3's. On → `references/worktree-protocol.md`: create or reuse
    `<worktree.root>/<slug>`, share the graph, run setup. Failure is reported, not
    fatal — fall back to the current checkout.
-3. **Collision check.** Only when other worktrees exist. Same reference, collision
+3. **Collision check.** Whenever other worktrees exist, even under `--no-worktree`:
+   a `run` session already sits in its own worktree. Same reference, collision
    section. Read the `Files` table of every active worktree's plan and intersect
    paths. Overlap → warn with the worktree and the shared paths before going
    further.

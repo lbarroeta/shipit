@@ -18,6 +18,8 @@ gh pr create --base "<repo.default_branch>" --head "<branch>" ...
 
 **Shared paths are not yours.** A worktree may hold symlinks created at setup:
 `worktree.link[]` entries, and the graph output directory. Never stage a symlink.
+`run` also copies ignored `.env*` files from the main checkout: they are local
+secrets, never staged and never forced in with `git add -f`.
 Check before staging:
 
 ```bash

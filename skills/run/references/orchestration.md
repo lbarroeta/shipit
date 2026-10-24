@@ -23,16 +23,20 @@ python3 /plugin/skills/run/scripts/run_state.py --repo /repo begin --provider op
 python3 /plugin/skills/run/scripts/run_state.py --repo /repo status --issue-key 'linear:workspace:issue-id'
 python3 /plugin/skills/run/scripts/run_state.py --repo /repo checkpoint --issue-key 'linear:workspace:issue-id' --owner OWNER --stage plan --result-file /run-dir/planner-result.json
 python3 /plugin/skills/run/scripts/run_state.py --repo /repo pause --issue-key 'linear:workspace:issue-id' --owner OWNER --reason 'Waiting for human QA'
+python3 /plugin/skills/run/scripts/run_state.py --repo /repo update --issue-key 'linear:workspace:issue-id' --owner OWNER --reason 'PR conflicts with main'
 ```
 
 `begin` returns `owner`, `state_path`, `repo`, `branch`, `base_sha`, `routes`,
-`stage` and `mode` (`new`/`resume`). At `qa`/`done`, `begin`, `status` and the
+`stage`, `mode` (`new`/`resume`) and `worktree`: null in the main checkout,
+otherwise `main`, `setup`, `copied`, `linked` and `skipped` (`path`, `reason`). At `qa`/`done`, `begin`, `status` and the
 `handoff` checkpoint also return `qa_guide`: `report` (the checkpointed final
 delivery report) and `steps` (its `## QA…` sections verbatim, or null). Store artifacts and results in the parent of
 `state_path`. State/locks live under the Git common directory's `shipit/`, excluded
 from commits without editing gitignore or the repo contract. Issue locks are shared
 across linked worktrees; checkout locks also prevent two different issues editing
-the same checkout. Only the owning coordinator can checkpoint or pause.
+the same checkout. Each linked worktree is its own checkout, so sessions in separate
+worktrees run in parallel. `status` reads a run from any checkout; every other
+command runs only in the run's own checkout. Only the owning coordinator can checkpoint or pause.
 
 Stages: `preparing → sync_before → plan → implement → sync_after → handoff → qa → done`. `pause` preserves
 stage and releases locks. A later `begin` reacquires them. Resume requires the same
@@ -83,6 +87,13 @@ Builder: execute with `--defer-handoff`; the explicit run request authorizes
 execution within the fetched criteria after the coordinator's contract check.
 Keep plan corrections in the planner, not the builder. Delivery: `implementation`
 mode, immutable post-sync delivery report plus builder evidence, journal path; no product or plan edits.
+After `update`, the builder also gets the upstream SHA and `conflicts` from the
+last `updates` entry: resolve every conflict marker within the card's criteria and
+revalidate. Its manifest includes the merged upstream paths for ownership; its
+report names the upstream SHA, lists only the resolutions under Files Changed and
+carries the QA guide forward. The implement checkpoint rejects leftover markers.
+With a merge in progress, delivery stages the manifest and its commit completes
+the merge; never abort, rebase or force-push it.
 Each child saves a result JSON and returns its path plus a short summary:
 
 ```json
@@ -193,5 +204,12 @@ with full owned manifest, then run `repair --issue-key KEY --owner OWNER
 the old implementation evidence, retains plan/pre-sync, and returns to implement.
 The builder receives sync-owned doc/config changes and must revalidate before a
 new sync_after checkpoint. `replan` instead reruns sync_before and planning.
+
+`update` applies at qa/done only. It requires a clean tree, restores the task
+branch, fetches main and merges it with `--no-ff --no-commit`, then returns to
+implement like a QA failure, recording `{reason, upstream, conflicts}` under
+`updates`. It refuses when the branch already contains main or when the remote
+task branch has commits this checkout lacks (for example GitHub's "Update branch"):
+reconcile delivery first.
 Do not mark pass from automated checks or another agent's opinion. Give the builder
 the recorded feedback; keep any corrective work inside the original criteria.

@@ -26,6 +26,15 @@ def git(repo, *args, env=None):
     return result.stdout.rstrip("\n")
 
 
+def git_ok(repo, *args):
+    return subprocess.run(["git", "-C", str(repo), *args], capture_output=True).returncode == 0
+
+
+def git_dir(repo, flag):
+    path = Path(git(repo, "rev-parse", flag))
+    return (path if path.is_absolute() else repo / path).resolve()
+
+
 def read_json(path):
     try:
         value = json.loads(Path(path).read_text())
@@ -82,10 +91,7 @@ def file_digest(path):
 
 
 def locations(repo, key):
-    common = Path(git(repo, "rev-parse", "--git-common-dir"))
-    if not common.is_absolute():
-        common = repo / common
-    root = common.resolve() / "shipit"
+    root = git_dir(repo, "--git-common-dir") / "shipit"
     run_dir = root / "runs" / digest(key)
     locks = [root / "locks" / f"issue-{digest(key)}.json",
              root / "locks" / f"checkout-{digest(str(repo))}.json"]
@@ -216,24 +222,31 @@ def resume(repo, state, task, args, run_dir):
     state["status"] = "active"
 
 
+def fetch_main(repo):
+    """Fetch main's remote and return its upstream tip without touching any checkout."""
+    git(repo, "show-ref", "--verify", "refs/heads/main")
+    upstream = git(repo, "for-each-ref", "--format=%(upstream:remotename) %(upstream:remoteref)",
+                   "refs/heads/main").split()
+    if len(upstream) != 2 or upstream[1] != "refs/heads/main":
+        raise Blocked("main needs an upstream tracking a remote main branch.")
+    git(repo, "fetch", "--", upstream[0])
+    return git(repo, "rev-parse", "main@{upstream}")
+
+
 def prepare(repo, state, args, path):
     """Sync main and create the task branch; also finishes an interrupted preparation."""
     require_clean(repo)
     if state["base_sha"] is None:
-        git(repo, "show-ref", "--verify", "refs/heads/main")
-        upstream = git(repo, "for-each-ref", "--format=%(upstream:remotename) %(upstream:remoteref)",
-                       "refs/heads/main").split()
-        if len(upstream) != 2 or upstream[1] != "refs/heads/main":
-            raise Blocked("main needs an upstream tracking a remote main branch.")
-        git(repo, "fetch", "--", upstream[0])
-        incoming = git(repo, "rev-parse", "main@{upstream}")
-        local = git(repo, "rev-parse", "refs/heads/main")
-        if git(repo, "merge-base", local, incoming) != local:
-            raise Blocked("main has local commits absent from upstream or has diverged; "
-                          "no switch, merge or reset was performed.")
-        # shortcut: a merge refused by --no-overwrite-ignore still leaves the checkout on main; switch back if that bites.
-        git(repo, "switch", "--no-overwrite-ignore", "main")
-        git(repo, "merge", "--ff-only", "--no-overwrite-ignore", incoming)
+        incoming = fetch_main(repo)
+        # A linked worktree cannot check out main while another checkout holds it: branch from the fetched tip.
+        if git_dir(repo, "--git-dir") == git_dir(repo, "--git-common-dir"):
+            local = git(repo, "rev-parse", "refs/heads/main")
+            if git(repo, "merge-base", local, incoming) != local:
+                raise Blocked("main has local commits absent from upstream or has diverged; "
+                              "no switch, merge or reset was performed.")
+            # shortcut: a merge refused by --no-overwrite-ignore still leaves the checkout on main; switch back if that bites.
+            git(repo, "switch", "--no-overwrite-ignore", "main")
+            git(repo, "merge", "--ff-only", "--no-overwrite-ignore", incoming)
         state["base_sha"] = incoming
         write_json(path, state)
     require_branch_allowed(repo, "Updated contract withholds branch in handoff.allow.")
@@ -247,6 +260,50 @@ def prepare(repo, state, args, path):
     state.update(version=2, stage="sync_before", status="active")
 
 
+def prepare_worktree(repo):
+    """Copy or link ignored local files from the main checkout into a linked worktree; never overwrite."""
+    common = git_dir(repo, "--git-common-dir")
+    if git_dir(repo, "--git-dir") == common:
+        return None
+    config = config_at(repo)
+    settings = config.get("worktree") or {}
+    links = settings.get("link", [])
+    if not isinstance(links, list) or any(not isinstance(name, str) or not name for name in links):
+        raise Blocked("worktree.link must be a list of repository-relative paths.")
+    source = common.parent if common.name == ".git" else None
+    report = {"main": str(source) if source else None, "setup": settings.get("setup"),
+              "copied": [], "linked": [], "skipped": []}
+    if source is None:
+        return report
+    listed = git(source, "ls-files", "-z", "--others", "--ignored", "--exclude-standard", "--directory")
+    wanted = [(name, False) for name in listed.split("\0")
+              if name and not name.endswith("/") and Path(name).name.startswith(".env")]
+    if (config.get("docs") or {}).get("pointer") == "CLAUDE.local.md":
+        wanted.append(("CLAUDE.local.md", False))
+    wanted += [(name, True) for name in links]
+    if settings.get("share_graph") and (config.get("graph") or {}).get("out"):
+        wanted.append((config["graph"]["out"].rstrip("/"), True))
+    for name, link in wanted:
+        origin, target = source / name, repo / name
+        if Path(name).is_absolute() or ".." in Path(name).parts:
+            report["skipped"].append({"path": name, "reason": "outside the checkout"})
+        elif not os.path.lexists(origin):
+            report["skipped"].append({"path": name, "reason": "missing in the main checkout"})
+        elif not os.path.lexists(target):
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if link:
+                target.symlink_to(origin)
+            else:
+                shutil.copy2(origin, target)
+            # Only ignored paths may stay: anything else enters the run's diff and could be committed.
+            if git(repo, "status", "--porcelain", "--untracked-files=all", "--", name):
+                target.unlink()
+                report["skipped"].append({"path": name, "reason": "not ignored in this worktree"})
+            else:
+                report["linked" if link else "copied"].append(name)
+    return report
+
+
 def begin(repo, args):
     task = read_task(args.task_file)
     run_dir, locks = locations(repo, task["key"])
@@ -257,7 +314,7 @@ def begin(repo, args):
     try:
         state = read_json(path) if path.exists() else None
         if state and state["repo"] != str(repo):
-            raise Blocked(f"Run belongs to checkout {state['repo']}.")
+            raise Blocked(f"Run belongs to checkout {state['repo']}; continue from a session there.")
         if state and state["source_digest"] != source_digest(task) and not args.replan_reason:
             raise Blocked("Task scope changed. Reconcile the saved plan with the user before resuming.")
         if (state and state.get("version", 1) < 2 and state["stage"] not in {"qa", "done", "preparing"}
@@ -268,7 +325,8 @@ def begin(repo, args):
             if state["stage"] != "preparing":
                 resume(repo, state, task, args, run_dir)
                 write_json(path, state)
-                output = {"mode": "resume", "state_path": str(path), **state}
+                output = {"mode": "resume", "state_path": str(path), **state,
+                          "worktree": prepare_worktree(repo)}
                 if state["stage"] in {"qa", "done"}:
                     output["qa_guide"] = qa_guide(state)
                 return output
@@ -281,7 +339,7 @@ def begin(repo, args):
             write_json(path, state)
         prepare(repo, state, args, path)
         write_json(path, state)
-        return {"mode": "new", "state_path": str(path), **state}
+        return {"mode": "new", "state_path": str(path), **state, "worktree": prepare_worktree(repo)}
     except BaseException:
         try:
             if state and state.get("owner") == owner:
@@ -334,6 +392,37 @@ def reset_plan(state, reason):
     state["version"] = 2
     for key in ("validated_files", "validated_head", "validated_diff", "validated_tree", "delivery_files"):
         state.pop(key, None)
+
+
+def reopen_implementation(repo, state):
+    """Invalidate builder, final sync and delivery evidence; the current diff becomes run-owned."""
+    state["owned_files"] = {name: file_digest(repo / name) for name in changed_paths(repo)}
+    for stage in ("implement", "sync_after", "handoff"):
+        state["artifacts"].pop(stage, None)
+
+
+def update(repo, state, reason):
+    """Merge the fetched upstream main into a delivered task branch without committing it."""
+    if state["stage"] not in {"qa", "done"}:
+        raise Blocked("Updating with main applies only to a delivered run.")
+    require_clean(repo)
+    if git(repo, "branch", "--show-current") != state["branch"]:
+        git(repo, "switch", "--no-overwrite-ignore", state["branch"])
+    state["routes"] = routes(repo, state["provider"])["routes"]
+    incoming = fetch_main(repo)
+    if git_ok(repo, "merge-base", "--is-ancestor", incoming, "HEAD"):
+        raise Blocked("The task branch already contains the latest main.")
+    if (git_ok(repo, "rev-parse", "--verify", "--quiet", "@{upstream}")
+            and not git_ok(repo, "merge-base", "--is-ancestor", "@{upstream}", "HEAD")):
+        raise Blocked("The remote task branch has commits this checkout lacks; reconcile delivery first.")
+    merged = subprocess.run(["git", "-C", str(repo), "merge", "--no-ff", "--no-commit",
+                             "--no-overwrite-ignore", incoming], capture_output=True, text=True)
+    if not git_ok(repo, "rev-parse", "--verify", "--quiet", "MERGE_HEAD"):
+        raise Blocked(f"git merge: {merged.stderr.strip() or merged.stdout.strip()}")
+    conflicts = sorted(filter(None, git(repo, "diff", "--name-only", "--diff-filter=U", "-z").split("\0")))
+    state.setdefault("updates", []).append({"reason": reason, "upstream": incoming, "conflicts": conflicts})
+    state["stage"] = "implement"
+    reopen_implementation(repo, state)
 
 
 def changed_paths(repo):
@@ -446,6 +535,12 @@ def checkpoint(repo, state, args):
             raise Blocked("Implementation result needs a files manifest.")
         if set(files) != changed_paths(repo):
             raise Blocked("Implementation manifest must exactly match the current diff and untracked files.")
+        if args.stage == "implement" and git_ok(repo, "rev-parse", "--verify", "--quiet", "MERGE_HEAD"):
+            for name in state.get("updates", [{}])[-1].get("conflicts", []):
+                path = repo / name
+                if path.is_file() and any(line.startswith(("<<<<<<< ", ">>>>>>> "))
+                                          for line in path.read_text(errors="replace").splitlines()):
+                    raise Blocked(f"Unresolved merge conflict in {name}.")
         state["validated_files"] = {name: file_digest(repo / name) for name in files}
         state["validated_head"] = git(repo, "rev-parse", "HEAD")
         state["validated_diff"] = digest(git(repo, "diff", "--binary", "HEAD"))
@@ -480,14 +575,14 @@ def main():
     start.add_argument("--replan-reason", help="Explicitly reconcile an approved scope/artifact correction")
     status = commands.add_parser("status")
     status.add_argument("--issue-key", required=True)
-    for command in ("checkpoint", "pause", "qa", "verify", "replan", "repair"):
+    for command in ("checkpoint", "pause", "qa", "verify", "replan", "repair", "update"):
         sub = commands.add_parser(command)
         sub.add_argument("--issue-key", required=True)
         sub.add_argument("--owner", required=True)
         if command == "checkpoint":
             sub.add_argument("--stage", choices=["sync_before", "plan", "implement", "sync_after", "handoff"], required=True)
             sub.add_argument("--result-file", required=True)
-        elif command in {"pause", "replan", "repair"}:
+        elif command in {"pause", "replan", "repair", "update"}:
             sub.add_argument("--reason", required=True)
             if command in {"pause", "repair", "replan"}:
                 sub.add_argument("--result-file", help="Save a verified incomplete child's report and owned files", required=command == "repair")
@@ -507,14 +602,17 @@ def main():
             print(json.dumps({"mode": "new", "issue_key": args.issue_key}))
             return
         state = read_json(state_path)
-        if state["repo"] != str(repo):
-            raise Blocked(f"Run belongs to checkout {state['repo']}.")
+        if state["repo"] != str(repo) and args.command != "status":
+            raise Blocked(f"Run belongs to checkout {state['repo']}; continue from a session there.")
         if args.command != "status":
             require_owner(state, locks, args.owner)
             if args.command == "pause":
                 if args.result_file:
                     capture_pending(repo, state, args.result_file)
                 state.update(status="paused", reason=args.reason)
+            elif args.command == "update":
+                verify_artifacts(state)
+                update(repo, state, args.reason)
             else:
                 require_branch(repo, state)
                 if args.command == "replan":
@@ -552,9 +650,7 @@ def main():
                             reset_plan(state, "Legacy QA repair requires synchronized context")
                         else:
                             state["stage"] = "implement"
-                        state["owned_files"] = {name: file_digest(repo / name) for name in changed_paths(repo)}
-                        for stage in ("implement", "sync_after", "handoff"):
-                            state["artifacts"].pop(stage, None)
+                        reopen_implementation(repo, state)
             write_json(state_path, state)
             if args.command == "pause":
                 release(locks, args.owner)
