@@ -13,8 +13,8 @@ not ownership or freshness; preserve it on no-op sync.
 
 Source inventory covers tracked and non-ignored untracked files, excluding graph
 outputs, `.shipit/`, plans/tasks and generated rules; contract fingerprints cover
-config, stack, conventions, design and rule files separately. The repo's own docs
-are sources: a changed human doc is drift worth reviewing. Ignored inputs,
+config, stack, conventions, design, rule and product-context files separately.
+The repo's own docs are sources: a changed human doc is drift worth reviewing. Ignored inputs,
 external docs, submodule internals, tracker state and graph semantic coverage need
 explicit inspection when relevant. An unchanged hash report alone is not proof
 those dependencies are current. A failed graph update never certifies the graph.

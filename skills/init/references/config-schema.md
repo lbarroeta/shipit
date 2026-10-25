@@ -32,7 +32,7 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `language.pr` | string | PR title and body, review-thread replies. Default `en` |
 | `language.code` | string | Comments written in code. Default `en` |
 | `docs.agent_docs` | string[] | Agent instruction files and the local docs they link to. Symlinks resolved; each file listed once |
-| `docs.pointer` | string | File holding the `shipit:contract` and `shipit:design` blocks: `AGENTS.md` when `init` created it or it already carried a shipit block, otherwise `CLAUDE.local.md`. Read by `sync`, `doctor` and `design-system` to find the blocks. Absent → `AGENTS.md` |
+| `docs.pointer` | string | File holding the `shipit:contract`, `shipit:design` and `shipit:product` blocks: `AGENTS.md` when `init` created it or it already carried a shipit block, otherwise `CLAUDE.local.md`. Read by `sync`, `doctor` and `design-system` to find the blocks. Absent → `AGENTS.md` |
 | `docs.owned_by_shipit` | string[] | Always `[".shipit/"]` |
 | `stack.languages` | string[] | With version pin files as evidence in `stack.md` |
 | `stack.frameworks` | string[] | Only from declared dependencies |
@@ -76,7 +76,8 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 
 Everything under `.shipit/` is shipit's. The repo's own documentation — `docs/`,
 the README, agent docs — is linked from it, never copied into it, and edited only
-to apply a doc patch the user approved.
+to apply a doc patch the user approved. Product docs are the one exception: they
+move into `.shipit/` per `../../../references/product-context.md § Migration`.
 
 ## Placeholders
 

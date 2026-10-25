@@ -23,10 +23,10 @@ codex plugin marketplace add KodimTech/shipit
 codex plugin add shipit@shipit
 ```
 
-Start a new session and the twelve skills are available. Codex matches them by
+Start a new session and the fourteen skills are available. Codex matches them by
 description, and the same names work as slash commands — `/shipit:task-create`, `/shipit:task-next`,
-`/shipit:code-plan`, `/shipit:init`, `/shipit:sync`, `/shipit:design-system`, `/shipit:code-implement`, `/shipit:code-handoff`,
-`/shipit:pr-fix`, `/shipit:status`, `/shipit:doctor`, `/shipit:run` — exactly as in Claude Code. Same `skills/`
+`/shipit:code-plan`, `/shipit:init`, `/shipit:sync`, `/shipit:design-system`, `/shipit:product-discovery`,
+`/shipit:product-mvp-cut`, `/shipit:code-implement`, `/shipit:code-handoff`, `/shipit:pr-fix`, `/shipit:status`, `/shipit:doctor`, `/shipit:run` — exactly as in Claude Code. Same `skills/`
 directory and the same `.shipit/` contract, so a repo initialized in one runtime
 works in the others.
 
@@ -170,6 +170,10 @@ any other file. Collaborators update the plugin before their next shipit command
 Repos with a UI then run `/shipit:design-system` once — see
 [*Adding it to a project already running shipit*](#adding-it-to-a-project-already-running-shipit).
 
+Product docs still in `docs/` — PRD, MVP, brief, tech design, backlog, as
+rails-factory writes them? `/shipit:init` moves them into `.shipit/` after one
+confirmation — see [*Product context*](#product-context).
+
 ## Maintaining repository context
 
 `init` sets a repo up in any state — new, documented, legacy `.sdd/`, or already
@@ -261,6 +265,10 @@ The individual cycle remains available:
 
 ```
 /shipit:init        read the repo, write the contract   once per repo; safe to re-run
+        │
+/shipit:product-discovery  interview → PRD               once per product; re-run to update
+        │
+/shipit:product-mvp-cut    PRD → MVP cut                 re-run to add or reclassify stories
         │
 /shipit:design-system  interview → design contract       once per repo with UI; re-run to update
         │
@@ -529,6 +537,29 @@ your yes; with neither `uv` nor `pipx` it prints the steps and carries on. With 
 CLI, it builds the graph with `graphify update .`: code only, no LLM, no tokens.
 Documentation never goes into the graph from `init`.
 
+## Product context
+
+What the product is and what ships first, so tickets and plans stop re-deciding
+scope. `/shipit:product-discovery` interviews you and writes the PRD;
+`/shipit:product-mvp-cut` classifies every story `In`, `Reduced`, `Manual` or
+`Deferred`. Both follow `language.task`.
+
+| File | Content |
+| --- | --- |
+| `.shipit/product/prd.md` | Problem, users, metrics, stories `H1…` with `AC1…`, non-goals |
+| `.shipit/product/mvp.md` | Learning metric, core flow, the class of every story |
+| `.shipit/product/*.md` | Other product docs, such as a brief or the current state |
+| `.shipit/tech-design.md` | How the MVP is built |
+| `.shipit/backlog.md` | Ticket index cut from the MVP; the tracker stays the source of truth |
+
+`task-create` cites the story and flags non-goals or deferred stories; `task-next`
+skips them; `code-plan` reads the story's ACs. Each task keeps the docs current:
+the plan's `Docs impact` lists the status the change proves — a story `(built)`,
+a delivered ticket, the current state — `code-implement` applies it, and `sync`
+catches what the plan missed. Scope, metrics and design are decisions: always
+proposed as a patch and applied only on your yes. The rules live in
+[`references/product-context.md`](references/product-context.md).
+
 ## A design contract for UI
 
 Agents building UI with no design contract invent one per screen: a new blue, a
@@ -733,6 +764,8 @@ extracted from:
 | `status` | ~70 | ~1.2k | new |
 | `task-create` | not yet measured | not yet measured | new |
 | `design-system` | not yet measured | not yet measured | new; the interview is multi-turn by design |
+| `product-discovery` | not yet measured | not yet measured | new; multi-turn interview |
+| `product-mvp-cut` | not yet measured | not yet measured | new |
 | `run` | not yet measured | not yet measured | new; native subagent work is additional |
 
 The four equivalent skills cost **~380 always-on against the originals' ~442**, and

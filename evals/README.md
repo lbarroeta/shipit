@@ -58,6 +58,8 @@ plugin disabled, so the number reported is a delta, not an absolute.
 | `task-defined-blocked` | Rejecting a defined dependency-blocked task or inventing business rules to fill essential gaps |
 | `plan-stale-prerequisite` | Starting stale or prerequisite-blocked work before checking the live Goal and unblock condition |
 | `task-provider-relations` | Claiming native hierarchy/dependencies when only text references were published, or losing child content |
+| `product-migration` | Copying product docs instead of moving them, breaking their links, translating them, or editing human docs without a yes |
+| `sync-product-status` | Leaving a delivered story unmarked, or rewriting a product or design decision to match the code |
 | `run-dirty-main` | Switching main or adopting uncommitted user changes before an orchestrated task |
 | `run-resume-qa` | Restarting from main, duplicating delivery, or calling automated checks human QA approval |
 | `run-model-unavailable` | Role-playing subagents or silently substituting unavailable stage models |
