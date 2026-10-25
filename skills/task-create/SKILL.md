@@ -56,7 +56,8 @@ workflow, not a blocker.
   explicit authorized decision. Ask for essential missing scope, security, data,
   monetary or external-contract behaviour before finalizing. A convenient default
   is not evidence. Reversible editorial choices may be stated as assumptions.
-- **Product scope is decided upstream.** Cite the story (`H3`) in `Source`. A
+- **Product scope is decided upstream.** Cite the stories each task and child delivers
+  (`H3`) in its `Source`. A
   request that is a non-goal, a `Deferred` or `Manual` story, or absent from the
   PRD is flagged in the draft's Blockers and the report, with
   `/shipit:product-mvp-cut` to decide it; never edit product docs here.
