@@ -68,7 +68,8 @@ Create bodies from the complete standalone task/child contract, not an index row
 Always preserve explicit Problem, Goal, scope/boundaries, AC IDs, scenario details
 and unblock conditions. Formatting conversions are allowed when required by the
 provider; content loss is not. Exclude source/date/shape draft metadata and the
-Created ledger; retain Type/Priority/Size in prose when native mapping is absent.
+Created ledger, but keep story IDs from `Source` as a `Story: H3` line: `code-plan`
+and `sync` read them; retain Type/Priority/Size in prose when native mapping is absent.
 
 Inspect usable create/update, hierarchy and dependency read/write capabilities in
 the current session. Provider support alone does not imply the connector exposes

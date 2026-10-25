@@ -34,6 +34,10 @@ a newer schema → report the gap; never reset it from a template.
   is for first setup; it must not reset existing preferences during sync.
 - Preserve all `shipit:design` blocks and design files. Report design drift to
   `shipit:design-system`; do not turn a new implementation into an approved design.
+- Product context follows `../../references/product-context.md`: apply status
+  edits the delivered change proves, propose decisions as patches, repair the
+  `shipit:product` block. Product docs outside `.shipit/` → report them as
+  migration candidates for `/shipit:init`; never move them here.
 - Human docs outside generated blocks are not owned. Correct a named factual
   section when the request/approved plan authorizes it; otherwise propose its exact
   patch. Preserve deliberate policies and decisions even if code violates them.
@@ -53,8 +57,8 @@ a newer schema → report the gap; never reset it from a template.
    `--check` reports drift and exits without migration, writes or graph updates.
 2. **Determine scope.** Before planning, reconcile accumulated drift that affects
    the task, plus shared configuration. After implementation, use the actual diff,
-   plan and report to find affected contracts/docs; check for additional external
-   changes. A report cannot hide files absent from its manifest. Read changes to
+   plan and report to find affected contracts/docs, product context included;
+   check for additional external changes. A report cannot hide files absent from its manifest. Read changes to
    manifests, CI, agent instructions, rule exemplars and related sources. A new
    HEAD alone does not require regeneration. Check external tracker reachability
    and referenced targets when relevant; local hashes cannot prove remote freshness.

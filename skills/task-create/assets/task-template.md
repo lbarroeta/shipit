@@ -1,6 +1,6 @@
 # <imperative change, ≤70 chars>
 
-**<Bug | Feature | Chore>** · Priority: <P0–P3> · Size: <XS–XL; L/XL include driver> · Source: <request | url> · <YYYY-MM-DD> · shape: <task | epic>
+**<Bug | Feature | Chore>** · Priority: <P0–P3> · Size: <XS–XL; L/XL include driver> · Source: <request | url>; <story IDs it delivers, e.g. H3 — only with a PRD> · <YYYY-MM-DD> · shape: <task | epic>
 
 ## Problem
 
@@ -58,7 +58,7 @@ below own their acceptance/scenarios. Repeat essential context in every child.>
 
 ### Child #1 — <imperative title, ≤70 chars>
 
-**<Bug | Feature | Chore>** · Priority: <P0–P3> · Size: <XS–L> · Parent: <parent title/local parent; ID after creation>
+**<Bug | Feature | Chore>** · Priority: <P0–P3> · Size: <XS–L> · Source: <story IDs this child delivers; delete without a PRD> · Parent: <parent title/local parent; ID after creation>
 
 #### Problem
 

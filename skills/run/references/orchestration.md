@@ -110,7 +110,7 @@ irrelevant/missing optional capabilities may remain; unresolved relevant conflic
 may not. A partial/blocked result never checkpoints. After-implementation checks
 include newly required checks; retain builder validation only with unchanged
 inputs and cite it in the final delivery report. The coordinator verifies that
-product files did not change during sync and no required check was omitted.
+product code did not change during sync (product-context doc edits are context) and no required check was omitted.
 Delivery adds `delivery_status` (`completed`, `partial`, `blocked`, `skipped`) and
 actual effect proofs. Use `blocked`/`failed` and a concrete reason when unable to
 finish; never emit `completed` with pending required work.

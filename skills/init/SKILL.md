@@ -51,6 +51,9 @@ a fact is the drift this avoids.
   discrepancy table. A decision (policy, architecture, design) → the human wins;
   current code violating it never supersedes it.
 - **Not covered** → shipit writes it in `.shipit/`.
+- **Product docs** — PRD, MVP, brief, current state, tech design, backlog → they
+  move into `.shipit/` per `../../references/product-context.md § Migration`,
+  confirmed with the step-1 plan. The one case where a human doc is moved.
 
 Each `.shipit/` file states only what the repo's docs do not, and links the doc
 that covers the rest: `.shipit/conventions.md` links the team's conventions doc
@@ -174,9 +177,9 @@ linked worktree.
 0. **Preflight.** `git rev-parse --show-toplevel` for the root; `git rev-parse --abbrev-ref origin/HEAD` for the default branch. Not a git repo → say so and stop: tier 0 is unmet. This is the only hard stop.
 1. **Diagnose.** Classify the repo per the state table above and show the plan
    before writing anything: what will be created, complemented, migrated and
-   proposed for deletion. A legacy `.sdd/` → one confirmation for the whole
-   migration. An existing config that fails to parse → report it and stop; never
-   reset it from the template.
+   proposed for deletion. A legacy `.sdd/` or product docs to migrate → one
+   confirmation for each migration. An existing config that fails to parse →
+   report it and stop; never reset it from the template.
 2. **Graph.** Per *Graph*.
 3. **Ask the output languages.** Only when no config records them. One question,
    four answers, each defaulting to `en`: plans and reports (`plan`), tickets and
@@ -302,4 +305,5 @@ passed off as a completed baseline.
 - Every doc contradiction found, and how it was resolved.
 - Next step: `/shipit:task-create` for a need with no ticket yet, `/shipit:code-plan` for one
   that has. UI layers found and no `.shipit/design-system.md` → also
-  `/shipit:design-system`, once.
+  `/shipit:design-system`, once. No `.shipit/product/prd.md` → also
+  `/shipit:product-discovery`, once.

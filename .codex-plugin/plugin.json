@@ -1,7 +1,7 @@
 {
   "name": "shipit",
   "version": "0.15.3",
-  "description": "Spec-driven development for any repo. run executes an existing issue ID or URL through native sync, planner, builder and delivery subagents with pinned stage models, refreshed main and resumable QA. Individual init, sync, design-system, task-create, task-next, code-plan, code-implement and code-handoff skills remain available; handoff.allow controls external effects.",
+  "description": "Spec-driven development for any repo. run executes an existing issue ID or URL through native sync, planner, builder and delivery subagents with pinned stage models, refreshed main and resumable QA. Individual init, sync, design-system, product-discovery, product-mvp-cut, task-create, task-next, code-plan, code-implement and code-handoff skills remain available; handoff.allow controls external effects.",
   "author": {
     "name": "Kodim Tech",
     "url": "https://github.com/KodimTech"
@@ -27,7 +27,7 @@
   "interface": {
     "displayName": "shipit",
     "shortDescription": "Plan, implement and deliver work under a contract generated from your own repo",
-    "longDescription": "Spec-driven development for any repo. run executes an existing issue ID or URL through native sync, planner, builder and delivery subagents with pinned stage models, refreshed main and resumable QA. Individual init, sync, design-system, task-create, task-next, code-plan, code-implement and code-handoff skills remain available; handoff.allow controls external effects.",
+    "longDescription": "Spec-driven development for any repo. run executes an existing issue ID or URL through native sync, planner, builder and delivery subagents with pinned stage models, refreshed main and resumable QA. Individual init, sync, design-system, product-discovery, product-mvp-cut, task-create, task-next, code-plan, code-implement and code-handoff skills remain available; handoff.allow controls external effects.",
     "developerName": "Kodim Tech",
     "category": "Developer Tools",
     "capabilities": [
@@ -38,6 +38,7 @@
     "defaultPrompt": [
       "Run shipit init on this repo.",
       "Set up the design system for this repo with shipit.",
+      "Write the PRD and cut the MVP for this product with shipit.",
       "Turn this need into a ticket with shipit.",
       "Plan this ticket with shipit.",
       "Implement the approved shipit plan.",
