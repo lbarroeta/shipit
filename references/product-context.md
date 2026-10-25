@@ -60,8 +60,10 @@ delivered story gets no `(built)`; its MVP note may name the delivered ACs.
 Implementation that diverges from `tech-design.md` is a decision: propose the
 patch, never rewrite the design to match the code.
 
-A coordinated `run` never waits on a question: decisions are returned as pending
-patches in the report, not applied.
+A coordinated `run` never waits on a question: status is applied as above, and
+decisions go to the delivery report's `Known Risks or Follow-ups` as pending
+patches, never as blockers, so the run advances; the coordinator shows them
+with the QA handoff.
 
 New stories and reclassifications belong to `product-mvp-cut`, which appends
 them to the PRD with the next free ID. Other skills point there.

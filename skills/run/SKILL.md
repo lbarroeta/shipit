@@ -120,7 +120,7 @@ and passes `--no-worktree` to its planner.
    `handoff` only when permitted steps finished or were deliberately skipped.
    Partial delivery stays at `handoff`; reconcile effects before retrying.
 9. **Human QA.** Present what changed, where to test, plain-language steps with
-   expected results, and what remains. The steps are the `qa_guide.steps` returned
+   expected results, and what remains, including pending product-doc patches. The steps are the `qa_guide.steps` returned
    by the `handoff` checkpoint, copied verbatim: the QA sections of the
    checkpointed final delivery report. `steps` null → read those sections from
    `qa_guide.report`; still none → report the missing QA guide as a gap. Never
