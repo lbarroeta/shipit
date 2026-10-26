@@ -92,7 +92,8 @@ Substituted at call time. Never bake the value in.
 | `{a}`, `{b}` | Two node names, in order | `graph.path` |
 
 A `test_one` without `{path}` is malformed: `code-implement` cannot target a single
-test, and the whole red-green loop degrades to running the full suite.
+test, the red-green loop is unavailable, and required tests become a validation
+gap. The full suite is never run locally as a fallback; CI owns it.
 
 ## Scope of `language`
 
@@ -159,13 +160,13 @@ and is independent of this list.
 ## `run.models`
 
 `run` uses native subagents, with one complete `{model, effort}` pair per stage.
-Defaults: Anthropic plan = Opus 5.5/high, sync and implement = Sonnet 5.5/high,
-handoff = Haiku 5.5/high; OpenAI plan = Astra 6/high, sync and implement = Sol 6.1/high,
-handoff = Luna 6/high. Runtime IDs are pinned in the run skill's
+Defaults: Anthropic plan and review = Opus 5.5/high, implement = Sonnet 5.5/high,
+sync = Sonnet 5.5/medium, handoff = Haiku 5.5/medium; OpenAI plan and review =
+Astra 6/high, implement = Sol 6.1/high, sync = Sol 6.1/medium, handoff = Luna 6/medium. Runtime IDs are pinned in the run skill's
 `assets/models.json`; aliases are not used. Both sync checkpoints share route `sync`.
 
 Example override: `run.models.openai.plan = {"model": "gpt-6.1-sol", "effort": "high"}`.
-Only `sync`, `plan`, `implement`, `handoff` are valid stage keys. Overrides must be complete
+Only `sync`, `plan`, `implement`, `review`, `handoff` are valid stage keys. Overrides must be complete
 pairs, available in the hosting runtime; Claude Code also needs a matching native
 agent definition. A mismatch blocks the run instead of inheriting the session
 model. `init` writes `{}`; `sync` preserves explicit overrides.

@@ -10,7 +10,9 @@ metadata:
 # shipit code-implement
 
 Execute the approved plan. The plan is the contract. The code is minimal, scoped,
-and verified with commands that are known to run in this repo.
+written as a senior engineer in the repo's detected stack would write it — SOLID
+and Clean Code included — and
+verified with commands that are known to run in this repo.
 
 ## Context budget
 
@@ -18,6 +20,9 @@ and verified with commands that are known to run in this repo.
 - Required: the `.shipit/rules/<layer>.md` for each layer the plan touches, and the
   `.shipit/rules/tests/<kind>.md` for each test it plans. Only those.
 - Required: `../../references/lean-ladder.md`, relative to this skill directory.
+- Required: `../../references/senior-stance.md` — idiom, framework features and
+  failure modes of the detected stack, test quality, operability, SOLID and Clean
+  Code.
 - Required: `references/validation-standards.md`. Every run validates.
 - Required only when the plan touches UI and `<paths.rules>/design.md` exists:
   that file, and the `.shipit/design-system.md` sections the plan's `Design` names.
@@ -94,13 +99,15 @@ and verified with commands that are known to run in this repo.
 3. **Test first.** For planned automated tests, where practical: write the failing
    test → run it with `commands.test_one` → confirm the expected red → minimal
    code → re-run → next layer. An **unexpected** red is investigated before any
-   production change.
-   `commands.test_one` null or missing `{path}` → say the loop is degraded and run
-   the configured `test_all` instead. Neither is runnable → report the required
-   validation gap under `validation-standards.md`; never silently skip the loop.
+   production change. Tests follow `senior-stance.md` § Tests: deterministic, fast,
+   scoped runs only.
+   `commands.test_one` null or missing `{path}` → the loop is unavailable: report
+   the required validation gap under `validation-standards.md` and point to
+   `/shipit:sync`. Never fall back to `test_all`; never silently skip the loop.
    A plan requiring no automated tests does not need an artificial red/green loop.
 4. **Implement.** The smallest correct change. Repo patterns over new structure —
-   including their comment density. Apply the ladder as stance, not as licence to
+   including their comment density — then the framework's idiom at the installed
+   version, SOLID and Clean Code, per `senior-stance.md`. Apply the ladder as stance, not as licence to
    deviate from the plan. A deliberate shortcut leaves a debt marker with its
    ceiling and upgrade trigger. External API not shown by a cited analogue, or a
    check failing on one → `docs-lookup.md` first, never from memory; that lookup
@@ -115,10 +122,11 @@ and verified with commands that are known to run in this repo.
    rewrites. If the implementation drifted in a way that hits a docs trigger the
    plan missed, update the doc and note it under `Known Risks or Follow-ups`.
 6. **Validate.** `references/validation-standards.md`, against the final code,
-   tests and docs. Cover each AC and planned regression with executed evidence or
-   explicitly pending human/external QA; preserve the plan's validation intent.
+   tests and docs. Cover each AC, `Failure paths` row and planned regression with
+   executed evidence or explicitly pending human/external QA; preserve the plan's
+   validation intent.
    Run scoped tests and applicable configured checks, including build when needed.
-   The full suite needs a reason named in that reference. Report exact commands
+   Never run the full suite (`test_all`): CI owns it. Report exact commands
    and exit codes; later edits invalidate affected results. UI changed with a
    design contract → each `rules/design.md` § Verify check, as met, not met, or
    not checked, with evidence or the missing prerequisite.
@@ -139,7 +147,8 @@ and verified with commands that are known to run in this repo.
    returning the report; do not export the report's full section structure.
 9. **Return for context sync.** Return the implementation report, full changed-file
    manifest and exact validation evidence to the caller. The next stages are
-   `shipit:sync` then `shipit:code-handoff`; do not dispatch either internally.
+   `shipit:code-review`, `shipit:sync`, then `shipit:code-handoff`; do not dispatch
+   them internally.
    `run` owns those stages when coordinated. Standalone work follows the same
    explicit sequence. Failed or unverified required checks remain blockers.
    Graph maintenance belongs to sync so it includes final documentation changes.

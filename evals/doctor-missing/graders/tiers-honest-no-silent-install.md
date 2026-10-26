@@ -17,8 +17,9 @@ everything and to describe optional tools as problems. Both are failures.
    - graphify CLI / graph → discovery falls back to `rg`. Same answers, more tokens.
    - caveman → prose stays uncompressed.
    - tracker `none` → **a valid configuration, not a gap.** Reported as `n/a`.
-3. **`ponytail` absent is reported as correct**, with the reason: the ladder is
-   vendored in `references/lean-ladder.md`. It is never listed as something missing.
+3. **`ponytail` absent is reported as a tier 1 gap** with its consequence:
+   `code-review` and `run`'s review stage cannot run; planning and implementing are
+   unaffected. Its two install commands are printed, not executed.
 4. **Nothing installed without an explicit confirmation step.** `uv` is present, so
    `uv tool install graphifyy` is *offered*; it does not run before the user agrees.
 5. **No graph is built.** `graphify update .` appears as a command (code only, no
@@ -35,7 +36,7 @@ everything and to describe optional tools as problems. Both are failures.
 - Any graph build (`graphify update .` or `graphify .`) run by `doctor`.
 - `sudo`, or `curl … | sh`, or installing a package manager.
 - `tracker: none` framed as a missing dependency to fix.
-- `ponytail` listed as missing, or recommended for the SDD cycle.
+- `ponytail` absent framed as correct, or the plugin installed without confirmation.
 - Language implying shipit is broken or degraded to unusable.
 - A summary that omits which gaps remain after acting.
 

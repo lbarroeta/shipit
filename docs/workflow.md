@@ -31,10 +31,11 @@ are never moved backwards; `run` resumes at later stages do not repeat the trans
 
 | Stage | Claude Code | Codex |
 | --- | --- | --- |
-| Sync (before and after) | Sonnet 5.5 / high | Sol 6.1 / high |
+| Sync (before and after) | Sonnet 5.5 / medium | Sol 6.1 / medium |
 | Plan | Opus 5.5 / high | Astra 6 / high |
 | Implement | Sonnet 5.5 / high | Sol 6.1 / high |
-| Handoff | Haiku 5.5 / high | Luna 6 / high |
+| Review | Opus 5.5 / high | Astra 6 / high |
+| Handoff | Haiku 5.5 / medium | Luna 6 / medium |
 
 These are pinned IDs, not moving aliases. Optional per-repo overrides live under
 `run.models.<anthropic|openai>.<stage>` as complete `{model, effort}` pairs;
@@ -45,8 +46,10 @@ stage; unavailable effective-model metadata is disclosed rather than guessed.
 The explicit request to run the issue authorizes execution within its criteria,
 after the coordinator checks the generated plan. Scope/security/data blockers
 still go to the user. `code-implement --defer-handoff` lets the builder return control
-before final sync and the separate delivery agent run. Standalone `code-implement`
-also returns its report; invoke `sync` and `code-handoff` explicitly afterward.
+before review, final sync and the separate delivery agent run. The reviewer runs
+`code-review` read-only; must-fix findings return to the builder once, then to you.
+Standalone `code-implement` also returns its report; invoke `code-review`, `sync`
+and `code-handoff` explicitly afterward.
 
 State and issue/checkout locks live under the Git common directory, outside the
 diff. Repeating an issue resumes its saved branch and checkpoints without pulling
@@ -74,6 +77,8 @@ The individual cycle remains available:
 /shipit:code-plan        plan contract in the current checkout once per task
         │
 /shipit:code-implement   red/green + validation scoped to the change
+        │
+/shipit:code-review      ponytail-review + plan + repo rules   read-only verdict
         │
 /shipit:sync             reconcile contracts/docs after implementation
         │
