@@ -90,9 +90,12 @@ The individual cycle remains available:
 ```
 
 Use `/shipit:task-next` to recommend the next executable issue from the live
-configured tracker. It considers current Goal/project relevance, priority, explicit
-order and verified dependencies, then explains its choice, alternatives and
-blockers. It is read-only and never marks work started. `code-plan` repeats the Goal and
+configured tracker. Like a senior project manager, it first reads the whole board
+(work in progress, review, blocked, active cycle, epics in flight), flags owned work
+to finish before starting, and follows the dependency path from the most urgent
+outcome to its first ready step. It weighs Goal/project relevance, priority, cycle
+commitment, explicit order and verified dependencies, then explains its choice,
+alternatives and blockers. It is read-only and never marks work started. `code-plan` repeats the Goal and
 prerequisite checks before its startup status transition.
 
 Plus two for visibility:

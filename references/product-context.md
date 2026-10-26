@@ -36,7 +36,7 @@ load the whole set.
 | Reader | Reads | For |
 | --- | --- | --- |
 | `task-create` | PRD stories and non-goals, MVP class of those stories | Cite the story; flag a request that is a non-goal, `Deferred`, `Manual` or not in the PRD |
-| `task-next` | MVP class and core-flow order | Relevance and ranking, after explicit priority |
+| `task-next` | PRD goal, metrics and non-goals; MVP learning metric, core flow and story classes; `backlog.md` ticket↔story map; roadmap/current-state docs | Board outcome, relevance and ranking, after explicit priority; tracker stays authoritative |
 | `code-plan` | The cited story's ACs and MVP kept ACs; tech-design rows for it | Requirements and decisions; product status updates for `Docs impact` |
 | `sync` | Files the delivered change makes stale | Status updates per *Keeping it current* |
 
