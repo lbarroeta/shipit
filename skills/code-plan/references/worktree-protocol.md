@@ -1,7 +1,8 @@
 # Worktree Protocol
 
 **Only read this when `worktree.enabled` is true. It is `false` by default** — the
-usual path is to plan in the current checkout and never open this file.
+usual path is to plan in the current checkout and read, at most, the *Collision
+check* section when other worktrees exist.
 
 One worktree per task, so several tasks run in parallel without fighting over one
 checkout. The plan is written **inside** the worktree, so `code-implement` and `code-handoff`
@@ -98,9 +99,10 @@ For each entry, all three conditions must hold before linking:
 mkdir -p "$(dirname "$WT/$f")" && ln -s "$MAIN/$f" "$WT/$f"
 ```
 
-**These are usually secrets.** The worktree lives outside the repo, so no
-`.gitignore` in the repo covers it, and anything running in that directory can
-read them. Prefer `worktree.setup` regenerating what is needed. If a link is made,
+**These are usually secrets.** Anything running in that directory can read them,
+and a symlink is ignored only by a pattern matching a file (`key`, not `key/`):
+check `git -C "$WT" status --porcelain -- "$f"` is empty, otherwise remove the
+link. Prefer `worktree.setup` regenerating what is needed. If a link is made,
 say so in the report by name.
 
 ## Setup
@@ -125,7 +127,7 @@ mkdir -p "$WT/<paths.plans>"
 The reason parallel worktrees are safe. Run it before the `Files` table is final.
 
 1. `git -C "$MAIN" worktree list --porcelain` → every active worktree except
-   `$MAIN` and `$WT`.
+   `$MAIN` and the checkout being planned in (`$WT`, or the current one without it).
 2. In each, read `<paths.plans>/*.md` and pull the first column of the `Files`
    table.
 3. Intersect those paths with the ones this plan intends to touch.

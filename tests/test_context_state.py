@@ -166,6 +166,15 @@ class ContextStateTests(unittest.TestCase):
         self.assertEqual(self.call("record")["status"], "recorded")
         self.assertEqual(json.loads(state.read_text())["version"], 2)
 
+    def test_linked_worktree_defers_the_committed_baseline(self):
+        worktree = self.root / "worktree"
+        self.git("worktree", "add", "-b", "card", str(worktree))
+        result = subprocess.run([sys.executable, str(HELPER), "--repo", str(worktree), "record",
+                                 "--inventory", str(self.inventory)], text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(json.loads(result.stdout)["status"], "deferred")
+        self.assertFalse((worktree / ".shipit/sync-state.json").exists())
+
     def test_legacy_contract_points_to_init(self):
         (self.repo / ".shipit").rename(self.repo / ".sdd")
         self.assertIn("/shipit:init", self.call("inspect", success=False)["reason"])

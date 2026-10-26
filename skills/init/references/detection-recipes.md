@@ -341,7 +341,13 @@ rows in `stack.md` carry the installed version from the lockfile, which is what
 - `root: "../worktrees/<repo-name>"`, repo name from the toplevel basename.
 - `base`: the default branch from recipe 1.
 - `link: []` — **always empty at init.** Only the user adds paths here, knowing
-  it symlinks untracked files (often secrets) into a directory no `.gitignore`
-  covers.
+  it symlinks untracked files (often secrets) into every worktree. `.env*` files
+  need no entry: `run` copies ignored ones into its worktree itself.
 - `share_graph`: from recipe 8.
-- `setup`: `commands.setup` if it verified green, else `null`.
+- `setup`: `commands.setup` if it verified green, in its non-serving form (a Rails
+  `bin/setup` that ends in `bin/dev` → `bin/setup --skip-server`). Otherwise the
+  frozen install of each lockfile from recipe 2, joined with `&&`: `npm ci`,
+  `pnpm install --frozen-lockfile`, `yarn install --immutable` (Berry) or
+  `--frozen-lockfile` (classic), `bun install --frozen-lockfile`, `bundle install`,
+  `uv sync --frozen`, `poetry install`, `composer install`, `mix deps.get`.
+  An install must never rewrite a lockfile. No lockfile → `null`.
