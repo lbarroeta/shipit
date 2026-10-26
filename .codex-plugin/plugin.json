@@ -1,6 +1,6 @@
 {
   "name": "shipit",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Spec-driven development for any repo. run executes an existing issue ID or URL through native sync, planner, builder, reviewer and delivery subagents with pinned stage models, refreshed main and resumable QA. Individual init, sync, design-system, product-discovery, product-mvp-cut, task-create, task-next, code-plan, code-implement, code-review and code-handoff skills remain available; handoff.allow controls external effects.",
   "author": {
     "name": "Kodim Tech",
