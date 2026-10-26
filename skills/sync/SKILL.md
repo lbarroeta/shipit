@@ -137,7 +137,8 @@ rediscovery, docs lookups and graph work. Otherwise continue the full workflow
 for the affected scope only. Return the sync report and owned paths for the
 planner/builder.
 After implementation, return the separate delivery report described above to the
-coordinator.
+coordinator. Carry the review report's Should fix, Nice to have, Accepted by
+user and Debt added entries into its `Known Risks or Follow-ups`, verbatim.
 
 ## Flags
 

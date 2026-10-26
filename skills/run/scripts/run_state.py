@@ -151,7 +151,7 @@ def routes(repo, provider):
         raise Blocked("run and run.models must be objects.")
     overrides = run_config.get("models", {}).get(provider, {})
     if not isinstance(overrides, dict) or set(overrides) - set(selected):
-        raise Blocked("run.models must contain only sync, plan, implement and handoff routes.")
+        raise Blocked("run.models must contain only sync, plan, implement, review and handoff routes.")
     selected.update(overrides)
     for stage, route in selected.items():
         if (not isinstance(route, dict) or set(route) != {"model", "effort"}
@@ -300,7 +300,7 @@ def verify_artifacts(state):
 
 def verify_pending(repo, state):
     pending = state.get("pending")
-    if not pending and state["stage"] in {"plan", "implement", "sync_after"} and "owned_files" in state:
+    if not pending and state["stage"] in {"plan", "implement", "review", "sync_after"} and "owned_files" in state:
         owned = state["owned_files"]
         if changed_paths(repo) != set(owned) or any(file_digest(repo / name) != value for name, value in owned.items()):
             raise Blocked("Run-owned files changed since the last checkpoint; reconcile before resuming.")
@@ -330,6 +330,7 @@ def reset_plan(state, reason):
         "owned_files": state.get("pending", {}).get("files", state.get("owned_files", state.get("validated_files", {})))})
     state["artifacts"] = {}
     state.pop("pending", None)
+    state.pop("review_repairs", None)
     state["stage"] = "sync_before"
     state["version"] = 2
     for key in ("validated_files", "validated_head", "validated_diff", "validated_tree", "delivery_files"):
@@ -403,8 +404,8 @@ def qa_guide(state):
 
 
 def checkpoint(repo, state, args):
-    expected = {"sync_before": "plan", "plan": "implement", "implement": "sync_after",
-                "sync_after": "handoff", "handoff": "qa"}
+    expected = {"sync_before": "plan", "plan": "implement", "implement": "review",
+                "review": "sync_after", "sync_after": "handoff", "handoff": "qa"}
     if state["stage"] != args.stage:
         raise Blocked(f"Expected stage {state['stage']}, received {args.stage}.")
     result = read_result(args.result_file)
@@ -423,7 +424,7 @@ def checkpoint(repo, state, args):
         raise Blocked("Effective model differs from the configured route.")
     if effective.get("effort") and effective["effort"] != requested["effort"]:
         raise Blocked("Effective effort differs from the configured route.")
-    if args.stage in {"sync_before", "plan", "sync_after"} and result.get("blockers") != []:
+    if args.stage in {"sync_before", "plan", "review", "sync_after"} and result.get("blockers") != []:
         raise Blocked("The stage must explicitly report no unresolved blockers.")
     if args.stage == "sync_after" and str(artifact) == state["artifacts"]["implement"]["path"]:
         raise Blocked("Final sync must write a separate delivery report; preserve builder evidence.")
@@ -485,12 +486,14 @@ def main():
         sub.add_argument("--issue-key", required=True)
         sub.add_argument("--owner", required=True)
         if command == "checkpoint":
-            sub.add_argument("--stage", choices=["sync_before", "plan", "implement", "sync_after", "handoff"], required=True)
+            sub.add_argument("--stage", choices=["sync_before", "plan", "implement", "review", "sync_after", "handoff"], required=True)
             sub.add_argument("--result-file", required=True)
         elif command in {"pause", "replan", "repair"}:
             sub.add_argument("--reason", required=True)
             if command in {"pause", "repair", "replan"}:
                 sub.add_argument("--result-file", help="Save a verified incomplete child's report and owned files", required=command == "repair")
+            if command == "repair":
+                sub.add_argument("--user-decision", help="The user's explicit decision allowing another review repair round")
         elif command == "qa":
             sub.add_argument("--outcome", choices=["pass", "fail", "blocked"], required=True)
             sub.add_argument("--feedback", required=True)
@@ -525,20 +528,27 @@ def main():
                 else:
                     verify_artifacts(state)
                 if args.command == "repair":
-                    if state["stage"] != "sync_after":
-                        raise Blocked("Repair is only applicable after implementation sync failed.")
+                    if state["stage"] not in {"review", "sync_after"}:
+                        raise Blocked("Repair is only applicable after review or implementation sync failed.")
+                    if state["stage"] == "review":
+                        if state.get("review_repairs", 0) >= 1 and not args.user_decision:
+                            raise Blocked("Must-fix review findings persisted after one repair round; "
+                                          "pause and ask the user, then repair with --user-decision.")
+                        state["review_repairs"] = state.get("review_repairs", 0) + 1
                     capture_pending(repo, state, args.result_file)
-                    state.setdefault("repairs", []).append({"reason": args.reason,
-                        "artifacts": {key: state["artifacts"][key] for key in ("implement", "sync_after") if key in state["artifacts"]}})
-                    for key in ("implement", "sync_after", "handoff"):
+                    state.setdefault("repairs", []).append({"reason": args.reason, "stage": state["stage"],
+                        "user_decision": args.user_decision,
+                        "artifacts": {key: state["artifacts"][key] for key in ("implement", "review", "sync_after") if key in state["artifacts"]}})
+                    for key in ("implement", "review", "sync_after", "handoff"):
                         state["artifacts"].pop(key, None)
                     state["stage"] = "implement"
                 elif args.command == "verify":
-                    if state["stage"] not in {"sync_after", "handoff"}:
+                    if state["stage"] not in {"review", "sync_after", "handoff"}:
                         raise Blocked("Validation verification is only applicable before delivery.")
                     verify_validation(repo, state)
                 elif args.command == "checkpoint":
-                    if args.stage == "handoff":
+                    # The reviewer is read-only: what it approved must be exactly what the builder validated.
+                    if args.stage in {"review", "handoff"}:
                         verify_validation(repo, state)
                     checkpoint(repo, state, args)
                 elif args.command == "qa":
@@ -553,7 +563,8 @@ def main():
                         else:
                             state["stage"] = "implement"
                         state["owned_files"] = {name: file_digest(repo / name) for name in changed_paths(repo)}
-                        for stage in ("implement", "sync_after", "handoff"):
+                        state.pop("review_repairs", None)
+                        for stage in ("implement", "review", "sync_after", "handoff"):
                             state["artifacts"].pop(stage, None)
             write_json(state_path, state)
             if args.command == "pause":

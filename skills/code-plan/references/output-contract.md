@@ -45,7 +45,30 @@ columns and the `Tests` table's Test/Rule/Proves columns for downstream readers.
   negative paths and permissions when relevant, not merely the happy path. A
   criterion needing manual or external verification points to that scenario and
   its limitations; do not invent an executable test or claim it has run.
-- `Estimate`: one line, S / M / L plus the biggest uncertainty driver.
+- `Estimate`: one line, S / M / L plus the biggest uncertainty driver. L means
+  the change is too big to review well: propose a split under `Change size`.
+
+## Failure paths
+
+Required whenever an AC takes input, checks permissions, changes state or calls
+something external; delete it only for changes with none of those (copy, styling).
+Walk every such AC through the situations below and keep the ones the change can
+actually reach:
+
+- invalid, missing or empty input; malformed or oversized payloads;
+- boundaries — zero, one, the limit, past the limit, the last page, rounding,
+  timezones and locales;
+- not authenticated, not authorized, another tenant's or account's data;
+- concurrency — duplicate submission, retries, two writers on the same record;
+- external failure — timeout, error response, unavailable service, partial
+  success;
+- state — the record already deleted, archived or in an unexpected status.
+
+Each kept row states the expected behaviour (message, status, rollback, retry,
+no-op) and what proves it: a `Tests` row, or a `Manual QA` scenario. The happy path
+does not go here. An expected behaviour the sources do not decide follows
+`ambiguity-policy.md`: essential → `Blockers`, bounded → `Assumptions`. Never invent
+one.
 
 Conditional sections carry content or are deleted; never fill them with `N/A`:
 
@@ -65,6 +88,20 @@ Conditional sections carry content or are deleted; never fill them with `N/A`:
 - `Design`: required for UI when `<paths.rules>/design.md` exists. Reference
   pattern, component paths and applicable states. A component exists in the
   contract's Components/Not cataloged section, or is a justified Create row.
+- `Rollout`: required when the change touches a schema or data migration, a
+  contract other code consumes (another service, mobile or public clients,
+  webhooks, queued job payloads, events), cache key formats, or config and
+  environment variables. State: compatibility while old and new code run side by
+  side — a migration expands first and contracts in a later change; the deploy
+  order across services, migrations and workers; how to roll back, and which steps
+  are irreversible (dropped columns, destructive backfills) — those need explicit
+  approval in `Decisions` or block. A feature flag only when an AC or the repo's
+  convention requires one.
+- `Change size`: required when the estimate is L. Propose independently
+  deliverable slices, each with its AC IDs and why it stands alone, and recommend
+  which to plan first; the user decides whether to split the ticket
+  (`task-create` children) or proceed as one. A preparatory refactor the change
+  needs is its own slice, never mixed into the behaviour change.
 - `Docs impact`: exact living documentation paths and sections made stale by the
   behavior, contract, dependency, layer, convention, CI/deploy or design change.
 - `Assumptions`: bounded defaults with evidence/impact and revisit condition.
@@ -94,11 +131,15 @@ Apply these checks privately; do not emit the checklist:
   freshness, missing edges and inaccessible evidence are described honestly.
 - Each AC links to a change/existing behavior and observable validation; changes
   have no orphan scope, and affected consumers/regressions are covered.
+- Every AC that takes input, checks permissions, changes state or calls out was
+  walked through `Failure paths`; each kept row has an expected behaviour decided
+  by a source, and a test or QA scenario proving it.
 - Paths/symbols/analogues exist or are explicitly new; tests cite applicable rules.
 - Essential choices follow precedence; no business/security/contract guesses are
   hidden as assumptions. Blockers prevent a ready claim.
 - Real dependencies are sequenced; independent edits have no artificial phases.
-- Conditional UI/design/docs/worktree sections are present when required.
+- Conditional UI/design/docs/worktree sections are present when required, and
+  `Rollout` / `Change size` when their triggers hold.
 - No product code, verification command recipes, repetition, or empty sections.
 
 `code-implement` can also consume legacy plans without the new Baseline/Evidence/AC

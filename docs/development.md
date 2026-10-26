@@ -100,21 +100,21 @@ replaced by a scoped subgraph. Measure that with
 
 ## On ponytail
 
-shipit vendors the useful part of [ponytail](https://github.com/DietrichGebert/ponytail)
-(MIT) into `references/lean-ladder.md`: the laziness ladder, the five review tags, and
-the debt-marker convention. `code-plan` runs the ladder as a scope gate, `code-implement` uses it
-as a coding stance, `pr-fix` uses its tags to justify pushback.
+shipit vendors part of [ponytail](https://github.com/DietrichGebert/ponytail) (MIT)
+into `references/lean-ladder.md`: the laziness ladder, the five review tags, and the
+debt-marker convention. `code-plan` runs the ladder as a scope gate, `code-implement`
+uses it as a coding stance, `pr-fix` uses its tags to justify pushback.
 
-**Do not run the ponytail plugin during an SDD cycle.** Three reasons, from its own
-documentation:
+The plugin itself is a **tier 1 companion**: `code-review`, and `run`'s review stage,
+use its `ponytail-review` skill as the review engine. Install it:
 
-1. It is a persistent mode kept alive by session hooks. shipit skills are one-shot
-   workflows with their own rules — two authorities, one decision.
-2. "YAGNI applies to tests too" — one `assert`, no frameworks. In a repo with a real
-   suite and a coverage gate, that leaves CI red.
-3. "At most three short lines" of output, against a report that must carry
-   non-developer QA steps, a file manifest, and validation results.
+```
+claude plugin marketplace add DietrichGebert/ponytail
+claude plugin install ponytail@ponytail
+```
 
-`lean-ladder.md` overrides both of those rules explicitly. Install the plugin
-separately if you want `/ponytail-audit` or `/ponytail-debt`; the debt marker prefix
-stays `ponytail:` by default so its ledger still finds shipit's markers.
+Its session-wide mode stays active once installed. Two of its rules would break the
+SDD contract — "YAGNI applies to tests too" (one `assert`, no frameworks) and "at
+most three short lines" of output — so `lean-ladder.md` § Where this overrides
+ponytail disables both inside every shipit skill. The debt marker prefix stays
+`ponytail:` by default so `/ponytail-debt` still finds shipit's markers.

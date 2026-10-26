@@ -29,5 +29,9 @@ What was deliberately NOT taken:
   `/ponytail-debt` skill can harvest markers shipit leaves behind. It is
   configurable via `markers.debt` in `.shipit/config.json`.
 
+At runtime, skills/code-review invokes the installed ponytail plugin's
+ponytail-review skill as its review engine. That skill is not vendored; the
+plugin is a required companion for code-review and run's review stage.
+
 Two rules in lean-ladder.md deliberately override ponytail inside the shipit
 flow — see that file's "Where this overrides ponytail" section.

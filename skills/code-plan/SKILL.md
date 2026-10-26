@@ -13,7 +13,9 @@ Turn a request into a plan the implementer can execute without re-deciding
 essential behavior. Consistency means the same verified requirements and essential
 decisions across models, not identical prose or incidental choices.
 
-Write as a mid-senior dev handing work to a peer who already knows this repo. The
+Think and write as a senior engineer in the repo's detected stack
+(`../../references/senior-stance.md`), handing work to a peer who already knows
+this repo. The
 implementer loads the repo contract itself. The plan carries only what it cannot derive from
 the repo: the verified evidence, decisions, exact files, analogues, and AC-to-validation
 links. Reference repo rules rather than restating them.
@@ -36,6 +38,8 @@ Read narrow. Bulk-loading is the single biggest token sink in this flow.
   prohibited output; this file does not restate it.
 - Required: `../../references/lean-ladder.md`, relative to this skill directory,
   for the scope gate.
+- Required: `../../references/senior-stance.md` — the stack-specific senior judgement,
+  test quality, operability, SOLID and Clean Code behind discovery and decisions.
 - Required: `references/discovery-protocol.md`. Every run does discovery, and it
   owns the graph-before-`rg` order (graphify is the supported graph tool; its
   read commands come from `config.json`, never from its own skill or docs).
@@ -145,25 +149,33 @@ planner owns this same transition and returns a blocked result to the coordinato
    any `rg`; `rg` is the fallback, not the default. `graph: null` but a graphify
    graph on disk → stale config, protocol § 0 covers it. Find one analogue per new
    file, verify affected consumers/effects/tests, and resolve essential unknowns.
+   Check the stack failure modes the change reaches, per `senior-stance.md`.
    Stop when the evidence criteria are met, not after a fixed number of searches.
-5. **Spec contract.** Connect each source AC to verified behavior, exact proposed
+5. **Responsibilities.** Place each responsibility under `senior-stance.md` § Design
+   principles: the unit that owns it, the extension point it uses, the collaborators
+   it receives. The result shapes the `Files` table and `Decisions`.
+6. **Spec contract.** Connect each source AC to verified behavior, exact proposed
    files/symbols and observable validation. Preserve business rules, failure
-   conditions, authorization/scoping and UI states when frontend. Resolve essential
+   conditions, authorization/scoping and UI states when frontend. Walk each AC
+   through `output-contract.md` § Failure paths; every kept row gets a decided
+   expected behaviour and its proof. Resolve essential
    choices using the decision precedence; record real dependency ordering only.
-6. **Scope gate.** Run the ladder over the `Files` table. Every `Create` row
+7. **Scope gate.** Run the ladder over the `Files` table. Every `Create` row
    passes rungs 1–4 or it does not ship. What the gate rejects goes to
    `Out of scope` as `skipped: <X>, add when <Y>`.
-7. **Ambiguity.** `references/ambiguity-policy.md`. Essential gap → blocked
+8. **Ambiguity.** `references/ambiguity-policy.md`. Essential gap → blocked
    artifact and precise question. Nonessential bounded gap → evidenced assumption.
-8. **Gates.** UI touched → `Manual QA` filled, UI states in `Notes`, and `Design`
-   filled when `<paths.rules>/design.md` exists. Docs made
+9. **Gates.** UI touched → `Manual QA` filled, UI states in `Notes`, and `Design`
+   filled when `<paths.rules>/design.md` exists. Migration, consumed contract,
+   cache key or config change → `Rollout` filled. Docs made
    stale → `Docs impact` with exact paths and sections. Neither → delete the
    heading; an empty section is noise.
-9. **Estimate.** One line: S / M / L, and the driver. Uncertainty sizes a plan,
-   not line count.
-10. **Write.** `<paths.plans>/<slug>.md` from `assets/plan-template.md`, in the
+10. **Estimate.** One line: S / M / L, and the driver. Uncertainty sizes a plan,
+    not line count. L → fill `Change size` and say in the final report that a
+    split is recommended.
+11. **Write.** `<paths.plans>/<slug>.md` from `assets/plan-template.md`, in the
     current checkout — or inside the worktree when step 2 created one.
-11. **Self-check.** Recheck the baseline and run `output-contract.md`'s checks. Never emit the
+12. **Self-check.** Recheck the baseline and run `output-contract.md`'s checks. Never emit the
     checklist into the plan. Fix before reporting done.
 
 ## Final report
@@ -179,7 +191,7 @@ planner owns this same transition and returns a blocked result to the coordinato
   issue / adapter `none`); any failure is a blocker, never success.
 - Collisions found with in-flight worktrees, when there were any to check.
 - Blockers, or assumptions taken.
-- Estimate.
+- Estimate, and the recommended split when it is L.
 - Next: `/shipit:code-handoff` in `plan` mode to deliver it, or `/shipit:code-implement` to
   execute it locally.
 

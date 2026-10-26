@@ -26,7 +26,8 @@ lose rather than implying breakage.
   manager.
 - A missing optional tool is reported as `missing`, never as an error, and never with
   language implying shipit is broken.
-- `ponytail` present is reported as something to **turn off**, not as a success.
+- `ponytail` absent is a tier 1 gap: `code-review` and `run`'s review stage need it.
+  Present is `ok`, never something to turn off.
 - Do not write to `.shipit/config.json` or any agent doc. `init` owns the
   `companions` block and the contract pointer, `design-system` the design pointer;
   this skill only reads and reports.
@@ -58,6 +59,7 @@ lose rather than implying breakage.
 ```
 tier 0  git                 ok       2.51.0
 tier 1  gh                  ok       authenticated as <login>
+        ponytail            ok       code-review engine
         tracker             linear   MCP connected
         tracker create      ok       team Engineering · state Backlog
         tracker fields      partial  priority → priority · size → none (points scale)
@@ -66,7 +68,6 @@ tier 2  graphify cli        ok       ~/.local/bin/graphify
         graph in worktree   n/a      symlinked from main checkout
         caveman             missing  → prose stays uncompressed
         context7            ok       MCP connected (login not verifiable)
-tier 3  ponytail            absent   correct — ladder is vendored
 
 contract
         .shipit/        ok       generated 2026-07-28
@@ -104,7 +105,7 @@ reading this should know whether they can proceed, in one line.
 | legacy `.sdd/` present | A pre-0.15.0 contract the current skills do not read. Fix: `/shipit:init` migrates it. |
 | pointer absent | shipit skills still read the contract by path, but every other agent working in this repo ignores it and codes to its own priors. Fix: `/shipit:init`. |
 | `unknown[]` non-empty | Those verification steps do not exist. Named in every implement report. |
-| `ponytail` **present** | Its persistent mode contradicts spec-driven tests and truncates reports. Fix: `stop ponytail`. |
+| `ponytail` | `code-review` and `run`'s review stage cannot run. Planning, implementing and standalone delivery are unaffected. |
 
 ## Why `--fix` cannot do everything
 

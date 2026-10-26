@@ -76,7 +76,9 @@ User insists on the full version → build it. Do not re-argue.
 ## Where this overrides ponytail
 
 Two upstream rules are deliberately disabled inside the shipit flow. Both would
-break the SDD contract if carried over unchanged.
+break the SDD contract if carried over unchanged. They hold even with the ponytail
+plugin installed and its mode active — `code-review` requires it — because inside
+a shipit skill these rules win over the plugin's session-wide mode.
 
 **Tests.** Upstream says YAGNI applies to tests too — one `assert`-based
 self-check, no frameworks, no fixtures. **Inside shipit that rung is off.**

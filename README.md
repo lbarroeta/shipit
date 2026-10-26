@@ -24,6 +24,8 @@ repository's rules at every step:
    becomes a question, not a guess.
 4. **Implements and validates.** `code-implement` follows the plan, runs the repo's
    own test, lint and build commands, and writes QA steps a non-developer can follow.
+   `code-review` then reviews the diff with ponytail's `ponytail-review` against the
+   plan and the repo's rules; must-fix findings go back to the builder.
 5. **Delivers.** `code-handoff` creates the branch, commit, push and a
    ready-for-review PR, and moves the card to review — only the actions listed in
    `handoff.allow`.
@@ -51,9 +53,10 @@ without your yes.
 | `/shipit:task-next` | Recommends the next ticket to take, and why | Choosing what to work on |
 | `/shipit:code-plan` | Writes the implementation plan for a ticket | Before coding |
 | `/shipit:code-implement` | Executes the plan, runs the checks, prepares QA steps | After the plan |
+| `/shipit:code-review` | Reviews the change with `ponytail-review`, the plan and the repo's rules; read-only | After implementing |
 | `/shipit:code-handoff` | Branch, commit, push, PR, tracker status | Work is ready for review |
 | `/shipit:pr-fix` | Resolves review comments (`--comments`) or red CI (`--ci`) | The PR has feedback |
-| `/shipit:run` | sync → plan → implement → sync → handoff for an existing ticket | You have a ticket and want it done |
+| `/shipit:run` | sync → plan → implement → review → sync → handoff for an existing ticket | You have a ticket and want it done |
 | `/shipit:status` | Lists in-flight tasks with their PR and tracker state | Anytime; `--prune` removes merged worktrees |
 
 In OpenCode the commands are `/shipit-<name>`, and `run` is not available.
@@ -72,7 +75,8 @@ In OpenCode the commands are `/shipit-<name>`, and `run` is not available.
 3. Pick how you work:
    - **You have a ticket and want it done:** `/shipit:run ENG-412`.
    - **You want to drive each step:** `/shipit:code-plan ENG-412`, then
-     `/shipit:code-implement`, `/shipit:sync` and `/shipit:code-handoff`.
+     `/shipit:code-implement`, `/shipit:code-review`, `/shipit:sync` and
+     `/shipit:code-handoff`.
    - **You only have an idea:** `/shipit:task-create "sessions should expire after
      30 idle minutes"` first.
 4. Review comments or red CI on the PR → `/shipit:pr-fix`.
@@ -143,9 +147,8 @@ is installed without your yes.
 | Tier | What | Without it |
 | --- | --- | --- |
 | **0 — required** | `git` | shipit does not run. That is the whole tier. |
-| **1 — recommended** | `gh` authenticated; a tracker MCP if you use one | `code-handoff` cannot push or open a PR; without a tracker MCP it falls back on your branch convention. `task-create` still drafts, `code-plan` and `code-implement` are unaffected. |
+| **1 — recommended** | `gh` authenticated; a tracker MCP if you use one; the ponytail plugin | `code-handoff` cannot push or open a PR; without a tracker MCP it falls back on your branch convention. Without ponytail, `code-review` and `run`'s review stage cannot run. `task-create` still drafts, `code-plan` and `code-implement` are unaffected. |
 | **2 — accelerators** | graphify CLI + graph; caveman; Context7 | Discovery falls back to `rg`: same answers, more tokens. Without Context7, library and framework API claims the repo cannot show come from model memory, marked unverified, with one notice line in the report. |
-| **3 — do not enable during a cycle** | the ponytail plugin | Nothing. The useful part is already vendored here. |
 
 ## Documentation
 

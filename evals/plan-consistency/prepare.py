@@ -17,6 +17,7 @@ PLUGIN_PATHS = (
     "skills/code-plan",
     "skills/task-next/references/readiness-policy.md",
     "references/lean-ladder.md",
+    "references/senior-stance.md",
 )
 
 

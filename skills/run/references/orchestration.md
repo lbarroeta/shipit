@@ -34,7 +34,7 @@ from commits without editing gitignore or the repo contract. Issue locks are sha
 across linked worktrees; checkout locks also prevent two different issues editing
 the same checkout. Only the owning coordinator can checkpoint or pause.
 
-Stages: `preparing → sync_before → plan → implement → sync_after → handoff → qa → done`. `pause` preserves
+Stages: `preparing → sync_before → plan → implement → review → sync_after → handoff → qa → done`. `pause` preserves
 stage and releases locks. A later `begin` reacquires them. Resume requires the same
 checkout and unchanged source/artifact hashes; it restores the saved branch only
 from a clean tree and never resets to main. Display saved QA/done results through
@@ -81,7 +81,9 @@ artifact. Both checkpoints use route `sync`.
 Planner: write the plan in `<paths.plans>`, use `--no-worktree`, no product code.
 Builder: execute with `--defer-handoff`; the explicit run request authorizes
 execution within the fetched criteria after the coordinator's contract check.
-Keep plan corrections in the planner, not the builder. Delivery: `implementation`
+Keep plan corrections in the planner, not the builder. Reviewer: execute
+`shipit:code-review` over the run-owned diff with plan and builder report; read-only,
+no tests, no git writes. Delivery: `implementation`
 mode, immutable post-sync delivery report plus builder evidence, journal path; no product or plan edits.
 Each child saves a result JSON and returns its path plus a short summary:
 
@@ -97,7 +99,10 @@ Each child saves a result JSON and returns its path plus a short summary:
 ```
 
 `effective` is populated by the coordinator only from runtime metadata; children
-leave unknown values null. The planner and both sync stages must return empty `blockers` for completion.
+leave unknown values null. The planner, the reviewer and both sync stages must return empty `blockers` for completion.
+A reviewer requesting changes returns `blocked` with one blocker per Must fix or
+`in scope` Should fix (re-review: Must fix only) and the unchanged `files` manifest;
+that result is what `repair` saves.
 Builder adds `validation`: exact executed `{ "command": "...", "exit_code": 0 }`
 entries, plus `files`: repo-relative paths exactly matching the tracked diff and
 non-ignored untracked files. Retain non-ignored generated plans here for ownership
@@ -186,11 +191,15 @@ python3 /plugin/skills/run/scripts/run_state.py --repo /repo qa --issue-key 'lin
 ```
 
 `pass` moves to done. `blocked` stays at qa. `fail` keeps the plan/branch, records
-feedback and invalidates builder/final-sync/delivery checkpoints, returning to implement.
+feedback and invalidates builder/review/final-sync/delivery checkpoints, returning to implement.
 After a product validation failure discovered by sync, save its blocked result
 with full owned manifest, then run `repair --issue-key KEY --owner OWNER
 --reason 'Exact failed check' --result-file /run-dir/blocked-sync.json`. This archives
 the old implementation evidence, retains plan/pre-sync, and returns to implement.
+A review requesting changes uses the same `repair` from the `review` stage. The
+helper allows one review repair per implementation cycle; a second needs
+`--user-decision 'User's words'` after the user decided. Every repair goes through
+review again before final sync.
 The builder receives sync-owned doc/config changes and must revalidate before a
 new sync_after checkpoint. `replan` instead reruns sync_before and planning.
 Do not mark pass from automated checks or another agent's opinion. Give the builder
