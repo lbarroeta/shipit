@@ -22,6 +22,13 @@ the first task that can move it today. Decide with evidence and say why.
 
 - Required: `.shipit/config.json` (`tracker`, `repo`, `paths`, `language`) and
   `references/readiness-policy.md`.
+- Product context, when present (`../../references/product-context.md`): PRD
+  `§3 Goal and success metrics` and `§5 Non-goals`; MVP `§1 Learning metric`,
+  `§2 Core flow` and the class of each story the candidates map to;
+  `.shipit/backlog.md` to map ticket IDs to story IDs; roadmap or current-state
+  docs under `.shipit/product/` for delivered or superseded work. Read only those
+  sections; absent files are skipped silently. Never read `.shipit/tasks/` drafts
+  as board state.
 - Read the configured tracker through its connected provider, GitHub Issues through
   `gh`. Scope to the configured repo/team/project and any narrower user-specified
   project, epic or IDs. User context may narrow; never silently broaden it.
@@ -44,8 +51,10 @@ the first task that can move it today. Decide with evidence and say why.
    in progress, in review/QA, blocked and unstarted; the active cycle/sprint and
    milestone; epics in flight and their remaining children. Note owned work in
    progress or with requested changes (finish before starting), stalled or
-   ownerless blocked items, and the outcome the board is currently driving
-   (active milestone, highest-priority epic or MVP core flow).
+   ownerless blocked items, and the outcome the board is currently driving: the
+   tracker's active milestone/cycle first, then the PRD goal and MVP learning
+   metric, then the highest-priority epic. Map each candidate to its story
+   through `backlog.md` or an explicit `H#` in its body.
 3. **Gather.** Fetch active, unstarted candidate work and its prerequisites. Omit
    terminal/archived/cancelled work and work already in progress elsewhere to avoid
    duplicate starts. Assignment on unstarted work is a relevance/ownership input,
@@ -63,8 +72,8 @@ the first task that can move it today. Decide with evidence and say why.
 6. **Rank ready candidates.** User's explicit sequencing constraints first, then
    current priority/urgency within that scope (including urgency carried along the
    path), then committed active cycle/sprint/milestone work, then continuing an epic
-   already in flight over opening a new one, then native project rank or explicit
-   Suggested order. Prefer work that demonstrably unblocks relevant tasks as a
+   already in flight over opening a new one, then MVP core-flow order, then native
+   project rank or explicit Suggested order. Prefer work that demonstrably unblocks relevant tasks as a
    tie-breaker, followed by clear scope and fit to stated capacity. Preserve the
    provider's priority meaning; Linear's 0 is unset, not highest priority.
    Never infer priority from issue number, creation order, estimate or table row.
@@ -83,6 +92,22 @@ the first task that can move it today. Decide with evidence and say why.
    blocked items without an owner or unblock action, missing priority on relevant
    work, epics with no ready child. Next command: `code-plan <ID>` or
    `run <ID>`; do not invoke either automatically.
+
+## Selection rules
+
+- The tracker owns state, priority, assignment and relations. Product docs inform
+  relevance and order only; they never make a ticket Done, blocked or prioritised.
+- A ticket for a non-goal, a `Deferred` or `Manual` story, or a story marked
+  `built` is not recommended. Report it with the doc section that excludes it; a
+  `built` story with an open ticket may be stale and needs verification.
+- With priority tied, a story on an earlier core-flow step ranks before a later
+  one. A later step whose earlier step still has open work ranks lower, but is
+  not blocked unless a real prerequisite says so.
+- A ticket that maps to no story while PRD/MVP exist stays eligible; flag it as
+  unmapped. A doc/tracker contradiction (a P0 on a `Deferred` story) is a conflict
+  to expose in the report, never resolved silently in either direction.
+- No recommendation rests on a guess: every reason in the report cites a tracker
+  field, a relation, or a product doc section.
 
 A high-priority blocked task can explain urgency, but cannot become the next
 executable task until its prerequisite is met; recommend the ready step that moves
