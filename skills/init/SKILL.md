@@ -31,7 +31,7 @@ committed. The repo's own docs are linked from the contract, never copied into i
 | State | What `init` does |
 | --- | --- |
 | New — no contract, no docs | Detects and writes everything |
-| Empty — no manifest yet (recipe 2) | Also asks which template the code will come from, per *Template* |
+| Empty — no files outside `.shipit/`, tracked or untracked | Also asks which template the code will come from, per *Template* |
 | Documented — `docs/`, `AGENTS.md`, `CLAUDE.md` or other agent docs exist | Inventories them, writes only what they do not state |
 | Legacy — `.sdd/` exists (files or symlinks) | Migrates it per *Legacy migration*, then continues |
 | Initialized — `.shipit/config.json` exists | Re-inspects and reconciles with sync's merge; recorded answers are reused, never re-asked |
@@ -227,7 +227,9 @@ be generated from, pin the commit and record `template`, all per
 `../../references/templates.md`. `init` never clones or generates the template:
 the stack stays `unknown` until the code exists, and re-running `init` then
 detects it. A repo with code and no recorded `template` gets `null` without a
-question.
+question. The baseline needs a commit: none yet (`git rev-parse -q --verify HEAD`
+fails) → before *Baseline*, ask the user to run
+`! git commit --allow-empty -m "chore: start"`; `init` never commits.
 
 ## Legacy migration
 

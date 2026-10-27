@@ -79,8 +79,9 @@ In OpenCode the commands are `/shipit-<name>`, and `run` is not available.
      `/shipit:code-handoff`.
    - **You only have an idea:** `/shipit:task-create "sessions should expire after
      30 idle minutes"` first.
-   - **You are starting from zero:** `git init` an empty directory and run
-     `/shipit:init`; it asks which template from `~/.config/shipit/templates.json`
+   - **You are starting from zero:** `git init` an empty directory, make a
+     first commit (`git commit --allow-empty -m "chore: start"`; the baseline needs
+     one) and run `/shipit:init`; it asks which template from `~/.config/shipit/templates.json`
      the code will come from — see [templates](references/templates.md). Then
      `/shipit:product-discovery` and `/shipit:product-mvp-cut`.
 4. Review comments, red CI or conflicts on the PR → `/shipit:pr-fix`.

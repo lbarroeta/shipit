@@ -26,9 +26,9 @@ typed in the chat for this run. A malformed entry is skipped and named.
 
 ## Choice
 
-Asked by `init` only when the repo is empty — no manifest matches
-`skills/init/references/detection-recipes.md § 2` — and `.shipit/config.json`
-records no `template` key. One question: the registry's names plus `none`. A
+Asked by `init` only when the repo is empty — `git ls-files -co --exclude-standard`
+lists nothing outside `.shipit/`, so a repo with code but no known manifest is not
+empty — and `.shipit/config.json` records no `template` key. One question: the registry's names plus `none`. A
 recorded answer, `null` included, is reused and never re-asked.
 
 Pin the commit at choice time, so every later step reads the same version that
