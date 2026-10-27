@@ -28,6 +28,7 @@
     "frameworks": [],
     "package_manager": null
   },
+  "template": null,
   "commands": {
     "setup": null,
     "test_all": null,

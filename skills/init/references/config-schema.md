@@ -37,6 +37,7 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `stack.languages` | string[] | With version pin files as evidence in `stack.md` |
 | `stack.frameworks` | string[] | Only from declared dependencies |
 | `stack.package_manager` | string \| null | Decided by lockfile |
+| `template` | object \| null | `{name, repo, commit}` the code is generated from; asked by `init` only in an empty repo. Absent → `null`. See `../../../references/templates.md § Config` |
 | `commands.*` | string \| null | Never written unverified. See placeholders below |
 | `commands_verified.<key>` | `{exit, at, proof, command}` | Exact proving command; proof is `resolve`, `version`, `help`, `dry-run`, or `real`. Only `real` proves execution of the operation |
 | `paths.plans` | string | Default `.shipit/plans`. Where `code-plan` writes plans. Local scratch — `init` excludes it via `.git/info/exclude` |
@@ -203,3 +204,4 @@ shape adds a row; one that does not, adds nothing.
 | `0.9.0` | `run.models` adds optional native subagent routing | Add `{ "models": {} }` under `run` only when absent; preserve any existing routes. Defaults are pinned in the plugin |
 | `0.10.0` | `tracker.create.fields` names where `Priority` and `Size` land | Absent → add `{ "priority": "unknown", "size": "unknown" }` and append both keys to `unknown[]`; adapter `none` → `null` for both, nothing appended. Upgrade does not detect — say `/shipit:sync` resolves them once the tracker is reachable |
 | `0.15.0` | The contract moved from `.sdd/` to `.shipit/`; `sdd_tracking` retired | Performed by `init` (see its *Legacy migration*): `sync` finding `.sdd/config.json` without `.shipit/config.json` stops and points to `/shipit:init`. On the moved config: drop `sdd_tracking`; a `paths.*` value inside `.sdd/`, or reached through a `.sdd/` symlink, becomes its `.shipit/` default, and any other custom value is kept and reported; set `docs.owned_by_shipit` to `[".shipit/"]` and `docs.pointer` to the file that holds the `shipit:contract` block |
+| `0.22.0` | `template` records the template a new project is generated from | None: absent reads as `null`. `init` asks only when the repo is still empty |

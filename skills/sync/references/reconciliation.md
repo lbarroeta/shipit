@@ -44,7 +44,7 @@ after reconciliation. Never replace
 an entire config from the template. Merge keys recursively; preserve extension keys.
 For config values, apply these policies even when a file looks wholly generated:
 
-- Preserve `language`, `handoff.allow`, `run.models`, `markers`, `docs.pointer`,
+- Preserve `language`, `handoff.allow`, `run.models`, `markers`, `docs.pointer`, `template`,
   custom `paths.plans/tasks/rules`, and explicit worktree enabled/root/base/link/setup
   settings. Missing preferences use documented legacy defaults or a required
   question; do not rerun init's default-setting recipes on existing values.

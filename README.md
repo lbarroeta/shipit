@@ -43,7 +43,7 @@ without your yes.
 
 | Command | What it does | When |
 | --- | --- | --- |
-| `/shipit:init` | Reads the repo and writes the `.shipit/` contract | Once per repo; safe to re-run |
+| `/shipit:init` | Reads the repo and writes the `.shipit/` contract; in an empty repo, asks which template the code will come from | Once per repo; safe to re-run |
 | `/shipit:doctor` | Checks git, `gh`, tracker and accelerators; prints each fix and its cost | Before the first run, or when something is missing |
 | `/shipit:sync` | Reconciles the contract and docs with the code; `--upgrade` migrates config | Before planning, after implementing, after updating shipit |
 | `/shipit:product-discovery` | Interviews you and writes the PRD | Once per product |
@@ -79,6 +79,10 @@ In OpenCode the commands are `/shipit-<name>`, and `run` is not available.
      `/shipit:code-handoff`.
    - **You only have an idea:** `/shipit:task-create "sessions should expire after
      30 idle minutes"` first.
+   - **You are starting from zero:** `git init` an empty directory and run
+     `/shipit:init`; it asks which template from `~/.config/shipit/templates.json`
+     the code will come from — see [templates](references/templates.md). Then
+     `/shipit:product-discovery` and `/shipit:product-mvp-cut`.
 4. Review comments, red CI or conflicts on the PR → `/shipit:pr-fix`.
 
 ## Install

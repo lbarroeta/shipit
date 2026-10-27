@@ -31,6 +31,7 @@ committed. The repo's own docs are linked from the contract, never copied into i
 | State | What `init` does |
 | --- | --- |
 | New — no contract, no docs | Detects and writes everything |
+| Empty — no manifest yet (recipe 2) | Also asks which template the code will come from, per *Template* |
 | Documented — `docs/`, `AGENTS.md`, `CLAUDE.md` or other agent docs exist | Inventories them, writes only what they do not state |
 | Legacy — `.sdd/` exists (files or symlinks) | Migrates it per *Legacy migration*, then continues |
 | Initialized — `.shipit/config.json` exists | Re-inspects and reconciles with sync's merge; recorded answers are reused, never re-asked |
@@ -154,7 +155,7 @@ linked worktree.
   in does not imply the language its owner wants shipit to write in. Ask once,
   default `en` per key, record it in `language.{plan,task,pr,code}`.
 - **Recorded answers are reused.** An existing config's `language`, tracker,
-  `handoff.allow`, `run.models`, `paths`, worktree settings and `docs.pointer` are
+  `handoff.allow`, `run.models`, `paths`, worktree settings, `template` and `docs.pointer` are
   never re-asked or reset to defaults; sync's reconciliation policy applies.
 - **Ticket drafts and generated plans are never committed.** `<paths.tasks>` and
   `<paths.plans>` are appended to `.git/info/exclude`. A draft is scratch that stops
@@ -190,6 +191,7 @@ linked worktree.
    unless named. Accept a tag (`es`, `pt-BR`) or a plain name; store the tag.
    Identifiers, commit subjects, branch names, the config and what shipit generates
    stay English. See `references/config-schema.md § Scope of language`.
+3b. **Template.** Empty repo only, per *Template*.
 4. **Inventory the docs.** Per *Existing documentation*.
 5. **Detect.** With a graph, query relevant architecture/convention concepts first
    and verify candidates in source; never treat graph output as proof. No graph →
@@ -217,6 +219,15 @@ linked worktree.
     actually left undetermined. The contract block exists exactly once, in
     `docs.pointer`. Every link shipit wrote resolves to an existing file. No `.sdd/`
     remains. Fix before reporting, then record the baseline below.
+
+## Template
+
+An empty repo is a project starting from zero. Ask which template its code will
+be generated from, pin the commit and record `template`, all per
+`../../references/templates.md`. `init` never clones or generates the template:
+the stack stays `unknown` until the code exists, and re-running `init` then
+detects it. A repo with code and no recorded `template` gets `null` without a
+question.
 
 ## Legacy migration
 
@@ -282,6 +293,8 @@ passed off as a completed baseline.
 - Graph: CLI present, installed, declined, or steps given; graph built, reused or
   absent.
 - Stack detected, one line.
+- Template: name, repo and pinned commit, `none`, or reused from the config. Empty
+  repo only.
 - Output language per key, and whether it came from the question, the existing
   config or `--language`.
 - Commands verified, with the exit code each returned.
@@ -308,4 +321,5 @@ passed off as a completed baseline.
 - Next step: `/shipit:task-create` for a need with no ticket yet, `/shipit:code-plan` for one
   that has. UI layers found and no `.shipit/design-system.md` → also
   `/shipit:design-system`, once. No `.shipit/product/prd.md` → also
-  `/shipit:product-discovery`, once.
+  `/shipit:product-discovery`, once. Empty repo → only
+  `/shipit:product-discovery`: there is no code to plan yet.
