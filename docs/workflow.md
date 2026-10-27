@@ -144,6 +144,13 @@ already delivered effects and journals must be reconciled before retrying.
 Slack and nowhere else. It drafts the ticket against your repo — grounded in real
 paths, not invented ones — shows it to you, and creates it only after you say yes.
 
+Like a senior project manager, it first surveys the board: it searches the tracker,
+local drafts and `backlog.md` for work that already covers the need. A duplicate or
+overlap stops the draft until you choose — use the existing ticket, narrow this one
+to the remainder, or create it anyway with the difference stated. The draft's
+**Related work** places it on the board: the outcome it advances, its parent epic
+and neighbouring tickets, with priority set against what the board is driving.
+
 ```
 /shipit:task-create "sessions should expire after 30 idle minutes"
 ```
