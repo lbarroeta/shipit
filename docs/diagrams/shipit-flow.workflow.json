@@ -1,0 +1,248 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Cómo funciona shipit",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "start",
+      "label": "Arrancar un proyecto (una vez)"
+    },
+    {
+      "id": "ticket",
+      "label": "Cada ticket"
+    },
+    {
+      "id": "feedback",
+      "label": "Feedback del PR",
+      "variant": "exception"
+    }
+  ],
+  "groups": [
+    {
+      "id": "planned",
+      "label": "Planeado (PRs 2–3)",
+      "lane": "start",
+      "fromCol": 3,
+      "toCol": 4,
+      "variant": "dashed"
+    },
+    {
+      "id": "run_chain",
+      "label": "/shipit:run encadena",
+      "lane": "ticket",
+      "fromCol": 1,
+      "toCol": 4,
+      "variant": "emphasis"
+    }
+  ],
+  "mainPath": [
+    "task_next",
+    "code_plan",
+    "code_implement",
+    "code_review",
+    "code_handoff"
+  ],
+  "nodes": [
+    {
+      "id": "init",
+      "lane": "start",
+      "col": 0,
+      "type": "security",
+      "label": "init",
+      "sublabel": "contrato + template"
+    },
+    {
+      "id": "discovery",
+      "lane": "start",
+      "col": 1,
+      "type": "frontend",
+      "label": "product-discovery",
+      "sublabel": "PRD",
+      "width": 128
+    },
+    {
+      "id": "mvp_cut",
+      "lane": "start",
+      "col": 2,
+      "type": "frontend",
+      "label": "product-mvp-cut",
+      "sublabel": "qué sale primero",
+      "width": 128
+    },
+    {
+      "id": "tech_design",
+      "lane": "start",
+      "col": 3,
+      "type": "external",
+      "label": "tech-design",
+      "sublabel": "módulos + datos",
+      "tag": "planeado"
+    },
+    {
+      "id": "bootstrap",
+      "lane": "start",
+      "col": 4,
+      "type": "external",
+      "label": "bootstrap",
+      "sublabel": "genera el código",
+      "tag": "planeado"
+    },
+    {
+      "id": "task_create",
+      "lane": "start",
+      "col": 5,
+      "type": "database",
+      "label": "task-create",
+      "sublabel": "épicas + tickets"
+    },
+    {
+      "id": "task_next",
+      "lane": "ticket",
+      "col": 0,
+      "type": "database",
+      "label": "task-next",
+      "sublabel": "qué sigue"
+    },
+    {
+      "id": "code_plan",
+      "lane": "ticket",
+      "col": 1,
+      "type": "backend",
+      "label": "code-plan",
+      "sublabel": "sync + plan"
+    },
+    {
+      "id": "code_implement",
+      "lane": "ticket",
+      "col": 2,
+      "type": "backend",
+      "label": "code-implement",
+      "sublabel": "tests, lint, QA"
+    },
+    {
+      "id": "code_review",
+      "lane": "ticket",
+      "col": 3,
+      "type": "security",
+      "label": "code-review",
+      "sublabel": "ponytail-review"
+    },
+    {
+      "id": "code_handoff",
+      "lane": "ticket",
+      "col": 4,
+      "type": "cloud",
+      "label": "code-handoff",
+      "sublabel": "sync + PR"
+    },
+    {
+      "id": "pr_fix",
+      "lane": "feedback",
+      "col": 5,
+      "type": "messagebus",
+      "label": "pr-fix",
+      "sublabel": "comentarios, CI"
+    }
+  ],
+  "edges": [
+    {
+      "from": "init",
+      "to": "discovery"
+    },
+    {
+      "from": "discovery",
+      "to": "mvp_cut"
+    },
+    {
+      "from": "mvp_cut",
+      "to": "tech_design",
+      "variant": "dashed"
+    },
+    {
+      "from": "tech_design",
+      "to": "bootstrap",
+      "variant": "dashed"
+    },
+    {
+      "from": "bootstrap",
+      "to": "task_create",
+      "variant": "dashed"
+    },
+    {
+      "from": "task_create",
+      "to": "task_next",
+      "label": "tickets",
+      "role": "branch"
+    },
+    {
+      "from": "task_next",
+      "to": "code_plan"
+    },
+    {
+      "from": "code_plan",
+      "to": "code_implement"
+    },
+    {
+      "from": "code_implement",
+      "to": "code_review"
+    },
+    {
+      "from": "code_review",
+      "to": "code_handoff",
+      "label": "ok",
+      "variant": "emphasis"
+    },
+    {
+      "from": "code_review",
+      "to": "code_implement",
+      "label": "must-fix",
+      "role": "return",
+      "variant": "dashed"
+    },
+    {
+      "from": "code_handoff",
+      "to": "pr_fix",
+      "label": "feedback",
+      "role": "error"
+    },
+    {
+      "from": "pr_fix",
+      "to": "code_handoff",
+      "label": "re-entrega",
+      "role": "return",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": ".shipit/ es el contrato",
+      "items": [
+        "config.json: comandos verificados, tracker, template",
+        "stack, conventions y rules/ con evidencia",
+        "product/: PRD y MVP; todos los skills lo leen"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Cómo usarlo",
+      "items": [
+        "Proyecto nuevo: git init y /shipit:init",
+        "Con ticket: /shipit:run ENG-412",
+        "Paso a paso: plan, implement, review, handoff"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Lo que nunca hace",
+      "items": [
+        "Commit, push o PR fuera de code-handoff",
+        "Inventar reglas de negocio o comandos",
+        "Instalar algo sin tu sí"
+      ]
+    }
+  ]
+}

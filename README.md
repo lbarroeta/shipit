@@ -158,6 +158,7 @@ is installed without your yes.
 
 | Guide | Covers |
 | --- | --- |
+| [Flow diagram](docs/diagrams/shipit-flow.html) | Interactive map of the main flow, from a new project to a merged PR (Spanish); open it in a browser. Source: `shipit-flow.workflow.json`, rendered with archify |
 | [Workflow](docs/workflow.md) | `run`, the step-by-step cycle, tickets and trackers, what `code-handoff` may do, parallel worktrees |
 | [The `.shipit/` contract](docs/contract.md) | What `init` writes, evidence rules, output language, the agent pointer, the code graph, product docs |
 | [Design contract](docs/design-system.md) | The `design-system` interview, and adding it to a project already running shipit |
