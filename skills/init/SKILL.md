@@ -156,10 +156,12 @@ linked worktree.
 - **Recorded answers are reused.** An existing config's `language`, tracker,
   `handoff.allow`, `run.models`, `paths`, worktree settings and `docs.pointer` are
   never re-asked or reset to defaults; sync's reconciliation policy applies.
-- **Ticket drafts are never committed.** `<paths.tasks>` is appended to
-  `.git/info/exclude`. A draft is scratch that stops being true the moment the issue
-  exists in the tracker, which is the source of truth from then on, and a stale copy
-  in the repo is worse than none.
+- **Ticket drafts and generated plans are never committed.** `<paths.tasks>` and
+  `<paths.plans>` are appended to `.git/info/exclude`. A draft is scratch that stops
+  being true the moment the issue exists in the tracker, which is the source of truth
+  from then on, and a stale copy in the repo is worse than none. A plan is context
+  for one task; its PR body carries it, and an untracked leftover blocks the next
+  run's clean-tree check. Plans already tracked stay tracked.
 - **Local files use `.git/info/exclude`, never `.gitignore`.** `.gitignore` is
   itself a shared, committed file — writing to it to keep something local is a
   contradiction. `.git/info/exclude` lives under `.git/`, is never committed, and
@@ -208,7 +210,7 @@ linked worktree.
     what the repo's docs do not state; an existing contract through sync's
     base/current/candidate merge (`../sync/references/reconciliation.md`).
 12. **Point at it.** Per *Discovery pointer*; record `docs.pointer`. Append
-    `<paths.tasks>` and any `CLAUDE.local.md` to `.git/info/exclude` when nothing
+    `<paths.tasks>`, `<paths.plans>` and any `CLAUDE.local.md` to `.git/info/exclude` when nothing
     already covers them — check with `git check-ignore -q` first.
 13. **Self-check and baseline.** Every factual claim shipit wrote has evidence. Every
     non-null command has a `commands_verified` entry. `unknown[]` matches what was
