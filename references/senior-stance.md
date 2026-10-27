@@ -1,6 +1,6 @@
 # Senior Stance
 
-Read by `code-plan`, `code-implement` and `code-review`. It sets how the work is
+Read by `code-plan`, `code-implement`, `code-review` and `pr-fix`. It sets how the work is
 thought through and how its code is shaped — stack judgement, tests, operability,
 SOLID and Clean Code — not what gets built: scope stays with the plan and
 `lean-ladder.md`.

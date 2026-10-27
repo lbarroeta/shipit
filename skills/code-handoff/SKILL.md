@@ -289,8 +289,8 @@ pushback justifications.
 
 - **Commit** — the report's `Files Changed` after artifact exclusions. Same
   manifest rule. An
-  empty `Files Changed` is valid here: a run of `resolved`, `pushback` or `question`
-  items touches no code. Then there is nothing to deliver — say so and stop.
+  empty `Files Changed` is valid here: a run of `resolved`, `invalid`, `pushback` or
+  `question` items touches no code. Then there is nothing to deliver — say so and stop.
 - **Push** — normally, to the PR's existing branch.
 - **PR** — never create one; a missing PR is a preflight failure. Update the body
   only when the report supplies a new one. The draft state is untouched unless
@@ -300,9 +300,10 @@ pushback justifications.
     resolve the thread. On GitHub: `gh api graphql` with the `resolveReviewThread`
     mutation, thread id from `pullRequest.reviewThreads`.
   - `resolved` → reply with the report's one-line reason, then resolve the thread.
-  - `pushback` → reply with the justification **verbatim** from the report. Do
-    **not** resolve. The decision is human.
+  - `pushback` or `invalid` → reply with the justification **verbatim** from the
+    report. Do **not** resolve. The decision is human.
   - `question` → reply with the question verbatim. Do **not** resolve.
+  - `external`, `pending`, `conflict` → no thread; nothing to post.
   Not allowed → every reply stays in the report as text, and the report names how
   many threads are waiting on the user.
 - **Tracker** — none in this mode, whatever `allow` says. The thread replies, or the
