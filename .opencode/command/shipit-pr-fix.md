@@ -1,5 +1,5 @@
 ---
-description: Resolve PR review comments and red CI with minimal fixes
+description: Triage PR review comments, red CI and merge conflicts, then apply approved minimal fixes
 ---
 
 Load the shipit `pr-fix` skill and run it.
@@ -7,7 +7,7 @@ Load the shipit `pr-fix` skill and run it.
 - Plugin root: `$SHIPIT_ROOT` if set, else `~/.config/opencode/plugins/shipit`.
 - Read `<root>/skills/pr-fix/SKILL.md` and follow it exactly. Paths it writes
   relative to itself resolve under `<root>` — including
-  `<root>/references/lean-ladder.md` and
+  `<root>/references/senior-stance.md`, `<root>/references/lean-ladder.md` and
   `<root>/skills/code-implement/references/validation-standards.md`.
 - Command names are flat here: `/shipit:pr-fix` is `/shipit-pr-fix`.
 

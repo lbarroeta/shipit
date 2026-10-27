@@ -55,7 +55,7 @@ without your yes.
 | `/shipit:code-implement` | Executes the plan, runs the checks, prepares QA steps | After the plan |
 | `/shipit:code-review` | Reviews the change with `ponytail-review`, the plan and the repo's rules; read-only | After implementing |
 | `/shipit:code-handoff` | Branch, commit, push, PR, tracker status | Work is ready for review |
-| `/shipit:pr-fix` | Resolves review comments (`--comments`) or red CI (`--ci`) | The PR has feedback |
+| `/shipit:pr-fix` | Triages review comments (`--comments`), red CI (`--ci`) and merge conflicts — what applies, what does not and why — then fixes what you approve | The PR has feedback |
 | `/shipit:run` | sync → plan → implement → review → sync → handoff for an existing ticket | You have a ticket and want it done |
 | `/shipit:status` | Lists in-flight tasks with their PR and tracker state | Anytime; `--prune` removes merged worktrees |
 
@@ -79,7 +79,7 @@ In OpenCode the commands are `/shipit-<name>`, and `run` is not available.
      `/shipit:code-handoff`.
    - **You only have an idea:** `/shipit:task-create "sessions should expire after
      30 idle minutes"` first.
-4. Review comments or red CI on the PR → `/shipit:pr-fix`.
+4. Review comments, red CI or conflicts on the PR → `/shipit:pr-fix`.
 
 ## Install
 
