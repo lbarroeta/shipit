@@ -39,7 +39,7 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `stack.package_manager` | string \| null | Decided by lockfile |
 | `commands.*` | string \| null | Never written unverified. See placeholders below |
 | `commands_verified.<key>` | `{exit, at, proof, command}` | Exact proving command; proof is `resolve`, `version`, `help`, `dry-run`, or `real`. Only `real` proves execution of the operation |
-| `paths.plans` | string | Default `.shipit/plans` |
+| `paths.plans` | string | Default `.shipit/plans`. Where `code-plan` writes plans. Local scratch — `init` excludes it via `.git/info/exclude` |
 | `paths.tasks` | string | Default `.shipit/tasks`. Where `task-create` writes ticket drafts. Local scratch — `init` excludes it via `.git/info/exclude` |
 | `paths.rules` | string | Default `.shipit/rules` |
 | `paths.src` | string[] | Roots that hold product code |

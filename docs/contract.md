@@ -19,8 +19,9 @@ rest. `paths.plans`, `paths.tasks` and `paths.rules` can move those three.
 
 Plus `.shipit/tasks/`, where `/shipit:task-create` writes ticket drafts. It is scratch, not
 contract: excluded from git through `.git/info/exclude`.
-Generated plans also stay local: `code-handoff` excludes them from commits, including
-inside `run`. Planning handoff carries a short proposal summary and the complete
+Generated plans also stay local: excluded the same way, and `code-handoff` keeps them
+out of commits, including inside `run`. `/shipit:status --prune` deletes a plan once
+its PR is merged or closed. Planning handoff carries a short proposal summary and the complete
 plan in a collapsed PR-body block when a PR exists or the branch has commits ahead
 of its base; otherwise the local plan is the deliverable, with no empty commit to
 create a PR.

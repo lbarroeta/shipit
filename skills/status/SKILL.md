@@ -1,6 +1,6 @@
 ---
 name: status
-description: Use to see every in-flight shipit task at once — worktree, plan, branch, PR state, tracker state — and to clean up worktrees whose PR is merged. Read-only unless `--prune` is passed.
+description: Use to see every in-flight shipit task at once — worktree, plan, branch, PR state, tracker state — and to clean up worktrees and plans whose PR is merged. Read-only unless `--prune` is passed.
 metadata:
   writes_product_code: false
 ---
@@ -22,7 +22,8 @@ four and no memory of which is which.
 - `git worktree remove` without `--force`, always. It refusing means uncommitted work
   exists — that is the point.
 - `git branch -d`, never `-D`. It refusing means unmerged commits exist.
-- Never delete a plan file. A merged plan is history.
+- A plan is deleted only by `--prune`, only once its task's PRs are all merged or
+  closed. The PR body carries the plan; the local file is context for that one task.
 - Tracker and PR unreachable → show the row with `?` in that column. Never omit a
   worktree because its status could not be fetched.
 
@@ -81,10 +82,27 @@ never pushed.
 
 `git worktree prune` at the end also clears records for directories deleted by hand.
 
+### Finished plans
+
+Then the plans in the main checkout's `<paths.plans>` — where `run` and the default
+no-worktree `code-plan` write them. A worktree's plans go with its worktree.
+
+Eligible: the plan's tracker id (its `# <ISSUE-ID>` heading, else its slug) matches
+the head branch of at least one PR, and every such PR is merged or closed. An open
+PR, no matching PR, or no tracker id → keep it and list the reason. Print, then:
+
+```bash
+rm "<paths.plans>/<slug>.md"
+```
+
+Never `git rm`: a tracked plan is team history, not scratch — list it as `tracked`
+and leave it.
+
 ## When there are no worktrees
 
 Say so in one line, and note whether `worktree.enabled` is false in the contract or
 simply nothing is in flight. Those are different situations and the fix differs.
+`--prune` still cleans finished plans.
 
 `worktree.enabled: false` is the default and is not a problem — report it as the
 configured mode, not as something to repair. Mention turning it on only if the user

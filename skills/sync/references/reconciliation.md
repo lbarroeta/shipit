@@ -55,7 +55,7 @@ For config values, apply these policies even when a file looks wholly generated:
   Recheck unresolved or absent capabilities when reachable. Connection failure
   means unverified, not absent: preserve choices, record unknown, do not switch
   adapters. A connected tracker contradicting recorded identity requires resolution.
-- Maintain task, `CLAUDE.local.md` and graph exclusions through Git's resolved
+- Maintain task, plan, `CLAUDE.local.md` and graph exclusions through Git's resolved
   info/exclude path; do not assume `.git` is a directory in worktrees. A contract
   file that Git ignores is reported; never untrack files or change team policy.
 - `worktree.share_graph` follows actual graph location/exclusion; never overwrite
