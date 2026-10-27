@@ -57,6 +57,7 @@ plugin disabled, so the number reported is a delta, not an absolute.
 | `task-next-blocked` | Selecting the first/highest-priority blocked issue, conflating hierarchy with dependencies, or mutating tracker state |
 | `task-next-critical-path` | Picking a standalone task over the ready prerequisite that unblocks the top priority, or starting new work without flagging owned work awaiting changes |
 | `task-next-product-context` | Recommending a `Deferred`, `built` or non-goal story, ignoring core-flow order, or letting product docs override tracker state |
+| `task-create-duplicate` | Drafting a ticket that duplicates open work, re-proposing cancelled work silently, or opening a new epic beside the one in flight |
 | `task-defined-blocked` | Rejecting a defined dependency-blocked task or inventing business rules to fill essential gaps |
 | `plan-stale-prerequisite` | Starting stale or prerequisite-blocked work before checking the live Goal and unblock condition |
 | `task-provider-relations` | Claiming native hierarchy/dependencies when only text references were published, or losing child content |
