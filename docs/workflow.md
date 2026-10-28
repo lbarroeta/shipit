@@ -48,6 +48,12 @@ after the coordinator checks the generated plan. Scope/security/data blockers
 still go to the user. `code-implement --defer-handoff` lets the builder return control
 before review, final sync and the separate delivery agent run. The reviewer runs
 `code-review` read-only; must-fix findings return to the builder once, then to you.
+With `acceptance.enabled`, the QA agent runs `code-qa` next. It sees only the goal and
+acceptance criteria, tests the local app through Playwright MCP, runs the regression
+suite first and adds one spec file per task. A failed criterion or regression goes
+back to the builder once, then to you; an edge case outside the criteria is a
+reported risk, never a blocker. The helper rejects any QA change outside
+`acceptance.regression.dir` and any edit to a spec already on `main`.
 Standalone `code-implement` also returns its report; invoke `code-review`, `sync`
 and `code-handoff` explicitly afterward.
 
@@ -79,6 +85,8 @@ The individual cycle remains available:
 /shipit:code-implement   red/green + validation scoped to the change
         │
 /shipit:code-review      ponytail-review + plan + repo rules   read-only verdict
+        │
+/shipit:code-qa          Playwright MCP + regression suite     opt-in: acceptance.enabled
         │
 /shipit:sync             reconcile contracts/docs after implementation
         │
@@ -236,7 +244,10 @@ PR, converts an existing draft when needed, and moves the linked card to
 `In Review` after verifying PR readiness. It verifies the card update and preserves
 review/QA/terminal states. No card or adapter `none` → the tracker step is `n/a`.
 Tracker comments, review-thread replies and issue creation remain opt-in: add
-`tracker_comment`, `thread_replies` or `issue_create` per repo. Existing explicit
+`tracker_comment`, `thread_replies`, `issue_create`, `evidence_pr` or
+`evidence_tracker` per repo. The two evidence entries publish `code-qa` screenshots to
+an orphan `shipit-evidence` branch and comment the acceptance table on the PR or the
+issue. Existing explicit
 allow-lists are preserved by sync and migrations. A capability that is not listed is not performed, and the run says
 `skipped (not in handoff.allow)` rather than doing it anyway.
 The `code-plan` startup transition to `In Progress` is separate and applies whenever

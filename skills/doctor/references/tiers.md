@@ -14,7 +14,9 @@ That is the whole tier. Everything below is optional.
 `shipit:run` has additional requirements specific to its orchestrated pipeline:
 Python 3.10+, native subagent controls, access to its configured model/effort pairs,
 a readable existing tracker issue, local `main` with a remote `main` upstream, and
-the ponytail plugin for its review stage.
+the ponytail plugin for its review stage. With `acceptance.enabled`, its acceptance
+stage also needs Playwright MCP in the session and Playwright installed in the repo
+(rows below).
 Report these when checking readiness for `run`; they do not block the individual
 planning/implementation skills. Never install or substitute them silently.
 
@@ -37,6 +39,8 @@ executables, and a tracker is reached through an MCP server or `gh`. They come f
 | `gh` | `command -v gh` | `brew install gh`, or see cli.github.com | `code-handoff` cannot open or update a PR |
 | `gh` auth | `gh auth status` | `gh auth login` | same as above |
 | ponytail | `claude plugin list` names it | `claude plugin marketplace add DietrichGebert/ponytail` then `claude plugin install ponytail@ponytail` | `code-review` and `run`'s review stage cannot run: `ponytail-review` is their review engine. Planning, implementing and delivering standalone are unaffected |
+| Playwright MCP | `browser_navigate`/`browser_snapshot` tools listed in the session | `claude mcp add playwright -- npx @playwright/mcp@latest`; Codex: `[mcp_servers.playwright]` with `command = "npx"`, `args = ["@playwright/mcp@latest"]` | `code-qa` and `run`'s acceptance stage cannot run. Only checked when `acceptance.enabled`; otherwise `n/a` |
+| Playwright in the repo | `detection-recipes.md § 5b` evidence plus `npx playwright --version` | JavaScript: `npm install -D @playwright/test && npx playwright install chromium`. Rails: add `capybara-playwright-driver` to the `:test` group, `bundle install`, then `npx playwright install chromium`; then `/shipit:sync` | no regression suite, so `acceptance` stays disabled. Never installed by `--fix`: it changes the repo's dependencies |
 | tracker | adapter from `.shipit/config.json`, plus whether its mechanism is reachable this session | run `/shipit:sync` once the tracker is reachable | no tracker-supplied branch name — `.shipit/conventions.md` decides instead. Adapter `none` is a valid configuration, not a gap |
 | tracker create | `tracker.create.supported` plus the target it names | run `/shipit:sync` with the tracker connected | the draft names no target to paste into. `task-create` still writes it; authorized handoff can publish when `issue_create` is allowed. With adapter `none` this is `n/a`, not a gap |
 | tracker fields | `tracker.create.fields.priority` and `.size`, each read on its own | `"unknown"` → run `/shipit:sync` with the tracker connected; on `github-issues` add `gh auth refresh -s project` when `unknown[]` shows the scope was the reason. `null` → verified absent: link a Project that has the field (`github-issues`), or set the name of a renamed field in `config.json` | `null`: a created issue does not carry that value in the tracker's own field; the draft still does. `"unknown"`: unverified, not missing — `code-handoff` tries the adapter's default name and may succeed. Adapter `none` → `n/a` |

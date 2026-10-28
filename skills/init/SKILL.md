@@ -195,6 +195,9 @@ linked worktree.
    and verify candidates in source; never treat graph output as proof. No graph →
    source discovery. Work through `references/detection-recipes.md` in order. It owns every recipe; do not improvise a detection this file does not describe.
 6. **Verify commands.** Run each candidate command. Green → write it. Red or absent → `null` plus `unknown[]`. Record the result in `commands_verified`.
+6b. **Acceptance QA.** Per `references/detection-recipes.md § 5b`: Playwright
+    verified installed → propose the `acceptance` block and confirm it with the user;
+    not installed → `enabled: false`, never an install.
 7. **Derive layers.** From real directories, with one exemplar each. No fixed list of layer names.
 8. **Derive test rules.** One real test per kind, reduced to its shape.
 9. **Detect tracker and companions.** Adapter per `references/detection-recipes.md

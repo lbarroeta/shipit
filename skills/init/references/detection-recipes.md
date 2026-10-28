@@ -98,6 +98,34 @@ and the exact command used; never report their operation as executed successfull
   simplecov+undercover, `--coverage` thresholds, codecov with a required status.
   Record the command, and whether it gates the merge.
 
+## 5b — Acceptance QA (Playwright)
+
+Detect and verify; **never install**. Playwright counts as installed when both hold:
+
+| Stack | Dependency evidence | Verify |
+| --- | --- | --- |
+| JavaScript | `@playwright/test` in `package.json` (any dependency group) | `npx playwright --version` exits 0 |
+| Rails / Ruby | `capybara-playwright-driver` or `playwright-ruby-client` in `Gemfile.lock` | `npx playwright --version` exits 0 (the Ruby client drives the Node CLI) |
+
+Both hold → propose an `acceptance` block (`config-schema.md § acceptance`):
+
+- `app.start`: the dev server from recipe 3 — `bin/dev`, `bin/rails server`,
+  `npm run dev`. `base_url` and `ready_url`: its local port, plus `/up` when Rails
+  defines that health route. `seed`: `bin/rails db:seed` or the repo's seed script
+  when one exists, else omit.
+- `regression.dir` and `command`: an existing directory of Playwright or system
+  specs dedicated to acceptance; otherwise `e2e` with `npx playwright test
+  --pass-with-no-tests` (JavaScript) or `spec/system/acceptance` with `bundle exec
+  rspec --pattern 'spec/system/acceptance/**/*_spec.rb'` (Rails). Verify the command
+  with recipe 4 — for these two forms, running it with no specs is the real proof.
+- `accounts`: ask once for the role names and the environment variable names
+  holding their credentials. Never read or store a value.
+- `enabled`: `true` only after the user confirms the block. Declined → `false`.
+
+Either missing → `"acceptance": {"enabled": false}` and append `acceptance` to
+`unknown[]` with the missing half (dependency or CLI). `doctor` prints the install
+commands. A `base_url` that is not local is never proposed.
+
 ## 6 — Layers
 
 No fixed vocabulary. Derive them:

@@ -26,6 +26,10 @@ repository's rules at every step:
    own test, lint and build commands, and writes QA steps a non-developer can follow.
    `code-review` then reviews the diff with ponytail's `ponytail-review` against the
    plan and the repo's rules; must-fix findings go back to the builder.
+   With `acceptance` enabled, `code-qa` then tests the running app black-box
+   through Playwright MCP against the acceptance criteria, probes edge cases, runs
+   the regression suite and adds a spec per passed criterion, so later changes
+   cannot silently undo this one.
 5. **Delivers.** `code-handoff` creates the branch, commit, push and a
    ready-for-review PR, and moves the card to review — only the actions listed in
    `handoff.allow`.
@@ -54,9 +58,10 @@ without your yes.
 | `/shipit:code-plan` | Writes the implementation plan for a ticket | Before coding |
 | `/shipit:code-implement` | Executes the plan, runs the checks, prepares QA steps | After the plan |
 | `/shipit:code-review` | Reviews the change with `ponytail-review`, the plan and the repo's rules; read-only | After implementing |
-| `/shipit:code-handoff` | Branch, commit, push, PR, tracker status | Work is ready for review |
+| `/shipit:code-qa` | Tests the running app with Playwright MCP against the acceptance criteria, runs the regression suite and adds regression specs; opt-in per repo | After review |
+| `/shipit:code-handoff` | Branch, commit, push, PR, tracker status, QA evidence when allowed | Work is ready for review |
 | `/shipit:pr-fix` | Triages review comments (`--comments`), red CI (`--ci`) and merge conflicts — what applies, what does not and why — then fixes what you approve | The PR has feedback |
-| `/shipit:run` | sync → plan → implement → review → sync → handoff for an existing ticket | You have a ticket and want it done |
+| `/shipit:run` | sync → plan → implement → review → QA (opt-in) → sync → handoff for an existing ticket | You have a ticket and want it done |
 | `/shipit:status` | Lists in-flight tasks with their PR and tracker state | Anytime; `--prune` removes merged worktrees |
 
 In OpenCode the commands are `/shipit-<name>`, and `run` is not available.

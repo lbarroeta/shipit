@@ -41,7 +41,10 @@ lose rather than implying breakage.
    non-empty, does `commands.test_one` carry `{path}`, and does the
    `<!-- shipit:contract -->` block exist exactly once in `docs.pointer` (absent →
    `AGENTS.md`).
-3. Add the three tracker rows. The script checks executables and a tracker is not
+3. With `acceptance.enabled`, add the two Playwright rows: MCP tools seen in this
+   session, and the repo's dependency plus `npx playwright --version`.
+   Disabled → both `n/a`.
+4. Add the three tracker rows. The script checks executables and a tracker is not
    one — these come from `tracker.adapter`, `tracker.create` and
    `tracker.create.fields` in the config, plus
    whether that adapter's mechanism is connected in this session. Say which of the
@@ -50,8 +53,8 @@ lose rather than implying breakage.
    session → `ok  MCP connected (login not verifiable)`; otherwise the script's
    `ctx7` lines, including login. Configured but failed to connect →
    `unverified`, not missing.
-4. Print the report below.
-5. `--fix` → show what will run, ask once, then invoke the script with `--yes`.
+5. Print the report below.
+6. `--fix` → show what will run, ask once, then invoke the script with `--yes`.
    Re-run step 1 afterwards and print the new state.
 
 ## Report format
@@ -60,6 +63,8 @@ lose rather than implying breakage.
 tier 0  git                 ok       2.51.0
 tier 1  gh                  ok       authenticated as <login>
         ponytail            ok       code-review engine
+        playwright mcp      ok       acceptance QA
+        playwright (repo)   ok       capybara-playwright-driver · 1.56.0
         tracker             linear   MCP connected
         tracker create      ok       team Engineering · state Backlog
         tracker fields      partial  priority → priority · size → none (points scale)
@@ -106,6 +111,7 @@ reading this should know whether they can proceed, in one line.
 | pointer absent | shipit skills still read the contract by path, but every other agent working in this repo ignores it and codes to its own priors. Fix: `/shipit:init`. |
 | `unknown[]` non-empty | Those verification steps do not exist. Named in every implement report. |
 | `ponytail` | `code-review` and `run`'s review stage cannot run. Planning, implementing and standalone delivery are unaffected. |
+| Playwright MCP or Playwright in the repo (with `acceptance.enabled`) | `code-qa` and `run`'s acceptance stage cannot run; `run` stops before planning. With acceptance disabled → `n/a`, not a gap. |
 
 ## Why `--fix` cannot do everything
 

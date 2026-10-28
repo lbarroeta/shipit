@@ -72,6 +72,7 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `worktree.setup` | string \| null | Runs once after a worktree is created |
 | `ci.config` | string \| null | The CI file |
 | `ci.required_jobs` | string[] | Jobs that gate the merge |
+| `acceptance` | object \| absent | `code-qa` and `run`'s acceptance stage. Absent or `enabled: false` → no stage. See below |
 | `unknown[]` | string[] | Every undetermined key |
 
 Everything under `.shipit/` is shipit's. The repo's own documentation — `docs/`,
@@ -144,6 +145,8 @@ reported as `skipped (not in handoff.allow)`, never as an error.
 | `tracker_status` | the review transition after a ready PR is delivered |
 | `thread_replies` | replying to and resolving review threads after `pr-fix` |
 | `issue_create` | `code-handoff`'s `task` mode: creating the issues a draft describes |
+| `evidence_pr` | pushing `code-qa` screenshots to `acceptance.evidence_branch` and one PR comment with the acceptance evidence |
+| `evidence_tracker` | pushing those screenshots and one tracker comment with the same evidence |
 
 Defaults to `branch`, `commit`, `push`, `pr_body`, `pr_ready` and `tracker_status`.
 `init` writes them explicitly so the file says what it allows rather than relying
@@ -160,17 +163,54 @@ and is independent of this list.
 ## `run.models`
 
 `run` uses native subagents, with one complete `{model, effort}` pair per stage.
-Defaults: Anthropic plan and review = Opus 5.5/high, implement = Sonnet 5.5/high,
+Defaults: Anthropic plan and review = Opus 5.5/high, implement and acceptance = Sonnet 5.5/high,
 sync = Sonnet 5.5/medium, handoff = Haiku 5.5/medium; OpenAI plan and review =
-Astra 6/high, implement = Sol 6.1/high, sync = Sol 6.1/medium, handoff = Luna 6/medium. Runtime IDs are pinned in the run skill's
+Astra 6/high, implement and acceptance = Sol 6.1/high, sync = Sol 6.1/medium, handoff = Luna 6/medium. Runtime IDs are pinned in the run skill's
 `assets/models.json`; aliases are not used. Both sync checkpoints share route `sync`.
 
 Example override: `run.models.openai.plan = {"model": "gpt-6.1-sol", "effort": "high"}`.
-Only `sync`, `plan`, `implement`, `review`, `handoff` are valid stage keys. Overrides must be complete
+Only `sync`, `plan`, `implement`, `review`, `acceptance`, `handoff` are valid stage keys. Overrides must be complete
 pairs, available in the hosting runtime; Claude Code also needs a matching native
 agent definition. A mismatch blocks the run instead of inheriting the session
 model. `init` writes `{}`; `sync` preserves explicit overrides.
 Absent `run` is backward-compatible; no migration is needed to try the defaults.
+
+## `acceptance`
+
+Black-box QA of a change against its acceptance criteria, through Playwright MCP,
+plus a regression suite that grows one spec file per task. Opt-in per project.
+
+```json
+"acceptance": {
+  "enabled": true,
+  "app": {
+    "start": "bin/dev",
+    "ready_url": "http://localhost:3000/up",
+    "base_url": "http://localhost:3000",
+    "seed": "bin/rails db:seed"
+  },
+  "accounts": { "admin": { "email_env": "QA_ADMIN_EMAIL", "password_env": "QA_ADMIN_PASSWORD" } },
+  "regression": { "dir": "spec/system/acceptance", "command": "bundle exec rspec --pattern 'spec/system/acceptance/**/*_spec.rb'" },
+  "evidence_branch": "shipit-evidence"
+}
+```
+
+| Key | Notes |
+| --- | --- |
+| `enabled` | Only `true` enables the stage. `init` writes `true` only when Playwright is verified installed |
+| `app.start` | Starts the app locally; run in the background when nothing answers `ready_url` |
+| `app.ready_url` | Polled until it answers. Absent → `base_url` |
+| `app.base_url` | **Must be `localhost`, `127.0.0.1` or `::1`.** The helper refuses anything else: QA clicks create and delete data |
+| `app.seed` | Optional, run before starting the app |
+| `accounts` | Role → names of environment variables holding credentials. Never values |
+| `regression.dir` | Repo-relative directory of QA-owned specs. Agents may add specs here; none may edit or delete one that already exists on the base branch |
+| `regression.command` | Runs the whole regression suite and must pass with no specs yet — `npx playwright test --pass-with-no-tests`, or `rspec --pattern` (zero examples exit 0) |
+| `evidence_branch` | Orphan branch for screenshots published by `evidence_pr`/`evidence_tracker`. Default `shipit-evidence` |
+
+Rails uses system specs with Capybara and `capybara-playwright-driver` in their own
+directory (`spec/system/acceptance`), so the developers' system specs stay builder
+territory. JavaScript apps use `@playwright/test` with `e2e/`. Either way the
+exploratory pass drives the dev server through Playwright MCP.
 
 ## Reading it safely
 

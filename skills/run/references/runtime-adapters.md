@@ -6,13 +6,14 @@ user-owned chat creation as a substitute. Load only the relevant section.
 
 The default route pairs are in `../assets/models.json`. The helper's `routes`
 command applies `.shipit/config.json` overrides at
-`run.models.<anthropic|openai>.<sync|plan|implement|review|handoff>`, each a complete
+`run.models.<anthropic|openai>.<sync|plan|implement|review|acceptance|handoff>`, each a complete
 `{"model": "...", "effort": "..."}` pair. Do not modify global session settings.
-Route keys are `sync`, `plan`, `implement`, `review` and `handoff`. Checkpoints are
-`sync_before`, `plan`, `implement`, `review`, `sync_after`, and `handoff`; both sync
+Route keys are `sync`, `plan`, `implement`, `review`, `acceptance` and `handoff`. Checkpoints are
+`sync_before`, `plan`, `implement`, `review`, `acceptance` (only when enabled), `sync_after`, and `handoff`; both sync
 checkpoints use route `sync` and `skills/sync/SKILL.md`. The code stages retain
 their existing skill paths. Native agent names are `run-sync`, `run-planner`,
-`run-builder`, `run-reviewer` and `run-delivery`. Public skill names are not checkpoint keys.
+`run-builder`, `run-reviewer`, `run-qa` and `run-delivery`; `acceptance` uses
+`skills/code-qa/SKILL.md`. Public skill names are not checkpoint keys.
 Check availability and restrictions through the runtime's exposed capabilities;
 if access cannot be proven until spawn, the spawn failure is a blocker, not
 permission to switch model. `begin` returns routes after pulling `main`, so they
@@ -29,6 +30,7 @@ The plugin ships native definitions under its root `agents/`:
 | plan | `shipit:run-planner` | `claude-opus-5-5` | `high` |
 | implement | `shipit:run-builder` | `claude-sonnet-5-5` | `high` |
 | review | `shipit:run-reviewer` | `claude-opus-5-5` | `high` |
+| acceptance | `shipit:run-qa` | `claude-sonnet-5-5` | `high` |
 | handoff | `shipit:run-delivery` | `claude-haiku-5-5` | `medium` |
 
 Use the native Agent tool with the corresponding scoped subagent type. Give it
@@ -53,6 +55,7 @@ substitute or cap values. Do not ask the model to certify its own identity.
 | plan | `gpt-6-astra` | `high` |
 | implement | `gpt-6.1-sol` | `high` |
 | review | `gpt-6-astra` | `high` |
+| acceptance | `gpt-6.1-sol` | `high` |
 | handoff | `gpt-6-luna` | `medium` |
 
 Use the exposed native spawn, message/follow-up and wait controls. Depending on

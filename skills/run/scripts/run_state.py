@@ -5,11 +5,12 @@ import argparse
 import hashlib
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import shutil
 import subprocess
 import sys
 import tempfile
+from urllib.parse import urlsplit
 import uuid
 
 
@@ -151,7 +152,7 @@ def routes(repo, provider):
         raise Blocked("run and run.models must be objects.")
     overrides = run_config.get("models", {}).get(provider, {})
     if not isinstance(overrides, dict) or set(overrides) - set(selected):
-        raise Blocked("run.models must contain only sync, plan, implement, review and handoff routes.")
+        raise Blocked("run.models must contain only sync, plan, implement, review, acceptance and handoff routes.")
     selected.update(overrides)
     for stage, route in selected.items():
         if (not isinstance(route, dict) or set(route) != {"model", "effort"}
@@ -162,6 +163,29 @@ def routes(repo, provider):
 
 
 ALLOW_DEFAULT = ["branch", "commit", "push", "pr_body", "pr_ready", "tracker_status"]
+
+
+def acceptance(repo):
+    """The repo's opted-in acceptance block, or None; QA may only drive a local app."""
+    block = config_at(repo).get("acceptance")
+    if block is None or (isinstance(block, dict) and block.get("enabled") is not True):
+        return None
+    app, regression = (block.get(key) if isinstance(block, dict) else None for key in ("app", "regression"))
+    if not isinstance(app, dict) or not isinstance(regression, dict):
+        raise Blocked("acceptance needs app and regression objects.")
+    try:
+        host = urlsplit(app.get("base_url") or "").hostname
+    except (TypeError, ValueError):
+        host = None
+    if host not in {"localhost", "127.0.0.1", "::1"}:
+        raise Blocked("acceptance.app.base_url must point to localhost; QA never drives a shared environment.")
+    directory = regression.get("dir")
+    if (not isinstance(directory, str) or not directory.strip() or PurePosixPath(directory).is_absolute()
+            or ".." in PurePosixPath(directory).parts):
+        raise Blocked("acceptance.regression.dir must be a repo-relative directory.")
+    if not isinstance(regression.get("command"), str) or not regression["command"].strip():
+        raise Blocked("acceptance.regression.command must be a command string.")
+    return block
 
 
 def read_task(path):
@@ -300,7 +324,7 @@ def verify_artifacts(state):
 
 def verify_pending(repo, state):
     pending = state.get("pending")
-    if not pending and state["stage"] in {"plan", "implement", "review", "sync_after"} and "owned_files" in state:
+    if not pending and state["stage"] in {"plan", "implement", "review", "acceptance", "sync_after"} and "owned_files" in state:
         owned = state["owned_files"]
         if changed_paths(repo) != set(owned) or any(file_digest(repo / name) != value for name, value in owned.items()):
             raise Blocked("Run-owned files changed since the last checkpoint; reconcile before resuming.")
@@ -331,6 +355,7 @@ def reset_plan(state, reason):
     state["artifacts"] = {}
     state.pop("pending", None)
     state.pop("review_repairs", None)
+    state.pop("acceptance_repairs", None)
     state["stage"] = "sync_before"
     state["version"] = 2
     for key in ("validated_files", "validated_head", "validated_diff", "validated_tree", "delivery_files"):
@@ -403,9 +428,42 @@ def qa_guide(state):
     return {"report": str(path), "steps": "\n".join(lines).strip() or None}
 
 
+def snapshot(repo, state, files):
+    state["validated_files"] = {name: file_digest(repo / name) for name in files}
+    state["validated_head"] = git(repo, "rev-parse", "HEAD")
+    state["validated_diff"] = digest(git(repo, "diff", "--binary", "HEAD"))
+    plans = [state["artifacts"].get("plan", {})] + [
+        revision["artifacts"].get("plan", {}) for revision in state.get("revisions", [])]
+    plan_paths = {Path(plan["path"]).resolve() for plan in plans if plan.get("path")}
+    state["delivery_files"] = [name for name in files if (repo / name).resolve() not in plan_paths]
+    state["validated_tree"] = proposed_tree(repo, state["delivery_files"], state["validated_head"])
+
+
+def require_new_specs(repo, state, files):
+    """QA may only add or rework specs this run created; specs already on main stay untouched."""
+    if git(repo, "rev-parse", "HEAD") != state.get("validated_head"):
+        raise Blocked("Acceptance must not commit; return to delivery reconciliation.")
+    validated = state["validated_files"]
+    touched = sorted(name for name in set(files) | set(validated)
+                     if name not in validated or file_digest(repo / name) != validated[name])
+    config = acceptance(repo)
+    if not config:
+        raise Blocked("acceptance is no longer enabled in .shipit/config.json; reconcile before checkpointing it.")
+    root = PurePosixPath(config["regression"]["dir"]).parts
+    outside = [name for name in touched if PurePosixPath(name).parts[:len(root)] != root
+               or ".." in PurePosixPath(name).parts]
+    if outside:
+        raise Blocked(f"Acceptance may only write regression specs; outside the regression dir: {', '.join(outside)}")
+    existing = git(repo, "--literal-pathspecs", "ls-tree", "-r", "-z", "--name-only",
+                   state["base_sha"], "--", *touched) if touched else ""
+    if existing:
+        raise Blocked("Acceptance must not edit or delete existing regression specs: "
+                      + ", ".join(filter(None, existing.split("\0"))))
+
+
 def checkpoint(repo, state, args):
     expected = {"sync_before": "plan", "plan": "implement", "implement": "review",
-                "review": "sync_after", "sync_after": "handoff", "handoff": "qa"}
+                "review": "sync_after", "acceptance": "sync_after", "sync_after": "handoff", "handoff": "qa"}
     if state["stage"] != args.stage:
         raise Blocked(f"Expected stage {state['stage']}, received {args.stage}.")
     result = read_result(args.result_file)
@@ -424,7 +482,7 @@ def checkpoint(repo, state, args):
         raise Blocked("Effective model differs from the configured route.")
     if effective.get("effort") and effective["effort"] != requested["effort"]:
         raise Blocked("Effective effort differs from the configured route.")
-    if args.stage in {"sync_before", "plan", "review", "sync_after"} and result.get("blockers") != []:
+    if args.stage in {"sync_before", "plan", "review", "acceptance", "sync_after"} and result.get("blockers") != []:
         raise Blocked("The stage must explicitly report no unresolved blockers.")
     if args.stage == "sync_after" and str(artifact) == state["artifacts"]["implement"]["path"]:
         raise Blocked("Final sync must write a separate delivery report; preserve builder evidence.")
@@ -447,14 +505,16 @@ def checkpoint(repo, state, args):
             raise Blocked("Implementation result needs a files manifest.")
         if set(files) != changed_paths(repo):
             raise Blocked("Implementation manifest must exactly match the current diff and untracked files.")
-        state["validated_files"] = {name: file_digest(repo / name) for name in files}
-        state["validated_head"] = git(repo, "rev-parse", "HEAD")
-        state["validated_diff"] = digest(git(repo, "diff", "--binary", "HEAD"))
-        plans = [state["artifacts"].get("plan", {})] + [
-            revision["artifacts"].get("plan", {}) for revision in state.get("revisions", [])]
-        plan_paths = {Path(plan["path"]).resolve() for plan in plans if plan.get("path")}
-        state["delivery_files"] = [name for name in files if (repo / name).resolve() not in plan_paths]
-        state["validated_tree"] = proposed_tree(repo, state["delivery_files"], state["validated_head"])
+        snapshot(repo, state, files)
+    if args.stage == "acceptance":
+        checks = result.get("validation", [])
+        if not checks or any(check["exit_code"] != 0 for check in checks):
+            raise Blocked("Acceptance needs the executed regression suite with exit code 0.")
+        files = result.get("files")
+        if files is None or set(files) != changed_paths(repo):
+            raise Blocked("Acceptance manifest must exactly match the current diff and untracked files.")
+        require_new_specs(repo, state, files)
+        snapshot(repo, state, files)
     if args.stage == "handoff" and result.get("delivery_status") not in {"completed", "skipped"}:
         raise Blocked("A partial/blocked delivery remains at handoff for reconciliation.")
     if args.stage.startswith("sync_"):
@@ -465,7 +525,7 @@ def checkpoint(repo, state, args):
     state.pop("pending", None)
     state["agents"].append({"stage": args.stage, "agent_id": result.get("agent_id"),
                             "requested": requested, "effective": effective or None})
-    state["stage"] = expected[args.stage]
+    state["stage"] = "acceptance" if args.stage == "review" and acceptance(repo) else expected[args.stage]
 
 
 def main():
@@ -486,14 +546,14 @@ def main():
         sub.add_argument("--issue-key", required=True)
         sub.add_argument("--owner", required=True)
         if command == "checkpoint":
-            sub.add_argument("--stage", choices=["sync_before", "plan", "implement", "review", "sync_after", "handoff"], required=True)
+            sub.add_argument("--stage", choices=["sync_before", "plan", "implement", "review", "acceptance", "sync_after", "handoff"], required=True)
             sub.add_argument("--result-file", required=True)
         elif command in {"pause", "replan", "repair"}:
             sub.add_argument("--reason", required=True)
             if command in {"pause", "repair", "replan"}:
                 sub.add_argument("--result-file", help="Save a verified incomplete child's report and owned files", required=command == "repair")
             if command == "repair":
-                sub.add_argument("--user-decision", help="The user's explicit decision allowing another review repair round")
+                sub.add_argument("--user-decision", help="The user's explicit decision allowing another review or acceptance repair round")
         elif command == "qa":
             sub.add_argument("--outcome", choices=["pass", "fail", "blocked"], required=True)
             sub.add_argument("--feedback", required=True)
@@ -528,22 +588,23 @@ def main():
                 else:
                     verify_artifacts(state)
                 if args.command == "repair":
-                    if state["stage"] not in {"review", "sync_after"}:
-                        raise Blocked("Repair is only applicable after review or implementation sync failed.")
-                    if state["stage"] == "review":
-                        if state.get("review_repairs", 0) >= 1 and not args.user_decision:
-                            raise Blocked("Must-fix review findings persisted after one repair round; "
+                    if state["stage"] not in {"review", "acceptance", "sync_after"}:
+                        raise Blocked("Repair is only applicable after review, acceptance or implementation sync failed.")
+                    if state["stage"] in {"review", "acceptance"}:
+                        rounds = f"{state['stage']}_repairs"
+                        if state.get(rounds, 0) >= 1 and not args.user_decision:
+                            raise Blocked(f"Blocking {state['stage']} findings persisted after one repair round; "
                                           "pause and ask the user, then repair with --user-decision.")
-                        state["review_repairs"] = state.get("review_repairs", 0) + 1
+                        state[rounds] = state.get(rounds, 0) + 1
                     capture_pending(repo, state, args.result_file)
                     state.setdefault("repairs", []).append({"reason": args.reason, "stage": state["stage"],
                         "user_decision": args.user_decision,
-                        "artifacts": {key: state["artifacts"][key] for key in ("implement", "review", "sync_after") if key in state["artifacts"]}})
-                    for key in ("implement", "review", "sync_after", "handoff"):
+                        "artifacts": {key: state["artifacts"][key] for key in ("implement", "review", "acceptance", "sync_after") if key in state["artifacts"]}})
+                    for key in ("implement", "review", "acceptance", "sync_after", "handoff"):
                         state["artifacts"].pop(key, None)
                     state["stage"] = "implement"
                 elif args.command == "verify":
-                    if state["stage"] not in {"review", "sync_after", "handoff"}:
+                    if state["stage"] not in {"review", "acceptance", "sync_after", "handoff"}:
                         raise Blocked("Validation verification is only applicable before delivery.")
                     verify_validation(repo, state)
                 elif args.command == "checkpoint":
@@ -564,7 +625,8 @@ def main():
                             state["stage"] = "implement"
                         state["owned_files"] = {name: file_digest(repo / name) for name in changed_paths(repo)}
                         state.pop("review_repairs", None)
-                        for stage in ("implement", "review", "sync_after", "handoff"):
+                        state.pop("acceptance_repairs", None)
+                        for stage in ("implement", "review", "acceptance", "sync_after", "handoff"):
                             state["artifacts"].pop(stage, None)
             write_json(state_path, state)
             if args.command == "pause":
