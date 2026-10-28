@@ -121,8 +121,8 @@ may not. A partial/blocked result never checkpoints. After-implementation checks
 include newly required checks; retain builder validation only with unchanged
 inputs and cite it in the final delivery report. The coordinator verifies that
 product code did not change during sync (product-context doc edits are context) and no required check was omitted.
-QA adds `validation` (every executed `regression.command` run, all exit 0 for
-completion), `files` (the full run-owned manifest including its new specs) and
+QA adds `validation` (every executed regression run in order; completion needs the
+last one to be the full `regression.command` with exit 0), `files` (the full run-owned manifest including its new specs) and
 `evidence_dir`. A failed criterion or regression returns `blocked` with one blocker
 per failure and the unchanged manifest — what `repair` saves. `Environment:`
 blockers pause instead of repairing. The checkpoint rejects commits made during the

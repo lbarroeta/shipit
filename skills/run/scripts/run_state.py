@@ -175,14 +175,15 @@ def acceptance(repo):
         raise Blocked("acceptance needs app and regression objects.")
     try:
         host = urlsplit(app.get("base_url") or "").hostname
-    except (TypeError, ValueError):
+    except (AttributeError, TypeError, ValueError):
         host = None
     if host not in {"localhost", "127.0.0.1", "::1"}:
         raise Blocked("acceptance.app.base_url must point to localhost; QA never drives a shared environment.")
     directory = regression.get("dir")
-    if (not isinstance(directory, str) or not directory.strip() or PurePosixPath(directory).is_absolute()
-            or ".." in PurePosixPath(directory).parts):
-        raise Blocked("acceptance.regression.dir must be a repo-relative directory.")
+    # "." has no parts and would match every path in the regression-dir guard.
+    if (not isinstance(directory, str) or not PurePosixPath(directory.strip()).parts
+            or PurePosixPath(directory).is_absolute() or ".." in PurePosixPath(directory).parts):
+        raise Blocked("acceptance.regression.dir must be a repo-relative subdirectory.")
     if not isinstance(regression.get("command"), str) or not regression["command"].strip():
         raise Blocked("acceptance.regression.command must be a command string.")
     return block
@@ -439,17 +440,14 @@ def snapshot(repo, state, files):
     state["validated_tree"] = proposed_tree(repo, state["delivery_files"], state["validated_head"])
 
 
-def require_new_specs(repo, state, files):
+def require_new_specs(repo, state, files, directory):
     """QA may only add or rework specs this run created; specs already on main stay untouched."""
     if git(repo, "rev-parse", "HEAD") != state.get("validated_head"):
         raise Blocked("Acceptance must not commit; return to delivery reconciliation.")
     validated = state["validated_files"]
     touched = sorted(name for name in set(files) | set(validated)
                      if name not in validated or file_digest(repo / name) != validated[name])
-    config = acceptance(repo)
-    if not config:
-        raise Blocked("acceptance is no longer enabled in .shipit/config.json; reconcile before checkpointing it.")
-    root = PurePosixPath(config["regression"]["dir"]).parts
+    root = PurePosixPath(directory).parts
     outside = [name for name in touched if PurePosixPath(name).parts[:len(root)] != root
                or ".." in PurePosixPath(name).parts]
     if outside:
@@ -507,13 +505,18 @@ def checkpoint(repo, state, args):
             raise Blocked("Implementation manifest must exactly match the current diff and untracked files.")
         snapshot(repo, state, files)
     if args.stage == "acceptance":
+        config = acceptance(repo)
+        if not config:
+            raise Blocked("acceptance is no longer enabled in .shipit/config.json; reconcile before checkpointing it.")
+        # Earlier red runs (a flaky retry, a new spec QA fixed) are evidence; the last run is the gate.
         checks = result.get("validation", [])
-        if not checks or any(check["exit_code"] != 0 for check in checks):
-            raise Blocked("Acceptance needs the executed regression suite with exit code 0.")
+        last = checks[-1] if checks else {}
+        if last.get("command") != config["regression"]["command"] or last.get("exit_code") != 0:
+            raise Blocked("Acceptance needs the full regression suite (regression.command) as its last run, with exit code 0.")
         files = result.get("files")
         if files is None or set(files) != changed_paths(repo):
             raise Blocked("Acceptance manifest must exactly match the current diff and untracked files.")
-        require_new_specs(repo, state, files)
+        require_new_specs(repo, state, files, config["regression"]["dir"])
         snapshot(repo, state, files)
     if args.stage == "handoff" and result.get("delivery_status") not in {"completed", "skipped"}:
         raise Blocked("A partial/blocked delivery remains at handoff for reconciliation.")

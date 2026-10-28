@@ -265,7 +265,9 @@ exists before a branch does.
   shortened. **No QA steps in the report → no comment.** Not allowed → the steps
   stay in the report for the user to post.
 - **Evidence** — `evidence_pr` or `evidence_tracker`, after the PR exists, and
-  only with an acceptance report: publish its evidence directory with
+  only with an acceptance report. `gh repo view --json visibility` not `PRIVATE` or
+  `INTERNAL` → publish nothing: the evidence branch would expose screenshots for
+  good; report `withheld (public repo)`. Otherwise publish its evidence directory with
   `scripts/publish_evidence.py --repo <repo> --remote <repo.remote> --branch
   <acceptance.evidence_branch or shipit-evidence> --prefix <ISSUE-ID>/<run id>
   --dir <evidence dir>`. It commits through a temporary index and pushes only that

@@ -49,11 +49,12 @@ def publish(repo, remote, branch, prefix, directory):
                      "-m", f"evidence: {prefix}")
         try:
             git(repo, "push", "--quiet", remote, f"{commit}:{ref}")
-        except Blocked:
+        except Blocked as exc:
+            error = exc
             continue
         return {"status": "completed", "branch": branch, "commit": commit,
                 "files": [str(PurePosixPath(prefix, path.name)) for path in files]}
-    raise Blocked(f"Push to {branch} kept being rejected; another publisher is racing.")
+    raise Blocked(f"Push to {branch} failed 3 times; last error: {error}")
 
 
 def main():

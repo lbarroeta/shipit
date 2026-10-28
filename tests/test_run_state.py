@@ -1,5 +1,6 @@
 """Exercise run preparation/recovery against disposable local Git repositories."""
 
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -676,7 +677,10 @@ class RunStateTests(unittest.TestCase):
         state = self.accepting()
         (self.repo / "e2e").mkdir()
         (self.repo / "e2e/42.spec.ts").write_text("AC1\n")
-        state = self.accepted(state, ["product.txt", "e2e/42.spec.ts"])
+        # QA fixed its own failing spec: the earlier red run is evidence, the last run is the gate.
+        state = self.accepted(state, ["product.txt", "e2e/42.spec.ts"], validation=[
+            {"command": "npx playwright test", "exit_code": 1},
+            {"command": "npx playwright test", "exit_code": 0}])
         self.assertEqual(state["stage"], "sync_after")
         self.assertIn("e2e/42.spec.ts", state["delivery_files"])
         self.owned(state, "verify")
@@ -699,7 +703,10 @@ class RunStateTests(unittest.TestCase):
 
     def test_acceptance_needs_green_regression_suite(self):
         state = self.accepting()
-        for checks in ([], [{"command": "npx playwright test", "exit_code": 1}]):
+        for checks in ([], [{"command": "npx playwright test", "exit_code": 1}],
+                       [{"command": "npx playwright test e2e/42.spec.ts", "exit_code": 0}],
+                       [{"command": "npx playwright test", "exit_code": 0},
+                        {"command": "npx playwright test", "exit_code": 1}]):
             with self.subTest(checks=checks):
                 reason = self.accepted(state, ["product.txt"], validation=checks, blockers=[])
                 self.assertIn("regression suite", reason["reason"])
@@ -731,6 +738,20 @@ class RunStateTests(unittest.TestCase):
         state = self.built()
         reason = self.checkpoint(state, "review", self.result(state, "review"), success=False)["reason"]
         self.assertIn("localhost", reason)
+
+    def test_acceptance_config_errors_block_instead_of_crashing(self):
+        spec = importlib.util.spec_from_file_location("run_state", HELPER)
+        run_state = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(run_state)
+        for app, directory, expected in (({"base_url": 5}, "e2e", "localhost"),
+                                         ({"base_url": "http://localhost:3000"}, ".", "subdirectory"),
+                                         ({"base_url": "http://localhost:3000"}, "./", "subdirectory")):
+            with self.subTest(app=app, directory=directory):
+                self.config["acceptance"] = {"enabled": True, "app": app,
+                                             "regression": {"dir": directory, "command": "npx playwright test"}}
+                (self.repo / ".shipit/config.json").write_text(json.dumps(self.config))
+                with self.assertRaisesRegex(run_state.Blocked, expected):
+                    run_state.acceptance(self.repo)
 
 
     def test_review_cannot_approve_changed_code(self):

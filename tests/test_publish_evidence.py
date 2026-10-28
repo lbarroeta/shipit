@@ -58,6 +58,13 @@ class PublishEvidenceTests(unittest.TestCase):
         (self.evidence / "ac1.png").write_bytes(b"png")
         self.assertIn("--prefix", self.publish("../main", success=False)["reason"])
 
+    def test_reports_the_real_push_error(self):
+        hook = self.remote / "hooks/pre-receive"
+        hook.write_text("#!/bin/sh\necho 'write access denied' >&2\nexit 1\n")
+        hook.chmod(0o755)
+        (self.evidence / "ac1.png").write_bytes(b"png")
+        self.assertIn("write access denied", self.publish("ENG-1", success=False)["reason"])
+
 
 if __name__ == "__main__":
     unittest.main()

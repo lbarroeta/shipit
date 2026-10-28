@@ -118,6 +118,9 @@ Both hold → propose an `acceptance` block (`config-schema.md § acceptance`):
   --pass-with-no-tests` (JavaScript) or `spec/system/acceptance` with `bundle exec
   rspec --pattern 'spec/system/acceptance/**/*_spec.rb'` (Rails). Verify the command
   with recipe 4 — for these two forms, running it with no specs is the real proof.
+  Then `git status --porcelain` must be unchanged: the run's output (`test-results/`,
+  `playwright-report/`) must be gitignored, or `run` rejects every acceptance
+  checkpoint. Not ignored → ask the user to ignore those paths; never edit `.gitignore`.
 - `accounts`: ask once for the role names and the environment variable names
   holding their credentials. Never read or store a value.
 - `enabled`: `true` only after the user confirms the block. Declined → `false`.

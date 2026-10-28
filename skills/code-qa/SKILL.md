@@ -98,7 +98,8 @@ next change cannot silently undo this one.
    and exemplar; select by role, label or `data-testid`; no sleeps; data created in
    the test or by existing factories. Then run `regression.command` again. A new
    spec that fails is yours to fix — at most twice; after that drop it and report
-   why. On any failure in steps 3–5, write no spec.
+   why. On any failure in steps 3–5, write no spec. A pass always ends with a full
+   `regression.command` run, even when no spec was written.
 7. **Clean up.** Stop the app if you started it. Write the report and, in `run`, the
    result.
 
@@ -145,7 +146,8 @@ The `run-qa` agent executes this skill as the `acceptance` stage. The coordinato
 passes the task snapshot, the evidence directory and report/result paths. Result:
 
 - Passed → `"status": "completed"`, `"blockers": []`, `validation` with every
-  executed `regression.command` run and its exit code, `files`: the full current
+  executed regression run and its exit code, in order — the last must be the full
+  `regression.command`, green — `files`: the full current
   run-owned manifest including the new specs, `evidence_dir`.
 - Failed criterion or regression → `"status": "blocked"`, one blocker per failure
   (`AC2 failed — expected <x>, got <y>`, `Regression: <spec> — <test title>`) and
