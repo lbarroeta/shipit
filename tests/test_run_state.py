@@ -1,5 +1,6 @@
 """Exercise run preparation/recovery against disposable local Git repositories."""
 
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -644,6 +645,115 @@ class RunStateTests(unittest.TestCase):
         self.assertEqual(state["stage"], "implement")
         self.assertEqual(state["repairs"][-1]["user_decision"], "User asked for one more round")
 
+    def accepting(self, spec_on_main=False):
+        """A built and reviewed run in a repo that opted into acceptance QA."""
+        self.config["acceptance"] = {"enabled": True,
+                                     "app": {"base_url": "http://localhost:3000"},
+                                     "regression": {"dir": "e2e", "command": "npx playwright test"}}
+        (self.repo / ".shipit/config.json").write_text(json.dumps(self.config))
+        paths = [".shipit/config.json"]
+        if spec_on_main:
+            (self.repo / "e2e").mkdir()
+            (self.repo / "e2e/existing.spec.ts").write_text("existing\n")
+            paths.append("e2e/existing.spec.ts")
+        self.git(self.repo, "add", *paths)
+        self.git(self.repo, "commit", "-m", "Opt into acceptance")
+        self.git(self.repo, "push")
+        state = self.reviewed(self.built())
+        self.assertEqual(state["stage"], "acceptance")
+        return state
+
+    def accepted(self, state, files, **extra):
+        data = dict(files=files, validation=[{"command": "npx playwright test", "exit_code": 0}])
+        data.update(extra)
+        return self.checkpoint(state, "acceptance", self.result(state, "acceptance", **data),
+                               success=extra.get("status", "completed") == "completed"
+                               and "blockers" not in extra)
+
+    def test_acceptance_is_skipped_unless_enabled(self):
+        self.assertEqual(self.reviewed(self.built())["stage"], "sync_after")
+
+    def test_acceptance_new_specs_reach_delivery(self):
+        state = self.accepting()
+        (self.repo / "e2e").mkdir()
+        (self.repo / "e2e/42.spec.ts").write_text("AC1\n")
+        # QA fixed its own failing spec: the earlier red run is evidence, the last run is the gate.
+        state = self.accepted(state, ["product.txt", "e2e/42.spec.ts"], validation=[
+            {"command": "npx playwright test", "exit_code": 1},
+            {"command": "npx playwright test", "exit_code": 0}])
+        self.assertEqual(state["stage"], "sync_after")
+        self.assertIn("e2e/42.spec.ts", state["delivery_files"])
+        self.owned(state, "verify")
+        state = self.synced(state)
+        self.assertEqual(state["stage"], "handoff")
+
+    def test_acceptance_cannot_touch_product_or_existing_specs(self):
+        state = self.accepting(spec_on_main=True)
+        (self.repo / "product.txt").write_text("qa edit\n")
+        reason = self.accepted(state, ["product.txt"], status="completed", blockers=[])
+        self.assertIn("outside the regression dir", reason["reason"])
+        (self.repo / "product.txt").write_text("updated\n")
+        (self.repo / "e2e/existing.spec.ts").write_text("weakened\n")
+        reason = self.accepted(state, ["product.txt", "e2e/existing.spec.ts"], blockers=[])
+        self.assertIn("existing regression specs", reason["reason"])
+        (self.repo / "e2e/existing.spec.ts").unlink()
+        reason = self.accepted(state, ["product.txt", "e2e/existing.spec.ts"], blockers=[])
+        self.assertIn("existing regression specs", reason["reason"])
+        self.assertEqual(self.call("status", "--issue-key", self.task["key"])["stage"], "acceptance")
+
+    def test_acceptance_needs_green_regression_suite(self):
+        state = self.accepting()
+        for checks in ([], [{"command": "npx playwright test", "exit_code": 1}],
+                       [{"command": "npx playwright test e2e/42.spec.ts", "exit_code": 0}],
+                       [{"command": "npx playwright test", "exit_code": 0},
+                        {"command": "npx playwright test", "exit_code": 1}]):
+            with self.subTest(checks=checks):
+                reason = self.accepted(state, ["product.txt"], validation=checks, blockers=[])
+                self.assertIn("regression suite", reason["reason"])
+
+    def test_acceptance_failure_repairs_once_then_needs_the_user(self):
+        state = self.accepting()
+        failed = self.result(state, "acceptance", status="blocked", files=["product.txt"],
+                             blockers=["AC1 failed: text not visible"])
+        state = self.owned(state, "repair", "--reason", "AC1 failed", "--result-file", str(failed))
+        self.assertEqual(state["stage"], "implement")
+        self.assertEqual(set(state["artifacts"]), {"sync_before", "plan"})
+        result = self.result(state, "implement", files=["product.txt"],
+                             validation=[{"command": "check", "exit_code": 0}])
+        state = self.reviewed(self.checkpoint(state, "implement", result))
+        self.assertEqual(state["stage"], "acceptance")
+        failed = self.result(state, "acceptance", status="blocked", files=["product.txt"],
+                             blockers=["AC1 still fails"])
+        reason = self.owned(state, "repair", "--reason", "Again", "--result-file", str(failed),
+                            success=False)["reason"]
+        self.assertIn("--user-decision", reason)
+
+    def test_acceptance_refuses_shared_environments(self):
+        self.config["acceptance"] = {"enabled": True,
+                                     "app": {"base_url": "https://app.example.com"},
+                                     "regression": {"dir": "e2e", "command": "npx playwright test"}}
+        (self.repo / ".shipit/config.json").write_text(json.dumps(self.config))
+        self.git(self.repo, "commit", "-am", "Remote QA target")
+        self.git(self.repo, "push")
+        state = self.built()
+        reason = self.checkpoint(state, "review", self.result(state, "review"), success=False)["reason"]
+        self.assertIn("localhost", reason)
+
+    def test_acceptance_config_errors_block_instead_of_crashing(self):
+        spec = importlib.util.spec_from_file_location("run_state", HELPER)
+        run_state = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(run_state)
+        for app, directory, expected in (({"base_url": 5}, "e2e", "localhost"),
+                                         ({"base_url": "http://localhost:3000"}, ".", "subdirectory"),
+                                         ({"base_url": "http://localhost:3000"}, "./", "subdirectory")):
+            with self.subTest(app=app, directory=directory):
+                self.config["acceptance"] = {"enabled": True, "app": app,
+                                             "regression": {"dir": directory, "command": "npx playwright test"}}
+                (self.repo / ".shipit/config.json").write_text(json.dumps(self.config))
+                with self.assertRaisesRegex(run_state.Blocked, expected):
+                    run_state.acceptance(self.repo)
+
+
     def test_review_cannot_approve_changed_code(self):
         state = self.built()
         (self.repo / "product.txt").write_text("reviewer edit\n")
@@ -707,6 +817,7 @@ class RunStateTests(unittest.TestCase):
             "plan": {"model": "gpt-6-astra", "effort": "high"},
             "implement": {"model": "gpt-6.1-sol", "effort": "high"},
             "review": {"model": "gpt-6-astra", "effort": "high"},
+            "acceptance": {"model": "gpt-6.1-sol", "effort": "high"},
             "handoff": {"model": "gpt-6-luna", "effort": "medium"},
         })
         self.assertEqual(self.call("routes", "--provider", "anthropic")["routes"], {
@@ -714,6 +825,7 @@ class RunStateTests(unittest.TestCase):
             "plan": {"model": "claude-opus-5-5", "effort": "high"},
             "implement": {"model": "claude-sonnet-5-5", "effort": "high"},
             "review": {"model": "claude-opus-5-5", "effort": "high"},
+            "acceptance": {"model": "claude-sonnet-5-5", "effort": "high"},
             "handoff": {"model": "claude-haiku-5-5", "effort": "medium"},
         })
         self.config["run"] = {"models": {"openai": {"plan": {"model": "custom", "effort": "high"}}}}

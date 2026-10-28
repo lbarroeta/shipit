@@ -90,6 +90,9 @@
     "share_graph": false,
     "setup": null
   },
+  "acceptance": {
+    "enabled": false
+  },
   "ci": {
     "config": null,
     "required_jobs": []

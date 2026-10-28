@@ -34,7 +34,9 @@ from commits without editing gitignore or the repo contract. Issue locks are sha
 across linked worktrees; checkout locks also prevent two different issues editing
 the same checkout. Only the owning coordinator can checkpoint or pause.
 
-Stages: `preparing → sync_before → plan → implement → review → sync_after → handoff → qa → done`. `pause` preserves
+Stages: `preparing → sync_before → plan → implement → review → [acceptance] → sync_after → handoff → qa → done`.
+`acceptance` exists only while `acceptance.enabled` is true in `.shipit/config.json`;
+the review checkpoint otherwise moves straight to `sync_after`. `pause` preserves
 stage and releases locks. A later `begin` reacquires them. Resume requires the same
 checkout and unchanged source/artifact hashes; it restores the saved branch only
 from a clean tree and never resets to main. Display saved QA/done results through
@@ -83,7 +85,10 @@ Builder: execute with `--defer-handoff`; the explicit run request authorizes
 execution within the fetched criteria after the coordinator's contract check.
 Keep plan corrections in the planner, not the builder. Reviewer: execute
 `shipit:code-review` over the run-owned diff with plan and builder report; read-only,
-no tests, no git writes. Delivery: `implementation`
+no tests, no git writes. QA: execute `shipit:code-qa` black-box with the task
+snapshot only — goal and criteria, never the plan, diff or reports — plus the
+evidence directory; it writes only new specs under `acceptance.regression.dir`.
+Delivery: `implementation`
 mode, immutable post-sync delivery report plus builder evidence, journal path; no product or plan edits.
 Each child saves a result JSON and returns its path plus a short summary:
 
@@ -116,6 +121,13 @@ may not. A partial/blocked result never checkpoints. After-implementation checks
 include newly required checks; retain builder validation only with unchanged
 inputs and cite it in the final delivery report. The coordinator verifies that
 product code did not change during sync (product-context doc edits are context) and no required check was omitted.
+QA adds `validation` (every executed regression run in order; completion needs the
+last one to be the full `regression.command` with exit 0), `files` (the full run-owned manifest including its new specs) and
+`evidence_dir`. A failed criterion or regression returns `blocked` with one blocker
+per failure and the unchanged manifest — what `repair` saves. `Environment:`
+blockers pause instead of repairing. The checkpoint rejects commits made during the
+stage, paths outside the regression directory, and any edit or deletion of a spec
+present at `base_sha`, then extends the validated snapshot with the new specs.
 Delivery adds `delivery_status` (`completed`, `partial`, `blocked`, `skipped`) and
 actual effect proofs. Use `blocked`/`failed` and a concrete reason when unable to
 finish; never emit `completed` with pending required work.
@@ -191,15 +203,16 @@ python3 /plugin/skills/run/scripts/run_state.py --repo /repo qa --issue-key 'lin
 ```
 
 `pass` moves to done. `blocked` stays at qa. `fail` keeps the plan/branch, records
-feedback and invalidates builder/review/final-sync/delivery checkpoints, returning to implement.
+feedback and invalidates builder/review/acceptance/final-sync/delivery checkpoints, returning to implement.
 After a product validation failure discovered by sync, save its blocked result
 with full owned manifest, then run `repair --issue-key KEY --owner OWNER
 --reason 'Exact failed check' --result-file /run-dir/blocked-sync.json`. This archives
 the old implementation evidence, retains plan/pre-sync, and returns to implement.
-A review requesting changes uses the same `repair` from the `review` stage. The
-helper allows one review repair per implementation cycle; a second needs
+A review requesting changes, or a failed acceptance criterion or regression, uses
+the same `repair` from the `review` or `acceptance` stage. The helper allows one
+repair per stage per implementation cycle; a second needs
 `--user-decision 'User's words'` after the user decided. Every repair goes through
-review again before final sync.
+review, and acceptance when enabled, again before final sync.
 The builder receives sync-owned doc/config changes and must revalidate before a
 new sync_after checkpoint. `replan` instead reruns sync_before and planning.
 Do not mark pass from automated checks or another agent's opinion. Give the builder

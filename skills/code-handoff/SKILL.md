@@ -50,6 +50,8 @@ gets from `/shipit:init`. Existing explicit allow-lists remain authoritative.
 | `tracker_status` | the mode's status transition |
 | `thread_replies` | replying to and resolving review threads in `review` mode |
 | `issue_create` | `task` mode: creating the issues a draft describes |
+| `evidence_pr` | `implementation` mode: pushing QA screenshots to the evidence branch and one PR comment with the acceptance evidence |
+| `evidence_tracker` | `implementation` mode: pushing QA screenshots to the evidence branch and one tracker comment with the same evidence |
 
 Rules:
 
@@ -77,6 +79,8 @@ Rules:
 - Optional: `references/worktree-lifecycle.md` when the branch lives in a worktree.
 - When publishing a PR body: `../code-implement/assets/pr-description-template.md`
   for the description check below.
+- Conditional: the `code-qa` acceptance report and its evidence directory, only when
+  `evidence_pr` or `evidence_tracker` is listed and the caller supplies them.
 - Never read the product diff to decide content. The report is the manifest.
 
 ## Hard rules
@@ -260,6 +264,19 @@ exists before a branch does.
   The QA steps were written for a non-developer, so they are the one part never
   shortened. **No QA steps in the report → no comment.** Not allowed → the steps
   stay in the report for the user to post.
+- **Evidence** — `evidence_pr` or `evidence_tracker`, after the PR exists, and
+  only with an acceptance report. `gh repo view --json visibility` not `PRIVATE` or
+  `INTERNAL` → publish nothing: the evidence branch would expose screenshots for
+  good; report `withheld (public repo)`. Otherwise publish its evidence directory with
+  `scripts/publish_evidence.py --repo <repo> --remote <repo.remote> --branch
+  <acceptance.evidence_branch or shipit-evidence> --prefix <ISSUE-ID>/<run id>
+  --dir <evidence dir>`. It commits through a temporary index and pushes only that
+  branch, never the checkout. `evidence_pr` → comment once on the PR with the
+  report's `## Evidence` section verbatim, each bare filename replaced by
+  `<repo web URL>/blob/<commit>/<path>?raw=true`. `evidence_tracker` → the same
+  body once on the linked issue, plus the PR link. A comment already in the
+  journal is not posted again. No acceptance report → `n/a (no acceptance stage)`.
+  Withheld → the screenshots stay in the run directory and the report says where.
 - **Status** — `tracker_status` only: after the delivered PR is verified ready
   for review, move the linked issue to `In Review` (or its unambiguous review
   equivalent) and read it back. Already in review, QA-ready or terminal → preserve
@@ -329,6 +346,7 @@ recap of the change — a `completed` line needs no explanation:
 - Push.
 - PR url, and whether the body was created or replaced; whether it is still a draft.
 - Review thread replies and resolutions — `review` mode, one line per thread.
+- Evidence branch commit, PR evidence comment and tracker evidence comment.
 - Tracker comment, and tracker status transition.
 - Worktree and preflight issues encountered.
 

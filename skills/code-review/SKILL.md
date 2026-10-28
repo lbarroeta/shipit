@@ -64,6 +64,11 @@ next stage can act on. It never edits code.
      paths` row is implemented with its expected behaviour and proved; no behaviour
      change outside the plan; files outside the plan's `Files` carry a reason.
    - **Repo contract**: the touched layers' and tests' rules.
+   - **Regression specs**: with `acceptance.enabled`, a diff that edits or deletes
+     a spec under `acceptance.regression.dir` that exists on the base branch is a
+     Must fix, unless an acceptance criterion of this task changes the behaviour that
+     spec asserts — then name the criterion. Weakening a regression test to pass is
+     how a suite stops protecting anything.
    - **Senior stance**: `senior-stance.md` — framework idiom, stack failure modes,
      test quality and speed, operability, design principles — applied to the lines
      changed.

@@ -80,6 +80,7 @@ extracted from:
 | `product-discovery` | not yet measured | not yet measured | new; multi-turn interview |
 | `product-mvp-cut` | not yet measured | not yet measured | new |
 | `run` | not yet measured | not yet measured | new; native subagent work is additional |
+| `code-qa` | not yet measured | not yet measured | new; Playwright MCP snapshots are additional |
 
 The four equivalent skills cost **~380 always-on against the originals' ~442**, and
 the two heaviest got materially cheaper per invocation — the contract removed the
