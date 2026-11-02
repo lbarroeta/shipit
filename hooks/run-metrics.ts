@@ -2,31 +2,56 @@ import type { EngineInterface, Register } from 'claude-code'
 import { addTime, addUsage, empty, merge, render, stageOf, type Totals } from './metrics'
 
 const TOOL = 'mcp__shipit__run_metrics'
+const NONE = 'No shipit run metrics recorded for this branch.'
 
-// shortcut: the live segment sits in module variables, so a hot reload mid-run
-// loses it; move to $.state if mods get reloaded during real runs.
-let segmentStart: number | undefined
-let seg = empty()
-const agents = new Map<string, { stage: string; openSince?: number }>()
+// The run being counted; its totals are saved to $.store on every change, so a
+// reload or another session only loses the step in flight.
+let run: { key: string; totals: Totals; at: number } | undefined
+let locks: string | undefined
+const agents = new Map<string, { stage: string; since?: number }>()
 
-// Earlier segments (pauses, resumes, other sessions) live in $.store per task branch.
-async function branchKey($: EngineInterface) {
-  const { exitCode, stdout } = await $.process.run(['git', 'branch', '--show-current'])
-  const branch = stdout.trim()
-  return exitCode === 0 && branch && !['main', 'master'].includes(branch) ? `run:${branch}` : undefined
+async function git($: EngineInterface) {
+  const { exitCode, stdout } = await $.process.run([
+    'git', 'rev-parse', '--path-format=absolute', '--show-toplevel', '--git-common-dir', '--abbrev-ref', 'HEAD',
+  ])
+  const [top = '', common = '', branch = ''] = stdout.trim().split('\n')
+  return exitCode === 0 && top ? { common, key: branch && branch !== 'HEAD' ? `run:${top}:${branch}` : undefined } : undefined
+}
+
+// A run is working while run_state.py holds its checkout lock: from `begin`
+// until it pauses (QA, a decision, a failure) or finishes.
+// shortcut: any checkout lock of the repository counts, so a run in another
+// worktree of the same repository would too; match the lock's digest if that happens.
+async function isLocked($: EngineInterface) {
+  locks ??= (await git($))?.common ?? ''
+  if (!locks) return false
+  try {
+    return (await $.fs.list(`${locks}/shipit/locks`)).some(f => f.name.startsWith('checkout-'))
+  } catch {
+    return false
+  }
 }
 
 async function stored($: EngineInterface, key: string | undefined) {
   return ((key && (await $.store.get(key))) as Totals | undefined) ?? empty()
 }
 
-async function live($: EngineInterface): Promise<Totals> {
-  if (segmentStart === undefined) return empty()
+// Moves the run's time up to now, applies `change` and saves; outside a run it does nothing.
+async function track($: EngineInterface, change: (t: Totals) => void = () => {}) {
+  const locked = await isLocked($)
   const now = await $.clock.now()
-  const t = merge(empty(), seg)
-  t.ms = now - segmentStart
-  for (const a of agents.values()) if (a.openSince !== undefined) addTime(t, a.stage, now - a.openSince)
-  return t
+  if (!run && locked) {
+    const key = (await git($))?.key
+    if (!key) return
+    run = { key, totals: await stored($, key), at: now }
+  }
+  if (!run) return
+  const r = run
+  r.totals.ms += Math.max(0, now - r.at) // the step that released the lock counts too
+  r.at = Math.max(r.at, now)
+  change(r.totals)
+  if (!locked) run = undefined
+  await $.store.set(r.key, r.totals)
 }
 
 export const register: Register = on => {
@@ -41,63 +66,49 @@ export const register: Register = on => {
     return r
   })
 
-  on('skill.prompt', async ($, e, next) => {
-    if (e.skill === 'shipit:run' && segmentStart === undefined) {
-      segmentStart = await $.clock.now()
-      seg = empty()
-      agents.clear()
-    }
-    return next(e)
-  })
-
   on('agent.spawn', async ($, e, next) => {
     const r = await next(e)
-    if (segmentStart !== undefined && r.agentId)
-      agents.set(r.agentId, { stage: stageOf(e.subagentType), openSince: await $.clock.now() })
+    if (r.agentId) agents.set(r.agentId, { stage: stageOf(e.subagentType), since: await $.clock.now() })
     return r
   }).catch(($, e, next) => next(e)) // bookkeeping never blocks a spawn
 
   on('turn.start', async ($, e, next) => {
     const a = e.agentId ? agents.get(e.agentId) : undefined
-    if (a) a.openSince = await $.clock.now()
+    if (a) a.since = await $.clock.now()
     return next(e)
   })
 
   // Every model response, main loop and subagents alike, counted once here.
   on('turn.step', async function* ($, e, next) {
     const r = yield* next(e)
-    if (segmentStart === undefined || !r.usage) return r
     const stage = e.agentId ? agents.get(e.agentId)?.stage : 'run'
-    if (stage)
-      addUsage(seg, stage, {
-        input: r.usage.input_tokens,
-        output: r.usage.output_tokens,
-        cacheRead: r.usage.cache_read_input_tokens,
-        cacheWrite: r.usage.cache_creation_input_tokens,
-      })
+    const u = r.usage
+    await track($, t => {
+      if (stage && u)
+        addUsage(t, stage, {
+          input: u.input_tokens,
+          output: u.output_tokens,
+          cacheRead: u.cache_read_input_tokens,
+          cacheWrite: u.cache_creation_input_tokens,
+        })
+    })
     return r
   })
 
   on('turn.complete', async ($, e, next) => {
     const r = await next(e)
-    if (segmentStart === undefined) return r
     const a = e.agentId ? agents.get(e.agentId) : undefined
-    if (a) {
-      addTime(seg, a.stage, e.durationMs)
-      a.openSince = undefined
-    } else if (!e.agentId) {
-      // The coordinator's turn ended: the run paused or finished; bank the segment.
-      const finished = await live($)
-      segmentStart = undefined
-      const key = await branchKey($)
-      if (key) await $.store.set(key, merge(await stored($, key), finished))
-    }
+    await track($, t => a && addTime(t, a.stage, e.durationMs))
+    if (a) a.since = undefined
     return r
   })
 
   on('tool.call', { tool: TOOL }, async $ => {
-    const key = await branchKey($)
-    const t = merge(await stored($, key), await live($))
-    return { result: t.ms || Object.keys(t.stages).length ? render(t) : 'No shipit run metrics recorded for this branch.' }
-  }).catch(() => ({ result: 'No shipit run metrics recorded for this branch.' }))
+    await track($)
+    const t = merge(empty(), await stored($, (await git($))?.key))
+    const now = await $.clock.now()
+    // The delivery agent calling this is still running: count it up to now.
+    for (const a of agents.values()) if (a.since !== undefined) addTime(t, a.stage, now - a.since)
+    return { result: t.ms || Object.keys(t.stages).length ? render(t) : NONE }
+  }).catch(() => ({ result: NONE }))
 }
