@@ -28,7 +28,8 @@ repository's rules at every step:
    plan and the repo's rules; must-fix findings go back to the builder.
 5. **Delivers.** `code-handoff` creates the branch, commit, push and a
    ready-for-review PR, and moves the card to review — only the actions listed in
-   `handoff.allow`.
+   `handoff.allow`. In Claude Code, a `run`'s PR ends with its total time and
+   tokens, broken down per skill.
 6. **Keeps context current.** `sync` updates the contract and docs as the code
    changes, without overwriting human decisions.
 
