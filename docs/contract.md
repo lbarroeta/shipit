@@ -2,8 +2,10 @@
 
 `init` writes the contract and a synchronization baseline, and factual claims carry
 evidence — a `path:line`, or the exact command output that proved it. Everything
-lives in `.shipit/`; your own documentation in `docs/`, the README or agent docs is
-linked from it, never copied into it.
+lives in `.shipit/`. Your knowledge docs — architecture, how the project runs,
+design reference — live in `.shipit/docs/` and stay yours: `sync` watches them and
+proposes patches, never rewrites them. The README and agent docs are linked from
+the contract, never copied into it.
 
 | File | For | Content |
 | --- | --- | --- |
@@ -13,6 +15,7 @@ linked from it, never copied into it.
 | `.shipit/conventions.md` | agents | Patterns this repo follows, each with an exemplar |
 | `.shipit/rules/<layer>.md` | agents | Layer rules derived from real files |
 | `.shipit/rules/tests/<kind>.md` | agents | Test shape, extracted from a real test |
+| `.shipit/docs/**/*.md` | agents, you | Your knowledge docs; `sync` reviews their drift, never rewrites them |
 
 The config always lives at `.shipit/config.json`: it is how every skill finds the
 rest. `paths.plans`, `paths.tasks` and `paths.rules` can move those three.
@@ -43,7 +46,8 @@ Three rules make it trustworthy:
   appears in a README is a candidate to verify, never a source. One that fails
   verification is `null`, and its key is reported in `unknown[]`.
 - **It complements your docs, never duplicates them.** Agent docs, the files they
-  link to and the headings of `docs/**/*.md` are inventoried first. A topic they cover
+  link to and the headings of `docs/**/*.md` and `.shipit/docs/**/*.md` are
+  inventoried first. A topic they cover
   is linked from `.shipit/`; only what they do not state is written there. Your docs
   are never edited except by a patch you approve. When a doc and the repo disagree,
   `init` asks: on a fact the repo wins, on a decision you do.

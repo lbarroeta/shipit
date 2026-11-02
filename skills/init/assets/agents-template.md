@@ -1,7 +1,8 @@
 # Agent instructions
 
 `CLAUDE.md` is a symlink to this file. Keep this entry point short; put technical
-rules and explanations in `docs/` and link to their owning document.
+rules in `.shipit/rules/`, explanations in `.shipit/docs/`, and link to their
+owning document.
 
 ## Read only what the task needs
 
@@ -10,7 +11,7 @@ docs → delete this section.>
 
 | Task | Required context |
 | --- | --- |
-| <task> | [<document title>](<docs/path.md>) |
+| <task> | [<document title>](<.shipit/docs/path.md>) |
 
 <!-- shipit:contract -->
 ## Repository contract

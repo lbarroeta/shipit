@@ -92,8 +92,8 @@ def contract_snapshot(repo, config):
     rules = relative(config.get("paths", {}).get("rules", ".shipit/rules"))
     names = {CONFIG, ".shipit/stack.md", ".shipit/conventions.md", ".shipit/design-system.md",
              ".shipit/tech-design.md", ".shipit/backlog.md"}
-    # Product docs live under the excluded .shipit/ prefix, so their edits surface here.
-    for root in (repo / rules, repo / ".shipit/product"):
+    # Product and knowledge docs live under the excluded .shipit/ prefix, so their edits surface here.
+    for root in (repo / rules, repo / ".shipit/product", repo / ".shipit/docs"):
         if root.exists():
             names.update(p.relative_to(repo).as_posix() for p in root.rglob("*.md"))
     return {name: fingerprint(repo / name) for name in sorted(names)}
