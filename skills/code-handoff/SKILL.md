@@ -252,6 +252,10 @@ exists before a branch does.
   `PR Preparation` body verbatim. Verbatim means no re-wording, no added preamble,
   and no re-adding a section the template dropped. Create a new PR only when none
   exists, ready for review and without `--draft`.
+  The body is only the text after the `## PR Preparation` heading, minus its title
+  line — never the whole report or any other section of it. No such section, no
+  `## Validation` heading in it, or report headings in it (`Summary`, `Files
+  Changed`, `QA…`) → preflight failure: return it to the producer, publish nothing.
 - **Run metrics** — coordinated `shipit:run` only, when `pr_body` is allowed and
   the `mcp__shipit__run_metrics` tool is available. Call it
   immediately before each body write, so its totals cover the whole run up to

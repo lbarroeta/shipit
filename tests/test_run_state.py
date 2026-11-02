@@ -14,6 +14,8 @@ HELPER = ROOT / "skills/run/scripts/run_state.py"
 
 
 class RunStateTests(unittest.TestCase):
+    PR_BODY = "\n## PR Preparation\n\nShows updated text.\n\n## Validation\n\n`git diff --check` exit 0\n"
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
@@ -88,7 +90,7 @@ class RunStateTests(unittest.TestCase):
     def result(self, state, stage, **extra):
         directory = Path(state["state_path"]).parent
         artifact = directory / f"{stage}.md"
-        artifact.write_text(f"{stage} evidence\n")
+        artifact.write_text(f"{stage} evidence\n" + (self.PR_BODY if stage == "sync_after" else ""))
         result = {"status": "completed", "artifact": str(artifact),
                   "requested": state["routes"]["sync" if stage.startswith("sync_") else stage], "effective": {"model": None, "effort": None},
                   "blockers": []}
@@ -526,6 +528,26 @@ class RunStateTests(unittest.TestCase):
         self.assertEqual(set(state["artifacts"]), {"sync_before", "plan"})
         self.assertEqual(state["qa"][0]["outcome"], "fail")
 
+    def test_final_sync_rejects_a_report_that_is_not_a_template_pr_body(self):
+        state = self.begin()
+        state = self.checkpoint(state, "plan", self.result(state, "plan"))
+        (self.repo / "product.txt").write_text("updated\n")
+        result = self.result(state, "implement", files=["product.txt"],
+                             validation=[{"command": "git diff --check", "exit_code": 0}])
+        state = self.reviewed(self.checkpoint(state, "implement", result))
+        result = self.result(state, "sync_after", files=["product.txt"], context_status="current",
+                             requires_revalidation=False,
+                             validation=[{"command": "git diff --check", "exit_code": 0}])
+        report = Path(state["state_path"]).parent / "sync_after.md"
+        for body, reason in (
+                ("## Summary\n\nDone.\n\n## Files Changed\n\n- product.txt\n", "PR Preparation"),
+                ("## PR Preparation\n\nDone.\n\n**Validation:** passes\n", "## Validation"),
+                ("## PR Preparation\n\nDone.\n\n## Validation\n\nok\n\n## QA\n\n1. Open\n", "report sections")):
+            report.write_text(f"# Report\n\n{body}")
+            self.assertIn(reason, self.checkpoint(state, "sync_after", result, success=False)["reason"])
+        report.write_text(f"# Report\n{self.PR_BODY}")
+        self.assertEqual(self.checkpoint(state, "sync_after", result)["stage"], "handoff")
+
     def test_delivered_run_returns_qa_steps_from_final_report(self):
         state = self.begin()
         state = self.checkpoint(state, "plan", self.result(state, "plan"))
@@ -539,7 +561,7 @@ class RunStateTests(unittest.TestCase):
                              validation=[{"command": "git diff --check", "exit_code": 0}])
         report = Path(state["state_path"]).parent / "sync_after.md"
         qa = "## QA Handoff\n\nEnvironment: staging\n\n## QA Steps For Non-Developer\n\n1. Open the page\n   - Expected: updated text"
-        report.write_text(f"# Report\n\n{qa}\n\n## Plan\n\nplan.md\n")
+        report.write_text(f"# Report\n\n{qa}\n\n## Plan\n\nplan.md\n{self.PR_BODY}")
         state = self.checkpoint(state, "sync_after", result)
         self.git(self.repo, "add", "product.txt")
         self.git(self.repo, "commit", "-m", "Delivered fixture change")
