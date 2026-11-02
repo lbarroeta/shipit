@@ -125,6 +125,8 @@ and passes `--no-worktree` to its planner.
    that includes context/doc edits and applicable final validation. Preserve the
    original builder report. Checkpoint `sync_after` only with current/updated
    context, no conflicts, no pending revalidation and passing context checks.
+   With `pr_body` allowed, the helper also rejects a report whose last
+   `## PR Preparation` section is not a template body; re-dispatch sync with its reason.
    A required product check failure uses `repair --result-file ... --reason ...`
    to return to the builder, then sync again; changed plan scope uses `replan` and
    the user's decision when needed. Never send stale builder hashes to delivery.

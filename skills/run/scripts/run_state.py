@@ -403,6 +403,22 @@ def qa_guide(state):
     return {"report": str(path), "steps": "\n".join(lines).strip() or None}
 
 
+def require_pr_body(path):
+    """Delivery publishes `## PR Preparation`, so it must hold a template body, not a report."""
+    lines = Path(path).read_text().splitlines()
+    if "## PR Preparation" not in lines:
+        raise Blocked("Delivery report needs a final `## PR Preparation` section holding the PR body "
+                      "from pr-description-template.md; the report itself is never the body.")
+    headings = [line for line in lines[lines.index("## PR Preparation") + 1:] if line.startswith("## ")]
+    if "## Validation" not in headings:
+        raise Blocked("PR Preparation body needs the template's `## Validation` heading "
+                      "(and `## Review notes` when applicable), not bold labels or `Validation:` prose.")
+    extra = [heading for heading in headings if heading not in {"## Review notes", "## Validation"}]
+    if extra:
+        raise Blocked(f"PR Preparation body carries report sections {extra}; "
+                      "keep only the pr-description-template.md body as the report's last section.")
+
+
 def checkpoint(repo, state, args):
     expected = {"sync_before": "plan", "plan": "implement", "implement": "review",
                 "review": "sync_after", "sync_after": "handoff", "handoff": "qa"}
@@ -428,6 +444,8 @@ def checkpoint(repo, state, args):
         raise Blocked("The stage must explicitly report no unresolved blockers.")
     if args.stage == "sync_after" and str(artifact) == state["artifacts"]["implement"]["path"]:
         raise Blocked("Final sync must write a separate delivery report; preserve builder evidence.")
+    if args.stage == "sync_after" and "pr_body" in config_at(repo).get("handoff", {}).get("allow", ALLOW_DEFAULT):
+        require_pr_body(artifact)
     if args.stage.startswith("sync_"):
         if result.get("context_status") not in {"current", "updated"}:
             raise Blocked("Sync needs current or updated context; partial/unknown context cannot advance.")
