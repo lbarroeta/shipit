@@ -33,7 +33,7 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `language.code` | string | Comments written in code. Default `en` |
 | `docs.agent_docs` | string[] | Agent instruction files and the local docs they link to. Symlinks resolved; each file listed once |
 | `docs.pointer` | string | File holding the `shipit:contract`, `shipit:design` and `shipit:product` blocks: `AGENTS.md` when `init` created it or it already carried a shipit block, otherwise `CLAUDE.local.md`. Read by `sync`, `doctor` and `design-system` to find the blocks. Absent → `AGENTS.md` |
-| `docs.owned_by_shipit` | string[] | Always `[".shipit/"]` |
+| `docs.owned_by_shipit` | string[] | Always `[".shipit/"]`. `.shipit/docs/` inside it stays human-owned; see below |
 | `stack.languages` | string[] | With version pin files as evidence in `stack.md` |
 | `stack.frameworks` | string[] | Only from declared dependencies |
 | `stack.package_manager` | string \| null | Decided by lockfile |
@@ -74,10 +74,14 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `ci.required_jobs` | string[] | Jobs that gate the merge |
 | `unknown[]` | string[] | Every undetermined key |
 
-Everything under `.shipit/` is shipit's. The repo's own documentation — `docs/`,
-the README, agent docs — is linked from it, never copied into it, and edited only
-to apply a doc patch the user approved. Product docs are the one exception: they
-move into `.shipit/` per `../../../references/product-context.md § Migration`.
+Everything under `.shipit/` is where agents find context, but not all of it is
+shipit's. `.shipit/docs/` holds the repo's knowledge docs — architecture, how the
+project runs, design reference — and they stay the humans': `sync` watches and
+reviews them, never adopts or regenerates them. The README and agent docs are
+linked from the contract, never copied into it. Human docs, wherever they live,
+are edited only to apply a doc patch the user approved. Product docs move into
+`.shipit/` per `../../../references/product-context.md § Migration`; knowledge docs
+in `docs/` move into `.shipit/docs/` per `../SKILL.md § Knowledge docs migration`.
 
 ## Placeholders
 

@@ -37,7 +37,10 @@ a newer schema → report the gap; never reset it from a template.
 - Product context follows `../../references/product-context.md`: apply status
   edits the delivered change proves, propose decisions as patches, repair the
   `shipit:product` block. Product docs outside `.shipit/` → report them as
-  migration candidates for `/shipit:init`; never move them here.
+  migration candidates for `/shipit:init`; never move them here. Knowledge docs
+  in `docs/` are reported the same way.
+- `.shipit/docs/` holds human knowledge docs: review their drift against the rules
+  that link them, propose patches, never generate, rewrite or adopt them.
 - Human docs outside generated blocks are not owned. Correct a named factual
   section when the request/approved plan authorizes it; otherwise propose its exact
   patch. Preserve deliberate policies and decisions even if code violates them.

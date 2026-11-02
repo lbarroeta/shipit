@@ -26,6 +26,11 @@ Product docs still in `docs/` — PRD, MVP, brief, tech design, backlog, as
 rails-factory writes them? `/shipit:init` moves them into `.shipit/` after one
 confirmation — see [*Product context*](contract.md#product-context).
 
+Knowledge docs still in `docs/` — architecture, how the project runs, design
+reference? `/shipit:init` moves them to `.shipit/docs/` under the same relative
+path after one confirmation; docs that state rules are proposed for
+`.shipit/rules/` instead.
+
 ## Did it land?
 
 In Claude Code, confirm `claude plugin details shipit@shipit` lists `code-plan`,

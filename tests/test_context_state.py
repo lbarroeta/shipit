@@ -113,6 +113,16 @@ class ContextStateTests(unittest.TestCase):
         self.write_inventory()
         self.assertIn("Not an init/sync-owned", self.call("record", success=False)["reason"])
 
+    def test_knowledge_docs_are_reported_but_never_adopted(self):
+        self.call("record")
+        (self.repo / ".shipit/docs/architecture").mkdir(parents=True)
+        (self.repo / ".shipit/docs/architecture/pipeline.md").write_text("Stages run in order\n")
+        self.assertEqual(self.call("inspect")["contract_changes"],
+                         [".shipit/docs/architecture/pipeline.md"])
+        self.managed.append(".shipit/docs/architecture/pipeline.md")
+        self.write_inventory()
+        self.assertIn("Not an init/sync-owned", self.call("record", success=False)["reason"])
+
     def test_conflicts_and_omitted_existing_rules_cannot_be_certified(self):
         (self.repo / ".shipit/rules/service.md").write_text("Generated\n")
         self.managed.append(".shipit/rules/service.md")
