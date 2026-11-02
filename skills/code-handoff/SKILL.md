@@ -121,8 +121,9 @@ Rules:
 - **One line per side effect.** This skill reports what it did, never what the
   change was — the report it was handed already said that, and a PR body is not
   improved by a second telling. Publish prepared implementation/review bodies
-  verbatim; never expand them. Plan-mode bodies follow the summary/full-plan rule
-  below.
+  verbatim; never expand them. The one addition is the `Run metrics` section of a
+  coordinated run (implementation mode). Plan-mode bodies follow the
+  summary/full-plan rule below.
 
 ## Preflight — all modes
 
@@ -251,6 +252,14 @@ exists before a branch does.
   `PR Preparation` body verbatim. Verbatim means no re-wording, no added preamble,
   and no re-adding a section the template dropped. Create a new PR only when none
   exists, ready for review and without `--draft`.
+- **Run metrics** — coordinated `shipit:run` only, when `pr_body` is allowed and
+  the `mcp__shipit__run_metrics` tool is available. Call it
+  immediately before each body write, so its totals cover the whole run up to
+  that moment, and append its output verbatim as the body's last section: total
+  time, total tokens and the per-skill breakdown. Tool absent, failing or
+  answering `No shipit run metrics…` → publish the body without the section and
+  report `run metrics: n/a`. Never estimate, round or rewrite the figures, and
+  never add them to tracker comments.
 - **Ready for review** — `pr_ready` only: convert an existing draft with
   `gh pr ready` (or the PR host equivalent). Already ready → no write. Verify
   actual readiness before the tracker transition. When withheld, preserve the
@@ -328,6 +337,7 @@ recap of the change — a `completed` line needs no explanation:
 - Commit hash, and the files staged — plus the generated plans and graph outputs excluded.
 - Push.
 - PR url, and whether the body was created or replaced; whether it is still a draft.
+- Run metrics — coordinated runs only: `appended` or `n/a` with the reason.
 - Review thread replies and resolutions — `review` mode, one line per thread.
 - Tracker comment, and tracker status transition.
 - Worktree and preflight issues encountered.

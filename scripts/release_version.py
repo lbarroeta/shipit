@@ -41,7 +41,7 @@ def latest_tag() -> tuple[str, tuple[int, int, int]]:
 
 
 def distributed(path: str) -> bool:
-    return path.startswith(("skills/", "agents/", ".opencode/command/", "references/")) or path in {
+    return path.startswith(("skills/", "agents/", "hooks/", ".opencode/command/", "references/")) or path in {
         ".claude-plugin/plugin.json",
         ".claude-plugin/marketplace.json",
         ".codex-plugin/plugin.json",
