@@ -20,6 +20,7 @@ Example commands (replace values, not arbitrary shell expressions):
 ```sh
 python3 /plugin/skills/run/scripts/run_state.py --repo /repo routes --provider openai
 python3 /plugin/skills/run/scripts/run_state.py --repo /repo begin --provider openai --task-file /tmp/task.json --branch codex/eng-412-invoices
+python3 /plugin/skills/run/scripts/run_state.py --repo /repo worktree --name ENG-412
 python3 /plugin/skills/run/scripts/run_state.py --repo /repo status --issue-key 'linear:workspace:issue-id'
 python3 /plugin/skills/run/scripts/run_state.py --repo /repo checkpoint --issue-key 'linear:workspace:issue-id' --owner OWNER --stage plan --result-file /run-dir/planner-result.json
 python3 /plugin/skills/run/scripts/run_state.py --repo /repo pause --issue-key 'linear:workspace:issue-id' --owner OWNER --reason 'Waiting for human QA'
@@ -36,9 +37,15 @@ delivery report) and `steps` (its `## QA…` sections verbatim, or null). Store 
 `state_path`. State/locks live under the Git common directory's `shipit/`, excluded
 from commits without editing gitignore or the repo contract. Issue locks are shared
 across linked worktrees; checkout locks also prevent two different issues editing
-the same checkout. Each linked worktree is its own checkout, so sessions in separate
-worktrees run in parallel. `status` reads a run from any checkout; every other
-command runs only in the run's own checkout. Only the owning coordinator can checkpoint or pause.
+the same checkout. Each linked worktree is its own checkout, so runs in separate
+worktrees go in parallel, from one coordinator or several sessions. `status` reads a
+run from any checkout; every other command takes the run's own checkout as `--repo`.
+Only the owning coordinator can checkpoint or pause.
+
+`worktree --name <issue-id>` runs from the main checkout only. It returns `path`
+(`<worktree.root>/<slug of the id>`, `<repo.name>` filled in) and `created`: a new
+detached worktree, or `false` when that path already is one of this repository's
+worktrees. A path that exists as anything else blocks.
 
 Stages: `preparing → sync_before → plan → implement → review → sync_after → handoff → qa → done`. `pause` preserves
 stage and releases locks. A later `begin` reacquires them. Resume requires the same
@@ -103,8 +110,9 @@ carries the QA guide forward. The implement checkpoint rejects leftover markers.
 The reviewer then reviews only those resolutions — `git diff MERGE_HEAD -- <path>`
 for each conflict plus the report's Files Changed — never upstream's own changes,
 which main already reviewed.
-With a merge in progress, delivery stages the manifest and its commit completes
-the merge; never abort, rebase or force-push it.
+With a merge in progress, pass delivery the last `updates` entry's `upstream` SHA:
+`code-handoff § Merge in progress` checks it against `MERGE_HEAD`, stages the
+manifest and closes the merge with a plain commit; never abort, rebase or force-push it.
 Each child saves a result JSON and returns its path plus a short summary:
 
 ```json

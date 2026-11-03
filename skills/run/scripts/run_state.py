@@ -415,6 +415,26 @@ def restore_databases(repo):
             git(repo, "checkout", "--", name)
 
 
+def create_worktree(repo, name):
+    """The linked worktree one card of a multi-card run works in, under worktree.root; reused when present."""
+    if git_dir(repo, "--git-dir") != git_dir(repo, "--git-common-dir"):
+        raise Blocked("Create card worktrees from the main checkout.")
+    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    if not slug:
+        raise Blocked("A card worktree needs the card's ID as its name.")
+    root = (config_at(repo).get("worktree") or {}).get("root") or "../worktrees/<repo.name>"
+    path = (repo / root.replace("<repo.name>", repo.name) / slug).resolve()
+    listed = {Path(line[len("worktree "):]).resolve()
+              for line in git(repo, "worktree", "list", "--porcelain").splitlines() if line.startswith("worktree ")}
+    if path in listed and path.is_dir():
+        return {"path": str(path), "created": False}
+    if os.path.lexists(path):
+        raise Blocked(f"{path} exists and is not a worktree of this repository.")
+    git(repo, "worktree", "prune")  # forget a worktree whose folder was deleted by hand
+    git(repo, "worktree", "add", "--detach", str(path))
+    return {"path": str(path), "created": True}
+
+
 def begin(repo, args):
     task = read_task(args.task_file)
     run_dir, locks = locations(repo, task["key"])
@@ -425,7 +445,7 @@ def begin(repo, args):
     try:
         state = read_json(path) if path.exists() else None
         if state and state["repo"] != str(repo):
-            raise Blocked(f"Run belongs to checkout {state['repo']}; continue from a session there.")
+            raise Blocked(f"Run belongs to checkout {state['repo']}; continue it with --repo {state['repo']}.")
         if state and state["source_digest"] != source_digest(task) and not args.replan_reason:
             raise Blocked("Task scope changed. Reconcile the saved plan with the user before resuming.")
         if (state and state.get("version", 1) < 2 and state["stage"] not in {"qa", "done", "preparing"}
@@ -717,6 +737,8 @@ def main():
     start.add_argument("--branch")
     start.add_argument("--provider", choices=["anthropic", "openai"], required=True)
     start.add_argument("--replan-reason", help="Explicitly reconcile an approved scope/artifact correction")
+    tree = commands.add_parser("worktree")
+    tree.add_argument("--name", required=True, help="The card's ID; names its worktree folder")
     status = commands.add_parser("status")
     status.add_argument("--issue-key", required=True)
     for command in ("checkpoint", "pause", "qa", "verify", "replan", "repair", "update"):
@@ -741,6 +763,8 @@ def main():
         output = routes(repo, args.provider)
     elif args.command == "begin":
         output = begin(repo, args)
+    elif args.command == "worktree":
+        output = create_worktree(repo, args.name)
     else:
         run_dir, locks = locations(repo, args.issue_key)
         state_path = run_dir / "state.json"
@@ -749,7 +773,7 @@ def main():
             return
         state = read_json(state_path)
         if state["repo"] != str(repo) and args.command != "status":
-            raise Blocked(f"Run belongs to checkout {state['repo']}; continue from a session there.")
+            raise Blocked(f"Run belongs to checkout {state['repo']}; continue it with --repo {state['repo']}.")
         if args.command != "status":
             require_owner(state, locks, args.owner)
             if args.command == "pause":

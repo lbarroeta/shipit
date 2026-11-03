@@ -222,7 +222,27 @@ class RunStateTests(unittest.TestCase):
         self.owned(state, "pause", "--reason", "fixture pause")
         status = self.call("status", "--issue-key", self.task["key"], repo=main)
         self.assertEqual(Path(status["repo"]), self.repo.resolve())
-        self.assertIn("continue from a session there", self.begin(success=False, repo=main)["reason"])
+        self.assertIn(f"continue it with --repo {self.repo.resolve()}", self.begin(success=False, repo=main)["reason"])
+
+    def test_several_cards_run_at_once_in_worktrees_the_helper_creates(self):
+        first = self.call("worktree", "--name", "ENG-412")
+        path = self.directory / "worktrees/repo/eng-412"
+        self.assertEqual(first, {"path": str(path.resolve()), "created": True})
+        self.assertEqual(self.call("worktree", "--name", "ENG-412")["created"], False)  # a repeated run reuses it
+        second = Path(self.call("worktree", "--name", "ENG 413!")["path"])
+        self.assertEqual(second.name, "eng-413")
+        one = self.call("begin", "--provider", "openai", "--task-file", str(self.task_file),
+                        "--branch", "codex/42-product", repo=path)
+        other = dict(self.task, key="github-issues:fixture/repo:43", id="43")
+        other_file = self.directory / "other.json"
+        other_file.write_text(json.dumps(other))
+        two = self.call("begin", "--provider", "openai", "--task-file", str(other_file),
+                        "--branch", "codex/43-other", repo=second)
+        self.assertEqual((one["status"], two["status"]), ("active", "active"))  # both hold their locks at once
+        self.assertEqual(self.git(self.repo, "branch", "--show-current"), "main")  # the main checkout never moves
+        self.assertIn("main checkout", self.call("worktree", "--name", "ENG-414", success=False, repo=path)["reason"])
+        (self.directory / "worktrees/repo/eng-415").mkdir()
+        self.assertIn("not a worktree", self.call("worktree", "--name", "ENG-415", success=False)["reason"])
 
     def test_worktree_receives_ignored_env_files_without_overwrite(self):
         (self.repo / ".gitignore").write_text(

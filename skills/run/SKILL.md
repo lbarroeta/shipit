@@ -1,6 +1,6 @@
 ---
 name: run
-description: Execute an existing issue or card from its ID or URL through shipit context sync, planning, implementation, code review, final sync and handoff, using sequential native subagents with stage-specific models. Resume the same task or process human QA feedback. For non-developers with a defined task; not for drafting ideas or creating tickets. Supports Claude Code and local Codex.
+description: Execute one or more existing issues or cards from their IDs or URLs through shipit context sync, planning, implementation, code review, final sync and handoff, using native subagents with stage-specific models; several cards run in parallel, each in a worktree run creates. Resume the same task or process human QA feedback. For non-developers with a defined task; not for drafting ideas or creating tickets. Supports Claude Code and local Codex.
 metadata:
   input: issue-id-or-url
   output: qa-delivery
@@ -9,7 +9,7 @@ metadata:
 
 # shipit run
 
-One conversation owns the task. You are the coordinator: prepare Git, delegate,
+One conversation owns the task, or the several it was given. You are the coordinator: prepare Git, delegate,
 wait, checkpoint and explain QA. **Do not perform the synchronizer, planner, builder, reviewer or
 delivery agent's work yourself.** Use real native subagents, not role-playing or new
 user-owned chats. Their model/effort pairs come from `assets/models.json`, with
@@ -17,8 +17,10 @@ explicit per-repo overrides in `run.models` of `.shipit/config.json`.
 
 ## Inputs and authorization
 
-Accept an existing issue/card ID or URL, e.g. `/shipit:run ENG-412` or
-`/shipit:run https://linear.app/team/issue/ENG-412/...`. No free-text task creation.
+Accept one or more existing issue/card IDs or URLs, e.g. `/shipit:run ENG-412`,
+`/shipit:run https://linear.app/team/issue/ENG-412/...` or `/shipit:run ENG-412 ENG-413`.
+One card runs in the current checkout, exactly as below. Several run in parallel per
+*Several cards*. No free-text task creation.
 An explicit request to **run** the referenced task authorizes planning and
 execution within its acceptance criteria. Merely matching this skill or reading
 an issue is not execution authorization. Confirm that distinction if intent is
@@ -39,10 +41,10 @@ that check unless the routes changed. Each child reads its assigned skill and th
 references itself. Missing contract → `/shipit:init` first. Missing native
 delegation, stage model/effort, Python 3.10+
 or required tracker access → stop with the exact gap. Never install a runtime or
-fall back to another model silently. Each session owns one checkout. Parallel
-tasks run in separate sessions, each opened in its own linked worktree; `run`
-prepares that worktree and passes `--no-worktree` to its planner, which still
-checks collisions with the other worktrees' plans.
+fall back to another model silently. Each run owns one checkout: the current one
+for a single card, its own linked worktree for each of several. A session opened by
+hand inside a linked worktree is prepared the same way. The planner always gets
+`--no-worktree` and still checks collisions with the other worktrees' plans.
 
 ## Workflow
 
@@ -70,7 +72,9 @@ checks collisions with the other worktrees' plans.
    with no new human feedback and no conflict with main (step 10) is
    displayed without switching branches or acquiring locks: show its `qa_guide`
    and the PR link, then stop. Never dispatch a stage to rebuild them. A run whose
-   `repo` is another checkout continues only from a session there; say which. Otherwise the
+   `repo` is another existing checkout of this repository, such as a card worktree,
+   continues there: pass `--repo <repo>` to every helper call and name that checkout
+   to each child. Otherwise the
    helper locks the issue **and** checkout. For a new task it requires a clean tree,
    switches to literal `main`, fetches its remote and merges the fetched upstream
    SHA with `--ff-only --no-overwrite-ignore`, then creates the task branch from
@@ -178,6 +182,36 @@ checks collisions with the other worktrees' plans.
    inspect and stop its children before an explicitly authorized recovery; never
    infer inactivity from elapsed time. Repeating a delivered task shows its existing
    QA delivery; repeating a completed task reports its saved result.
+
+## Several cards
+
+Two or more references → one coordinator, one worktree and one pipeline per card.
+A single reference never creates a worktree.
+
+1. **Resolve and preflight all first.** Steps 1–2 for every card, duplicates
+   dropped; preflight runs once. A card that does not resolve is reported and left
+   out; the rest proceed.
+2. **A worktree per card.** From the main checkout, the helper's
+   `worktree --name <issue-id>` creates `<worktree.root>/<id>` detached, or reuses
+   it on a repeated run. Then step 3 for that card with `--repo <path>`, its own
+   task file, branch and owner token, and `worktree.setup` inside that path. The
+   main checkout is never switched, so it may stay dirty.
+3. **Advance each pipeline on its own.** Steps 4–9 for every card at once: dispatch
+   a card's next stage as soon as its last checkpoint lands, never two stages of one
+   card together. Every helper call takes the card's `--repo`; every delegation
+   names the card's worktree as its checkout, and children run every command
+   there, never in the main checkout. Keep a short ledger per card: stage, owner,
+   state path, worktree.
+4. **One card's trouble stays its own.** A blocker, decision or failure pauses that
+   card (step 11) while the others continue. Ask the user per card, naming it.
+5. **QA per card.** Present step 10 for each card as it reaches QA, its worktree as
+   where to test. Feedback names its card and goes to that card's builder.
+6. **Resume.** The same command again reuses the worktrees and resumes each saved
+   run; one card alone resumes in its worktree per step 3.
+
+Run metrics follow the session's own checkout, so these PRs carry none (`run
+metrics: n/a`). Worktrees stay after delivery: `/shipit:status --prune` removes
+those whose PR merged; drop a per-worktree database there first (`db:drop`).
 
 ## Communication and failure handling
 

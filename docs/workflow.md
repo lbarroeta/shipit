@@ -56,9 +56,9 @@ diff. Repeating an issue resumes its saved branch and checkpoints without pullin
 main again or duplicating delivery. Give QA feedback in the same chat: failures
 return to the builder on that branch. Ready for QA includes where to test, setup
 and complete plain-language steps. Missing test environment is reported as QA
-blocked; a PR or green tests never means human QA passed. Each session owns one
-checkout; to run several cards at once, open one session per card in its own
-worktree — see [Parallel worktrees](#parallel-worktrees--opt-in).
+blocked; a PR or green tests never means human QA passed. One card runs in the
+current checkout; `/shipit:run ENG-412 ENG-413` runs several at once, each in a
+worktree `run` creates — see [Parallel `run` sessions](#parallel-run-sessions).
 
 The individual cycle remains available:
 
@@ -292,13 +292,18 @@ never one that is dirty or still open.
 
 ### Parallel `run` sessions
 
-One session per card, each in its own worktree. `run` needs no config flag; it
-detects the worktree:
+Give `run` several cards and it creates one worktree per card under
+`worktree.root` and runs their pipelines at once from the same session. One card
+runs in your current checkout, as always:
 
-```sh
-git worktree add --detach ../worktrees/<repo>/eng-412
-cd ../worktrees/<repo>/eng-412   # start the agent here, then /shipit:run ENG-412
 ```
+/shipit:run ENG-412 ENG-413   # ../worktrees/<repo>/eng-412 and eng-413, in parallel
+/shipit:run ENG-414           # the current checkout, no worktree
+```
+
+A session you open yourself inside a linked worktree is prepared the same way. The
+same command again reuses the worktrees. Run metrics are per session checkout, so
+multi-card PRs carry none.
 
 - **`main` is left alone.** The task branch starts from the fetched upstream tip; the
   main checkout is never switched or required to be clean.

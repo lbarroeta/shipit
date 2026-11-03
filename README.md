@@ -74,7 +74,8 @@ In OpenCode the commands are `/shipit-<name>`, and `run` is not available.
 
    Review what `init` wrote and commit it: the contract is shared with your team.
 3. Pick how you work:
-   - **You have a ticket and want it done:** `/shipit:run ENG-412`.
+   - **You have a ticket and want it done:** `/shipit:run ENG-412`. Several at
+     once: `/shipit:run ENG-412 ENG-413`, each in its own worktree.
    - **You want to drive each step:** `/shipit:code-plan ENG-412`, then
      `/shipit:code-implement`, `/shipit:code-review`, `/shipit:sync` and
      `/shipit:code-handoff`.

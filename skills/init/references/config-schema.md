@@ -64,8 +64,8 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `graph` | object \| null | `{tool, out, query, path, explain, update}`. Null unless CLI **and** graph exist |
 | `markers.debt` | string | Default `ponytail:` |
 | `companions.*` | `present` \| `absent` | `ponytail`, `graphify_cli`, `graphify_graph`, `caveman` |
-| `worktree.enabled` | boolean | **Default `false`.** Opt-in: `code-plan` works in the current checkout unless the user turns this on. `run` needs no flag: it detects a linked worktree |
-| `worktree.root` | string | Default `../worktrees/<repo.name>` |
+| `worktree.enabled` | boolean | **Default `false`.** Opt-in: `code-plan` works in the current checkout unless the user turns this on. `run` needs no flag: given several cards it creates their worktrees, and it detects one opened by hand |
+| `worktree.root` | string | Default `../worktrees/<repo.name>`. Also where `run` creates one worktree per card when given several |
 | `worktree.base` | string | Branch new worktrees fork from |
 | `worktree.link[]` | string[] | **Empty at init.** Opt-in only. See warning below |
 | `worktree.share_graph` | boolean | Symlink the main checkout's graph into worktrees |
