@@ -282,8 +282,10 @@ writes the plan inside it. Three things make that safe:
   main checkout, after the merge.
 - **Secrets stay local.** `run` copies ignored `.env*` files into its worktree and
   never overwrites one already there. `worktree.link[]` starts empty; anything else
-  you list, such as `config/master.key`, is symlinked. A copy or link the worktree
-  would not ignore is removed and reported, so it never reaches a commit.
+  you list, such as `config/master.key`, is symlinked; for Rails, `init` asks once
+  whether to add the credentials keys. A Rails credentials key missing from the
+  worktree is reported. A copy or link the worktree would not ignore is removed and
+  reported, so it never reaches a commit.
 
 `/shipit:status` shows the board. `--prune` removes worktrees whose PR is merged,
 never one that is dirty or still open.
@@ -301,27 +303,21 @@ cd ../worktrees/<repo>/eng-412   # start the agent here, then /shipit:run ENG-41
 - **`main` is left alone.** The task branch starts from the fetched upstream tip; the
   main checkout is never switched or required to be clean.
 - **The worktree boots.** `run` copies the ignored `.env*` files and links, then runs
-  `worktree.setup` once per new task. `init` detects it from `commands.setup` or the
+  `worktree.setup` once per new task, retried until the first checkpoint. `init` detects it from `commands.setup` or the
   lockfiles (`npm ci`, `bundle install`, `uv sync --frozen`…); an install never
   rewrites a lockfile. A Rails `bin/setup` runs as `bin/setup --skip-server`.
 - **One database per worktree.** Copied `.env` files point every worktree at the same
   database: parallel test runs reload each other's schema and deadlock, and a shared
   development database leaks one card's migrations into another card's
-  `schema.rb`. SQLite files inside the project are already separate. Otherwise
-  suffix the names once per repo and let `setup` set the suffix:
-
-  ```yaml
-  # config/database.yml
-  development:
-    database: myapp_development<%= ENV["DB_SUFFIX"] %>
-  test:
-    database: myapp_test<%= ENV["DB_SUFFIX"] %>
-  ```
-
-  ```sh
-  echo "DB_SUFFIX=_$(basename "$PWD" | tr -c 'a-zA-Z0-9\n' '_')" >> .env && bundle install && bin/rails db:prepare
-  ```
-
+  `schema.rb`. SQLite files inside the project are already separate. For Rails with
+  Postgres or MySQL, `init` (or `sync` on an existing repo) asks once; on yes
+  (`worktree.database: "per_worktree"`) `run` suffixes the development and test names
+  in each worktree's own `config/database.yml` (`myapp_development` →
+  `myapp_development_eng_412`) and marks it `skip-worktree`. Git then hides the edit
+  from status, diff and `git add`, so it never reaches a commit, and the main
+  checkout keeps its names. `setup` runs `db:prepare` to create them. A card that
+  must change `database.yml` is told to lift `skip-worktree` first; an edit git
+  cannot see blocks the run instead of being lost.
   Redis or search indexes need a per-worktree database number or prefix too.
   `--prune` does not drop these databases; run `db:drop` before removing a worktree.
 - **No baseline conflicts.** `sync` inside a worktree defers `.shipit/sync-state.json`;

@@ -341,7 +341,8 @@ rows in `stack.md` carry the installed version from the lockfile, which is what
   buys friction on every first plan for a feature most repos never need.
 - `root: "../worktrees/<repo-name>"`, repo name from the toplevel basename.
 - `base`: the default branch from recipe 1.
-- `link: []` — **always empty at init.** Only the user adds paths here, knowing
+- `link: []` — **empty at init** except the Rails credentials keys the user accepts
+  below. Only the user adds other paths here, knowing
   it symlinks untracked files (often secrets) into every worktree. `.env*` files
   need no entry: `run` copies ignored ones into its worktree itself.
 - `share_graph`: from recipe 8.
@@ -351,4 +352,23 @@ rows in `stack.md` carry the installed version from the lockfile, which is what
   `pnpm install --frozen-lockfile`, `yarn install --immutable` (Berry) or
   `--frozen-lockfile` (classic), `bun install --frozen-lockfile`, `bundle install`,
   `uv sync --frozen`, `poetry install`, `composer install`, `mix deps.get`.
-  An install must never rewrite a lockfile. No lockfile → `null`.
+  An install must never rewrite a lockfile. No lockfile → `null`. With
+  `database: "per_worktree"`, a setup that is neither `bin/setup` nor runs
+  `db:prepare` gets `&& bin/rails db:prepare` appended: it creates the worktree's databases.
+- `credentials` and `database` — Rails only (`config/application.rb` plus `rails`
+  in `Gemfile.lock`); otherwise `null`, nothing asked. Each is a decision: ask it
+  once after detection, with its consequence; the recorded answer is never
+  re-asked. `sync` asks the same when the key is absent.
+  - `credentials`: a tracked `config/credentials.yml.enc` or
+    `config/credentials/<env>.yml.enc` whose key (`config/master.key`,
+    `config/credentials/<env>.key`) exists here and is ignored → "Link the Rails
+    credentials key into every worktree? Without it, credentials read as nil
+    there." Yes → `"link"` and append each key to `link[]`; no → `"skip"`. No
+    such key → `null`.
+  - `database`: `config/database.yml` with a `postgresql`, `mysql2` or `trilogy`
+    adapter → "Give each worktree its own development and test databases?
+    Shared, parallel test runs reload each other's schema and one card's
+    migrations leak into another's `schema.rb`." Yes → `"per_worktree"`; no →
+    `"shared"`. SQLite or no database → `null`. Nothing is edited here: `run`
+    suffixes the names in each worktree's own copy and marks it `skip-worktree`,
+    so the change never reaches a commit.

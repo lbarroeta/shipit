@@ -66,6 +66,9 @@ For config values, apply these policies even when a file looks wholly generated:
   an explicit decision or mutate a shared target to make detection pass.
 - `worktree.setup` null → derive it with init's detection recipe 12; an explicit
   value is kept.
+- `worktree.credentials` / `worktree.database` absent → ask recipe 12's Rails
+  questions once; a recorded answer, `null` included, is kept and never re-asked.
+  Never edit `config/database.yml` for it: `run` localizes each worktree's copy.
 
 A disappeared layer/test kind retires its generated rule and corresponding config
 entry only when its last accepted base matches current bytes and no human/design

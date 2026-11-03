@@ -86,10 +86,13 @@ checks collisions with the other worktrees' plans.
    dirty. `begin` then returns `worktree` (null in the main checkout) after copying
    ignored `.env*` files, `CLAUDE.local.md` and linking `worktree.link[]` and the
    shared graph from the main checkout; only paths ignored here, never overwriting.
-   Report those names, never contents. On `mode: new` in a worktree, run
-   `worktree.setup` there before the first child; a non-zero exit blocks with its
-   output. Null `setup` with a lockfile present → warn that the builder may lack
-   dependencies and point to `/shipit:sync` on main, which fills it.
+   Report those names, never contents, plus any `database` files given this
+   worktree's own databases (never committed); a `skipped` Rails credentials key → warn
+   that credentials read as nil there and point to `/shipit:sync` on main. In a
+   worktree, run `worktree.setup` there before the first child on `mode: new`, and
+   again on a resume with no checkpointed artifact (a failed setup is retried); a
+   non-zero exit blocks with its output. Null `setup` with a lockfile present → warn
+   that the builder may lack dependencies and point to `/shipit:sync` on main, which fills it.
 4. **Context before planning.** Delegate `shipit:sync` in `before-plan` phase
    using route `sync` and the absolute `skills/sync/SKILL.md` path. Pass issue,
    checkout, ownership and report/result paths. The synchronizer inspects first

@@ -28,7 +28,9 @@ python3 /plugin/skills/run/scripts/run_state.py --repo /repo update --issue-key 
 
 `begin` returns `owner`, `state_path`, `repo`, `branch`, `base_sha`, `routes`,
 `stage`, `mode` (`new`/`resume`) and `worktree`: null in the main checkout,
-otherwise `main`, `setup`, `copied`, `linked` and `skipped` (`path`, `reason`). At `qa`/`done`, `begin`, `status` and the
+otherwise `main`, `setup`, `copied`, `linked`, `skipped` (`path`, `reason`) and, with
+`worktree.database: "per_worktree"`, `database`: the `config/database.yml` files
+localized for this worktree. At `qa`/`done`, `begin`, `status` and the
 `handoff` checkpoint also return `qa_guide`: `report` (the checkpointed final
 delivery report) and `steps` (its `## QA…` sections verbatim, or null). Store artifacts and results in the parent of
 `state_path`. State/locks live under the Git common directory's `shipit/`, excluded
@@ -89,11 +91,18 @@ Keep plan corrections in the planner, not the builder. Reviewer: execute
 `shipit:code-review` over the run-owned diff with plan and builder report; read-only,
 no tests, no git writes. Delivery: `implementation`
 mode, immutable post-sync delivery report plus builder evidence, journal path; no product or plan edits.
+A localized `config/database.yml` is `skip-worktree`: git cannot see edits to it.
+A builder whose plan changes it first runs `git update-index --no-skip-worktree --
+<file>` and removes the worktree suffix from its database names; the implement and
+sync_after checkpoints block a hidden edit, and the next `begin` localizes it again.
 After `update`, the builder also gets the upstream SHA and `conflicts` from the
 last `updates` entry: resolve every conflict marker within the card's criteria and
 revalidate. Its manifest includes the merged upstream paths for ownership; its
 report names the upstream SHA, lists only the resolutions under Files Changed and
 carries the QA guide forward. The implement checkpoint rejects leftover markers.
+The reviewer then reviews only those resolutions — `git diff MERGE_HEAD -- <path>`
+for each conflict plus the report's Files Changed — never upstream's own changes,
+which main already reviewed.
 With a merge in progress, delivery stages the manifest and its commit completes
 the merge; never abort, rebase or force-push it.
 Each child saves a result JSON and returns its path plus a short summary:
