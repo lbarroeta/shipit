@@ -100,7 +100,7 @@ def locations(repo, key):
     return run_dir, locks
 
 
-def acquire(locks, owner):
+def acquire(locks, owner, repo):
     acquired = []
     try:
         for path in locks:
@@ -111,7 +111,8 @@ def acquire(locks, owner):
                 raise Blocked(f"Run already active: {path}. Inspect it; never remove an active lock.") from exc
             acquired.append(path)
             with os.fdopen(fd, "w") as stream:
-                json.dump({"owner": owner}, stream)
+                # `repo` lets the metrics hook tell this checkout's lock from another worktree's.
+                json.dump({"owner": owner, "repo": str(repo)}, stream)
     except BaseException:
         for path in acquired:
             path.unlink()
@@ -246,9 +247,16 @@ def prepare(repo, state, args, path):
             if git(repo, "merge-base", local, incoming) != local:
                 raise Blocked("main has local commits absent from upstream or has diverged; "
                               "no switch, merge or reset was performed.")
-            # shortcut: a merge refused by --no-overwrite-ignore still leaves the checkout on main; switch back if that bites.
+            branch = git(repo, "branch", "--show-current")
+            previous = ["--detach", git(repo, "rev-parse", "HEAD")] if not branch else [branch]
             git(repo, "switch", "--no-overwrite-ignore", "main")
-            git(repo, "merge", "--ff-only", "--no-overwrite-ignore", incoming)
+            try:
+                git(repo, "merge", "--ff-only", "--no-overwrite-ignore", incoming)
+            except Blocked:
+                # A refused merge (an ignored file in the way) changed nothing: put the checkout back where it was.
+                with contextlib.suppress(Blocked):
+                    git(repo, "switch", "--no-overwrite-ignore", *previous)
+                raise
         state["base_sha"] = incoming
         write_json(path, state)
     require_branch_allowed(repo, "Updated contract withholds branch in handoff.allow.")
@@ -412,7 +420,7 @@ def begin(repo, args):
     run_dir, locks = locations(repo, task["key"])
     path = run_dir / "state.json"
     owner = uuid.uuid4().hex
-    acquire(locks, owner)
+    acquire(locks, owner, repo)
     state = None
     try:
         state = read_json(path) if path.exists() else None

@@ -1,6 +1,6 @@
 import { expect, mock, test } from 'claude-code/testing'
 
-test('counts a run while its lock is held, background agents included, per repository', async ($, on) => {
+test('counts a run while its own checkout lock is held, background agents included, per repository and worktree', async ($, on) => {
   const clock = mock.clock(on)
   mock.store(on, {
     // Same branch name in another repository: must not leak into this one.
@@ -9,8 +9,15 @@ test('counts a run while its lock is held, background agents included, per repos
   let locked = false
   let usage: { input_tokens: number; output_tokens: number } | null = null
   on('process.run', () => ({ value: { exitCode: 0, stdout: '/repo\n/repo/.git\nfeat/x\n', stderr: '' } }))
+  const lock = (name: string) => ({ name, kind: 'file' as const, size: 1, mtimeMs: 0, isLink: false })
+  // Another worktree of the same repository runs its own card the whole time: it must not count here.
   on('fs.list', () => ({
-    value: locked ? [{ name: 'checkout-abc.json', kind: 'file', size: 1, mtimeMs: 0, isLink: false }] : [],
+    value: [lock('checkout-other.json'), lock('checkout-half.json'), ...(locked ? [lock('checkout-abc.json')] : [])],
+  }))
+  on('fs.read', (_, e) => ({
+    value: e.path.endsWith('checkout-abc.json') ? '{"owner": "o", "repo": "/repo"}'
+      : e.path.endsWith('checkout-half.json') ? '{"own' // being written right now
+      : '{"owner": "x", "repo": "/worktrees/repo/eng-413"}',
   }))
   on('agent.spawn', () => ({ model: 'm', agentId: 'b1' }))
   on('turn.step', async function* (_, e) {

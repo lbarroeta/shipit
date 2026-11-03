@@ -7,7 +7,7 @@ const NONE = 'No shipit run metrics recorded for this branch.'
 // The run being counted; its totals are saved to $.store on every change, so a
 // reload or another session only loses the step in flight.
 let run: { key: string; totals: Totals; at: number } | undefined
-let locks: string | undefined
+let checkout: { top: string; common: string } | undefined
 const agents = new Map<string, { stage: string; since?: number }>()
 
 async function git($: EngineInterface) {
@@ -15,21 +15,24 @@ async function git($: EngineInterface) {
     'git', 'rev-parse', '--path-format=absolute', '--show-toplevel', '--git-common-dir', '--abbrev-ref', 'HEAD',
   ])
   const [top = '', common = '', branch = ''] = stdout.trim().split('\n')
-  return exitCode === 0 && top ? { common, key: branch && branch !== 'HEAD' ? `run:${top}:${branch}` : undefined } : undefined
+  return exitCode === 0 && top ? { top, common, key: branch && branch !== 'HEAD' ? `run:${top}:${branch}` : undefined } : undefined
 }
 
-// A run is working while run_state.py holds its checkout lock: from `begin`
-// until it pauses (QA, a decision, a failure) or finishes.
-// shortcut: any checkout lock of the repository counts, so a run in another
-// worktree of the same repository would too; match the lock's digest if that happens.
+// A run is working while run_state.py holds this checkout's lock: from `begin`
+// until it pauses (QA, a decision, a failure) or finishes. Other worktrees of the
+// repository hold their own checkout locks, told apart by the `repo` each records.
 async function isLocked($: EngineInterface) {
-  locks ??= (await git($))?.common ?? ''
-  if (!locks) return false
-  try {
-    return (await $.fs.list(`${locks}/shipit/locks`)).some(f => f.name.startsWith('checkout-'))
-  } catch {
-    return false
+  checkout ??= await git($)
+  if (!checkout) return false
+  const dir = `${checkout.common}/shipit/locks`
+  const files = await $.fs.list(dir).catch(() => [])
+  for (const f of files) {
+    if (!f.name.startsWith('checkout-')) continue
+    // A lock being written or released mid-read is not this run's; read the rest.
+    const lock = await $.fs.read(`${dir}/${f.name}`).then(t => JSON.parse(t) as { repo?: string }).catch(() => undefined)
+    if (lock?.repo === checkout.top) return true
   }
+  return false
 }
 
 async function stored($: EngineInterface, key: string | undefined) {

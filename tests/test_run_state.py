@@ -137,6 +137,18 @@ class RunStateTests(unittest.TestCase):
         self.assertEqual(self.git(self.repo, "branch", "--show-current"), "codex/42-product")
         self.assertEqual(self.git(self.repo, "status", "--porcelain"), "")
 
+    def test_refused_main_update_returns_to_the_previous_branch(self):
+        self.git(self.repo, "switch", "-c", "old-task")
+        (Path(self.git(self.repo, "rev-parse", "--absolute-git-dir")) / "info/exclude").write_text("build.log\n")
+        (self.repo / "build.log").write_text("local, ignored\n")
+        (self.seed / "build.log").write_text("tracked upstream\n")
+        self.git(self.seed, "add", "build.log")
+        self.git(self.seed, "commit", "-m", "Track the log")
+        self.git(self.seed, "push")
+        self.assertIn("git merge", self.begin(success=False)["reason"])
+        self.assertEqual(self.git(self.repo, "branch", "--show-current"), "old-task")
+        self.assertEqual((self.repo / "build.log").read_text(), "local, ignored\n")
+
     def test_dirty_checkout_is_preserved_and_lock_released(self):
         self.git(self.repo, "switch", "-c", "user-task")
         (self.repo / "product.txt").write_text("user-owned\n")
@@ -367,6 +379,13 @@ class RunStateTests(unittest.TestCase):
         self.assertEqual(module.suffix_database_names(text, "_wt"), text
                          .replace('"app_dev"', '"app_dev_wt"')
                          .replace('} %>\n', '} %>_wt\n'))
+
+    def test_checkout_lock_names_its_worktree_for_the_metrics_hook(self):
+        main = self.worktree()
+        self.begin(sync=False)
+        locks = Path(self.git(main, "rev-parse", "--path-format=absolute", "--git-common-dir")) / "shipit/locks"
+        [checkout] = locks.glob("checkout-*.json")
+        self.assertEqual(json.loads(checkout.read_text())["repo"], self.git(self.repo, "rev-parse", "--show-toplevel"))
 
     def test_update_merges_main_and_blocks_unresolved_conflicts(self):
         state = self.delivered()
