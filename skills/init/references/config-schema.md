@@ -64,12 +64,14 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `graph` | object \| null | `{tool, out, query, path, explain, update}`. Null unless CLI **and** graph exist |
 | `markers.debt` | string | Default `ponytail:` |
 | `companions.*` | `present` \| `absent` | `ponytail`, `graphify_cli`, `graphify_graph`, `caveman` |
-| `worktree.enabled` | boolean | **Default `false`.** Opt-in: `code-plan` works in the current checkout unless the user turns this on |
-| `worktree.root` | string | Default `../worktrees/<repo.name>` |
+| `worktree.enabled` | boolean | **Default `false`.** Opt-in: `code-plan` works in the current checkout unless the user turns this on. `run` needs no flag: given several cards it creates their worktrees, and it detects one opened by hand |
+| `worktree.root` | string | Default `../worktrees/<repo.name>`. Also where `run` creates one worktree per card when given several |
 | `worktree.base` | string | Branch new worktrees fork from |
 | `worktree.link[]` | string[] | **Empty at init.** Opt-in only. See warning below |
 | `worktree.share_graph` | boolean | Symlink the main checkout's graph into worktrees |
-| `worktree.setup` | string \| null | Runs once after a worktree is created |
+| `worktree.setup` | string \| null | Runs once after a worktree is created, and when `run` starts a task in one. Detected by init recipe 12; never rewrites a lockfile |
+| `worktree.credentials` | `link` \| `skip` \| null | Rails only, asked once (recipe 12). `link` → the credentials keys are in `link[]`; otherwise `run` reports a missing key |
+| `worktree.database` | `per_worktree` \| `shared` \| null | Rails with a server database only, asked once (recipe 12). `per_worktree` → `run` suffixes development/test names in each worktree's `config/database.yml`, marked `skip-worktree`; never committed |
 | `ci.config` | string \| null | The CI file |
 | `ci.required_jobs` | string[] | Jobs that gate the merge |
 | `unknown[]` | string[] | Every undetermined key |
@@ -124,12 +126,16 @@ portable across teams.
 ## Warning on `worktree.link[]`
 
 Every entry becomes a symlink from a worktree to an untracked file in the main
-checkout — in practice `.env` files and signing keys. Those worktrees live outside
-the repo, so no `.gitignore` in the repo covers them, and any tool that runs in
-the worktree root can read them.
+checkout — in practice signing keys such as `config/master.key`. Any tool that
+runs in the worktree root can read them. The worktree's own `.gitignore` applies,
+but a symlink is ignored only by a pattern that matches a file (`shared`, not
+`shared/`); `run` removes and reports any link or copy that would show up as
+untracked, so it never reaches a commit.
 
-`init` always writes `[]`. Filling it is a deliberate user decision. The safe
-alternative is `worktree.setup`, which regenerates what the worktree needs.
+`init` writes `[]`, plus the Rails credentials keys only on an explicit yes
+(recipe 12). Filling it is a deliberate user decision. Ignored
+`.env*` files need no entry: `run` copies them into its worktree, never
+overwriting one already there. `worktree.setup` regenerates the rest.
 
 ## `handoff.allow`
 
@@ -207,3 +213,4 @@ shape adds a row; one that does not, adds nothing.
 | `0.9.0` | `run.models` adds optional native subagent routing | Add `{ "models": {} }` under `run` only when absent; preserve any existing routes. Defaults are pinned in the plugin |
 | `0.10.0` | `tracker.create.fields` names where `Priority` and `Size` land | Absent → add `{ "priority": "unknown", "size": "unknown" }` and append both keys to `unknown[]`; adapter `none` → `null` for both, nothing appended. Upgrade does not detect — say `/shipit:sync` resolves them once the tracker is reachable |
 | `0.15.0` | The contract moved from `.sdd/` to `.shipit/`; `sdd_tracking` retired | Performed by `init` (see its *Legacy migration*): `sync` finding `.sdd/config.json` without `.shipit/config.json` stops and points to `/shipit:init`. On the moved config: drop `sdd_tracking`; a `paths.*` value inside `.sdd/`, or reached through a `.sdd/` symlink, becomes its `.shipit/` default, and any other custom value is kept and reported; set `docs.owned_by_shipit` to `[".shipit/"]` and `docs.pointer` to the file that holds the `shipit:contract` block |
+| `0.25.0` | `worktree.credentials` and `worktree.database` record Rails decisions for parallel `run` worktrees | Absent → ask init recipe 12's Rails questions once; not a Rails app → `null` for both, nothing asked. Never edits `config/database.yml` |

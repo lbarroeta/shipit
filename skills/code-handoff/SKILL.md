@@ -114,9 +114,18 @@ Rules:
 - A dirty worktree with unrelated user changes blocks the commit unless the shipit
   artifacts isolate cleanly. Stop and report. Never stash, reset, or checkout over
   user work.
+- **Merge in progress.** `MERGE_HEAD` exists → it must equal the upstream SHA the
+  coordinator names from `run`'s `update`; anything else, or none named, stops the
+  handoff. Then the paths the merge brought (`git diff --name-only HEAD MERGE_HEAD`)
+  may be staged without appearing in the manifest and are not unrelated changes.
+  No unmerged path may remain (`git diff --name-only --diff-filter=U` empty). Stage
+  the manifest by explicit path, then close it with a plain `git commit`, never with
+  pathspecs (Git refuses a partial commit during a merge). The same branch's PR
+  receives it; never abort the merge.
 - Never fake success. Host unavailable → report `blocked` or `partial` with the
   exact failing call. Never a summary that implies it worked.
-- Never merge. Never push to the default branch. Never force-push.
+- Never start a merge; closing the one `update` left in progress is the exception
+  above. Never push to the default branch. Never force-push.
 - Never remove a worktree. That is `/shipit:status --prune`.
 - **One line per side effect.** This skill reports what it did, never what the
   change was — the report it was handed already said that, and a PR body is not

@@ -2,10 +2,12 @@
 """Local Git preparation and durable checkpoints for shipit:run. No shell execution."""
 
 import argparse
+import contextlib
 import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -24,6 +26,15 @@ def git(repo, *args, env=None):
     if result.returncode:
         raise Blocked(f"git {' '.join(args)}: {result.stderr.strip() or result.stdout.strip()}")
     return result.stdout.rstrip("\n")
+
+
+def git_ok(repo, *args):
+    return subprocess.run(["git", "-C", str(repo), *args], capture_output=True).returncode == 0
+
+
+def git_dir(repo, flag):
+    path = Path(git(repo, "rev-parse", flag))
+    return (path if path.is_absolute() else repo / path).resolve()
 
 
 def read_json(path):
@@ -82,17 +93,14 @@ def file_digest(path):
 
 
 def locations(repo, key):
-    common = Path(git(repo, "rev-parse", "--git-common-dir"))
-    if not common.is_absolute():
-        common = repo / common
-    root = common.resolve() / "shipit"
+    root = git_dir(repo, "--git-common-dir") / "shipit"
     run_dir = root / "runs" / digest(key)
     locks = [root / "locks" / f"issue-{digest(key)}.json",
              root / "locks" / f"checkout-{digest(str(repo))}.json"]
     return run_dir, locks
 
 
-def acquire(locks, owner):
+def acquire(locks, owner, repo):
     acquired = []
     try:
         for path in locks:
@@ -103,7 +111,8 @@ def acquire(locks, owner):
                 raise Blocked(f"Run already active: {path}. Inspect it; never remove an active lock.") from exc
             acquired.append(path)
             with os.fdopen(fd, "w") as stream:
-                json.dump({"owner": owner}, stream)
+                # `repo` lets the metrics hook tell this checkout's lock from another worktree's.
+                json.dump({"owner": owner, "repo": str(repo)}, stream)
     except BaseException:
         for path in acquired:
             path.unlink()
@@ -216,24 +225,38 @@ def resume(repo, state, task, args, run_dir):
     state["status"] = "active"
 
 
+def fetch_main(repo):
+    """Fetch main's remote and return its upstream tip without touching any checkout."""
+    git(repo, "show-ref", "--verify", "refs/heads/main")
+    upstream = git(repo, "for-each-ref", "--format=%(upstream:remotename) %(upstream:remoteref)",
+                   "refs/heads/main").split()
+    if len(upstream) != 2 or upstream[1] != "refs/heads/main":
+        raise Blocked("main needs an upstream tracking a remote main branch.")
+    git(repo, "fetch", "--", upstream[0])
+    return git(repo, "rev-parse", "main@{upstream}")
+
+
 def prepare(repo, state, args, path):
     """Sync main and create the task branch; also finishes an interrupted preparation."""
     require_clean(repo)
     if state["base_sha"] is None:
-        git(repo, "show-ref", "--verify", "refs/heads/main")
-        upstream = git(repo, "for-each-ref", "--format=%(upstream:remotename) %(upstream:remoteref)",
-                       "refs/heads/main").split()
-        if len(upstream) != 2 or upstream[1] != "refs/heads/main":
-            raise Blocked("main needs an upstream tracking a remote main branch.")
-        git(repo, "fetch", "--", upstream[0])
-        incoming = git(repo, "rev-parse", "main@{upstream}")
-        local = git(repo, "rev-parse", "refs/heads/main")
-        if git(repo, "merge-base", local, incoming) != local:
-            raise Blocked("main has local commits absent from upstream or has diverged; "
-                          "no switch, merge or reset was performed.")
-        # shortcut: a merge refused by --no-overwrite-ignore still leaves the checkout on main; switch back if that bites.
-        git(repo, "switch", "--no-overwrite-ignore", "main")
-        git(repo, "merge", "--ff-only", "--no-overwrite-ignore", incoming)
+        incoming = fetch_main(repo)
+        # A linked worktree cannot check out main while another checkout holds it: branch from the fetched tip.
+        if git_dir(repo, "--git-dir") == git_dir(repo, "--git-common-dir"):
+            local = git(repo, "rev-parse", "refs/heads/main")
+            if git(repo, "merge-base", local, incoming) != local:
+                raise Blocked("main has local commits absent from upstream or has diverged; "
+                              "no switch, merge or reset was performed.")
+            branch = git(repo, "branch", "--show-current")
+            previous = ["--detach", git(repo, "rev-parse", "HEAD")] if not branch else [branch]
+            git(repo, "switch", "--no-overwrite-ignore", "main")
+            try:
+                git(repo, "merge", "--ff-only", "--no-overwrite-ignore", incoming)
+            except Blocked:
+                # A refused merge (an ignored file in the way) changed nothing: put the checkout back where it was.
+                with contextlib.suppress(Blocked):
+                    git(repo, "switch", "--no-overwrite-ignore", *previous)
+                raise
         state["base_sha"] = incoming
         write_json(path, state)
     require_branch_allowed(repo, "Updated contract withholds branch in handoff.allow.")
@@ -247,28 +270,196 @@ def prepare(repo, state, args, path):
     state.update(version=2, stage="sync_before", status="active")
 
 
+def prepare_worktree(repo):
+    """Copy or link ignored local files from the main checkout into a linked worktree; never overwrite."""
+    common = git_dir(repo, "--git-common-dir")
+    if git_dir(repo, "--git-dir") == common:
+        return None
+    config = config_at(repo)
+    settings = config.get("worktree") or {}
+    links = settings.get("link", [])
+    if not isinstance(links, list) or any(not isinstance(name, str) or not name for name in links):
+        raise Blocked("worktree.link must be a list of repository-relative paths.")
+    source = common.parent if common.name == ".git" else None
+    report = {"main": str(source) if source else None, "setup": settings.get("setup"),
+              "copied": [], "linked": [], "skipped": []}
+    if source is None:
+        return report
+    listed = git(source, "ls-files", "-z", "--others", "--ignored", "--exclude-standard", "--directory")
+    wanted = [(name, False) for name in listed.split("\0")
+              if name and not name.endswith("/") and Path(name).name.startswith(".env")]
+    if (config.get("docs") or {}).get("pointer") == "CLAUDE.local.md":
+        wanted.append(("CLAUDE.local.md", False))
+    wanted += [(name, True) for name in links]
+    if settings.get("share_graph") and (config.get("graph") or {}).get("out"):
+        wanted.append((config["graph"]["out"].rstrip("/"), True))
+    for name, link in wanted:
+        origin, target = source / name, repo / name
+        if Path(name).is_absolute() or ".." in Path(name).parts:
+            report["skipped"].append({"path": name, "reason": "outside the checkout"})
+        elif not os.path.lexists(origin):
+            report["skipped"].append({"path": name, "reason": "missing in the main checkout"})
+        elif not os.path.lexists(target):
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if link:
+                target.symlink_to(origin)
+            else:
+                shutil.copy2(origin, target)
+            # Only ignored paths may stay: anything else enters the run's diff and could be committed.
+            visible = git(repo, "status", "--porcelain", "--untracked-files=all", "--", name)
+            if visible and link and git_ok(source, "check-ignore", "-q", "--", name):
+                # A directory pattern (`out/`) never matches a symlink: ignore this exact path, as main already does.
+                exclude = Path(git(repo, "rev-parse", "--git-path", "info/exclude"))
+                exclude = exclude if exclude.is_absolute() else repo / exclude
+                exclude.parent.mkdir(parents=True, exist_ok=True)
+                text = exclude.read_text() if exclude.exists() else ""
+                pattern = "/" + re.sub(r"([\\*?\[!#])", r"\\\1", name)
+                # Append, never rewrite: another worktree's begin may be adding its own line at the same time.
+                with exclude.open("a") as handle:
+                    handle.write(("\n" if text and not text.endswith("\n") else "") + pattern + "\n")
+                visible = git(repo, "status", "--porcelain", "--untracked-files=all", "--", name)
+            if visible:
+                target.unlink()
+                report["skipped"].append({"path": name, "reason": "not ignored in this worktree"})
+            else:
+                report["linked" if link else "copied"].append(name)
+    if settings.get("credentials") != "skip":
+        # Without its key Rails reads credentials as nil, and the run fails far from the cause.
+        encrypted = git(repo, "ls-files", "-z", "--", ":(glob)**/config/credentials.yml.enc",
+                        ":(glob)**/config/credentials/*.yml.enc")
+        for name in filter(None, encrypted.split("\0")):
+            key = (str(Path(name).with_name("master.key")) if Path(name).name == "credentials.yml.enc"
+                   else name.removesuffix(".yml.enc") + ".key")
+            if key not in links and os.path.lexists(source / key) and not os.path.lexists(repo / key):
+                report["skipped"].append({"path": key, "reason": "Rails credentials key not in worktree.link"})
+    if settings.get("database") == "per_worktree":
+        report["database"] = localize_databases(repo, report["skipped"])
+    return report
+
+
+DATABASE_FILES = ":(glob)**/config/database.yml"
+
+
+def suffix_database_names(text, suffix):
+    """Append suffix to every development/test `database:` name; SQLite files are already per checkout."""
+    lines, section = text.splitlines(keepends=True), None
+    for index, line in enumerate(lines):
+        if re.match(r"[^\s#<]", line):
+            section = line.split(":", 1)[0].strip()
+        found = re.match(r"(\s+database:[ \t]*)(\S.*?)((?:[ \t]+#.*)?[ \t]*)(\r?\n)?$", line)
+        if section in {"development", "test"} and found and "sqlite" not in found[2] and found[2].strip("\"'") != ":memory:":
+            value = found[2]
+            quoted = len(value) > 1 and value[0] == value[-1] and value[0] in "\"'"
+            value = value[:-1] + suffix + value[-1] if quoted else value + suffix
+            lines[index] = found[1] + value + found[3] + (found[4] or "")
+    return "".join(lines)
+
+
+def database_entries(repo):
+    """(flag, path) per tracked database.yml this worktree localizes; "S" = skip-worktree. Empty in the
+    main checkout or without `worktree.database: per_worktree`, so a developer's own flag is never touched."""
+    if (git_dir(repo, "--git-dir") == git_dir(repo, "--git-common-dir")
+            or (config_at(repo).get("worktree") or {}).get("database") != "per_worktree"):
+        return []
+    return [(entry[0], entry[2:]) for entry in
+            git(repo, "ls-files", "-v", "-z", "--", DATABASE_FILES).split("\0") if entry]
+
+
+def is_localized(repo, name):
+    """True when the file is exactly the committed one with this worktree's suffix, i.e. holds no hidden edit."""
+    expected = suffix_database_names(git(repo, "show", f":{name}"), database_suffix(repo))
+    return (repo / name).read_text().rstrip("\n") == expected.rstrip("\n")
+
+
+def database_suffix(repo):
+    return "_" + re.sub(r"\W", "_", repo.name)
+
+
+def require_databases_unedited(repo):
+    """A localized database.yml hides edits from git: block instead of silently dropping the card's change."""
+    for flag, name in database_entries(repo):
+        if flag == "S" and not is_localized(repo, name):
+            raise Blocked(f"{name} is localized for this worktree and git cannot see edits to it. Run "
+                          f"`git update-index --no-skip-worktree -- {name}`, remove the `{database_suffix(repo)}` "
+                          "suffixes from its database names, then revalidate.")
+
+
+def localize_databases(repo, skipped):
+    """Give this worktree its own databases. skip-worktree hides the edit from status, diff and `git add`,
+    so it never reaches a commit."""
+    suffix = database_suffix(repo)
+    changed, localized = changed_paths(repo), []
+    for flag, name in database_entries(repo):
+        if flag == "S":
+            localized.append(name)
+        elif name in changed:
+            skipped.append({"path": name, "reason": "changed by this run; databases stay shared until delivered"})
+        else:
+            path = repo / name
+            text = path.read_text()
+            updated = suffix_database_names(text, suffix)
+            if updated == text:
+                skipped.append({"path": name, "reason": "no development/test database name to suffix"})
+                continue
+            path.write_text(updated)
+            git(repo, "update-index", "--skip-worktree", "--", name)
+            localized.append(name)
+    return localized
+
+
+def restore_databases(repo):
+    """Undo localize_databases so a merge or switch sees the committed file; a hidden edit is left alone."""
+    for flag, name in database_entries(repo):
+        if flag == "S" and is_localized(repo, name):
+            git(repo, "update-index", "--no-skip-worktree", "--", name)
+            git(repo, "checkout", "--", name)
+
+
+def create_worktree(repo, name):
+    """The linked worktree one card of a multi-card run works in, under worktree.root; reused when present."""
+    if git_dir(repo, "--git-dir") != git_dir(repo, "--git-common-dir"):
+        raise Blocked("Create card worktrees from the main checkout.")
+    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    if not slug:
+        raise Blocked("A card worktree needs the card's ID as its name.")
+    root = (config_at(repo).get("worktree") or {}).get("root") or "../worktrees/<repo.name>"
+    path = (repo / root.replace("<repo.name>", repo.name) / slug).resolve()
+    listed = {Path(line[len("worktree "):]).resolve()
+              for line in git(repo, "worktree", "list", "--porcelain").splitlines() if line.startswith("worktree ")}
+    if path in listed and path.is_dir():
+        return {"path": str(path), "created": False}
+    if os.path.lexists(path):
+        raise Blocked(f"{path} exists and is not a worktree of this repository.")
+    git(repo, "worktree", "prune")  # forget a worktree whose folder was deleted by hand
+    git(repo, "worktree", "add", "--detach", str(path))
+    return {"path": str(path), "created": True}
+
+
 def begin(repo, args):
     task = read_task(args.task_file)
     run_dir, locks = locations(repo, task["key"])
     path = run_dir / "state.json"
     owner = uuid.uuid4().hex
-    acquire(locks, owner)
+    acquire(locks, owner, repo)
     state = None
     try:
         state = read_json(path) if path.exists() else None
         if state and state["repo"] != str(repo):
-            raise Blocked(f"Run belongs to checkout {state['repo']}.")
+            raise Blocked(f"Run belongs to checkout {state['repo']}; continue it with --repo {state['repo']}.")
         if state and state["source_digest"] != source_digest(task) and not args.replan_reason:
             raise Blocked("Task scope changed. Reconcile the saved plan with the user before resuming.")
         if (state and state.get("version", 1) < 2 and state["stage"] not in {"qa", "done", "preparing"}
                 and not args.replan_reason):
             raise Blocked("Legacy run lacks sync checkpoints. Reconcile existing delivery effects, then resume with --replan-reason.")
+        # Switching or branching needs the committed database.yml; prepare_worktree localizes it again.
+        restore_databases(repo)
         if state:
             state.update(owner=owner, provider=args.provider)
             if state["stage"] != "preparing":
                 resume(repo, state, task, args, run_dir)
                 write_json(path, state)
-                output = {"mode": "resume", "state_path": str(path), **state}
+                output = {"mode": "resume", "state_path": str(path), **state,
+                          "worktree": prepare_worktree(repo)}
                 if state["stage"] in {"qa", "done"}:
                     output["qa_guide"] = qa_guide(state)
                 return output
@@ -281,9 +472,12 @@ def begin(repo, args):
             write_json(path, state)
         prepare(repo, state, args, path)
         write_json(path, state)
-        return {"mode": "new", "state_path": str(path), **state}
+        return {"mode": "new", "state_path": str(path), **state, "worktree": prepare_worktree(repo)}
     except BaseException:
         try:
+            # restore_databases ran above: never leave this worktree on the shared databases.
+            with contextlib.suppress(Exception):  # the original failure is the one to report
+                localize_databases(repo, [])
             if state and state.get("owner") == owner:
                 state["status"] = "blocked"
                 write_json(path, state)
@@ -335,6 +529,45 @@ def reset_plan(state, reason):
     state["version"] = 2
     for key in ("validated_files", "validated_head", "validated_diff", "validated_tree", "delivery_files"):
         state.pop(key, None)
+
+
+def reopen_implementation(repo, state):
+    """Invalidate builder, review, final sync and delivery evidence; the current diff becomes run-owned."""
+    state["owned_files"] = {name: file_digest(repo / name) for name in changed_paths(repo)}
+    state.pop("review_repairs", None)
+    for stage in ("implement", "review", "sync_after", "handoff"):
+        state["artifacts"].pop(stage, None)
+
+
+def update(repo, state, reason):
+    """Merge the fetched upstream main into a delivered task branch without committing it."""
+    if state["stage"] not in {"qa", "done"}:
+        raise Blocked("Updating with main applies only to a delivered run.")
+    # A merge refuses to touch a skip-worktree file it changes: merge the committed one, then localize again.
+    localized = [name for flag, name in database_entries(repo) if flag == "S"]
+    restore_databases(repo)
+    try:
+        require_clean(repo)
+        if git(repo, "branch", "--show-current") != state["branch"]:
+            git(repo, "switch", "--no-overwrite-ignore", state["branch"])
+        state["routes"] = routes(repo, state["provider"])["routes"]
+        incoming = fetch_main(repo)
+        if git_ok(repo, "merge-base", "--is-ancestor", incoming, "HEAD"):
+            raise Blocked("The task branch already contains the latest main.")
+        if (git_ok(repo, "rev-parse", "--verify", "--quiet", "@{upstream}")
+                and not git_ok(repo, "merge-base", "--is-ancestor", "@{upstream}", "HEAD")):
+            raise Blocked("The remote task branch has commits this checkout lacks; reconcile delivery first.")
+        merged = subprocess.run(["git", "-C", str(repo), "merge", "--no-ff", "--no-commit",
+                                 "--no-overwrite-ignore", incoming], capture_output=True, text=True)
+        if not git_ok(repo, "rev-parse", "--verify", "--quiet", "MERGE_HEAD"):
+            raise Blocked(f"git merge: {merged.stderr.strip() or merged.stdout.strip()}")
+        conflicts = sorted(filter(None, git(repo, "diff", "--name-only", "--diff-filter=U", "-z").split("\0")))
+        state.setdefault("updates", []).append({"reason": reason, "upstream": incoming, "conflicts": conflicts})
+        state["stage"] = "implement"
+    finally:
+        if localized:
+            localize_databases(repo, [])
+    reopen_implementation(repo, state)
 
 
 def changed_paths(repo):
@@ -465,6 +698,13 @@ def checkpoint(repo, state, args):
             raise Blocked("Implementation result needs a files manifest.")
         if set(files) != changed_paths(repo):
             raise Blocked("Implementation manifest must exactly match the current diff and untracked files.")
+        require_databases_unedited(repo)
+        if args.stage == "implement" and git_ok(repo, "rev-parse", "--verify", "--quiet", "MERGE_HEAD"):
+            for name in state.get("updates", [{}])[-1].get("conflicts", []):
+                path = repo / name
+                if path.is_file() and any(line.startswith(("<<<<<<< ", ">>>>>>> "))
+                                          for line in path.read_text(errors="replace").splitlines()):
+                    raise Blocked(f"Unresolved merge conflict in {name}.")
         state["validated_files"] = {name: file_digest(repo / name) for name in files}
         state["validated_head"] = git(repo, "rev-parse", "HEAD")
         state["validated_diff"] = digest(git(repo, "diff", "--binary", "HEAD"))
@@ -497,16 +737,18 @@ def main():
     start.add_argument("--branch")
     start.add_argument("--provider", choices=["anthropic", "openai"], required=True)
     start.add_argument("--replan-reason", help="Explicitly reconcile an approved scope/artifact correction")
+    tree = commands.add_parser("worktree")
+    tree.add_argument("--name", required=True, help="The card's ID; names its worktree folder")
     status = commands.add_parser("status")
     status.add_argument("--issue-key", required=True)
-    for command in ("checkpoint", "pause", "qa", "verify", "replan", "repair"):
+    for command in ("checkpoint", "pause", "qa", "verify", "replan", "repair", "update"):
         sub = commands.add_parser(command)
         sub.add_argument("--issue-key", required=True)
         sub.add_argument("--owner", required=True)
         if command == "checkpoint":
             sub.add_argument("--stage", choices=["sync_before", "plan", "implement", "review", "sync_after", "handoff"], required=True)
             sub.add_argument("--result-file", required=True)
-        elif command in {"pause", "replan", "repair"}:
+        elif command in {"pause", "replan", "repair", "update"}:
             sub.add_argument("--reason", required=True)
             if command in {"pause", "repair", "replan"}:
                 sub.add_argument("--result-file", help="Save a verified incomplete child's report and owned files", required=command == "repair")
@@ -521,6 +763,8 @@ def main():
         output = routes(repo, args.provider)
     elif args.command == "begin":
         output = begin(repo, args)
+    elif args.command == "worktree":
+        output = create_worktree(repo, args.name)
     else:
         run_dir, locks = locations(repo, args.issue_key)
         state_path = run_dir / "state.json"
@@ -528,14 +772,17 @@ def main():
             print(json.dumps({"mode": "new", "issue_key": args.issue_key}))
             return
         state = read_json(state_path)
-        if state["repo"] != str(repo):
-            raise Blocked(f"Run belongs to checkout {state['repo']}.")
+        if state["repo"] != str(repo) and args.command != "status":
+            raise Blocked(f"Run belongs to checkout {state['repo']}; continue it with --repo {state['repo']}.")
         if args.command != "status":
             require_owner(state, locks, args.owner)
             if args.command == "pause":
                 if args.result_file:
                     capture_pending(repo, state, args.result_file)
                 state.update(status="paused", reason=args.reason)
+            elif args.command == "update":
+                verify_artifacts(state)
+                update(repo, state, args.reason)
             else:
                 require_branch(repo, state)
                 if args.command == "replan":
@@ -580,10 +827,7 @@ def main():
                             reset_plan(state, "Legacy QA repair requires synchronized context")
                         else:
                             state["stage"] = "implement"
-                        state["owned_files"] = {name: file_digest(repo / name) for name in changed_paths(repo)}
-                        state.pop("review_repairs", None)
-                        for stage in ("implement", "review", "sync_after", "handoff"):
-                            state["artifacts"].pop(stage, None)
+                        reopen_implementation(repo, state)
             write_json(state_path, state)
             if args.command == "pause":
                 release(locks, args.owner)

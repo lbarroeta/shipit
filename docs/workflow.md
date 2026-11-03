@@ -56,8 +56,9 @@ diff. Repeating an issue resumes its saved branch and checkpoints without pullin
 main again or duplicating delivery. Give QA feedback in the same chat: failures
 return to the builder on that branch. Ready for QA includes where to test, setup
 and complete plain-language steps. Missing test environment is reported as QA
-blocked; a PR or green tests never means human QA passed. This first pipeline uses
-one existing checkout; use individual `code-plan --worktree` for independent worktrees.
+blocked; a PR or green tests never means human QA passed. One card runs in the
+current checkout; `/shipit:run ENG-412 ENG-413` runs several at once, each in a
+worktree `run` creates — see [Parallel `run` sessions](#parallel-run-sessions).
 
 The individual cycle remains available:
 
@@ -279,10 +280,56 @@ writes the plan inside it. Three things make that safe:
 - **Shared graph.** Graph output is usually excluded via `.git/info/exclude`, so a fresh worktree has none.
   It is symlinked read-only from the main checkout. Graph updates happen only in the
   main checkout, after the merge.
-- **No secrets by default.** `worktree.link[]` starts empty. Filling it symlinks
-  untracked files — usually `.env` files and keys — into a directory outside the repo
-  that no `.gitignore` covers. Opt in deliberately, or let `worktree.setup` regenerate
-  what the worktree needs.
+- **Secrets stay local.** `run` copies ignored `.env*` files into its worktree and
+  never overwrites one already there. `worktree.link[]` starts empty; anything else
+  you list, such as `config/master.key`, is symlinked; for Rails, `init` asks once
+  whether to add the credentials keys. A Rails credentials key missing from the
+  worktree is reported. A copy or link the worktree would not ignore is removed and
+  reported, so it never reaches a commit.
 
 `/shipit:status` shows the board. `--prune` removes worktrees whose PR is merged,
 never one that is dirty or still open.
+
+### Parallel `run` sessions
+
+Give `run` several cards and it creates one worktree per card under
+`worktree.root` and runs their pipelines at once from the same session. One card
+runs in your current checkout, as always:
+
+```
+/shipit:run ENG-412 ENG-413   # ../worktrees/<repo>/eng-412 and eng-413, in parallel
+/shipit:run ENG-414           # the current checkout, no worktree
+```
+
+A session you open yourself inside a linked worktree is prepared the same way. The
+same command again reuses the worktrees. Run metrics are per session checkout, so
+multi-card PRs carry none.
+
+- **`main` is left alone.** The task branch starts from the fetched upstream tip; the
+  main checkout is never switched or required to be clean.
+- **The worktree boots.** `run` copies the ignored `.env*` files and links, then runs
+  `worktree.setup` once per new task, retried until the first checkpoint. `init` detects it from `commands.setup` or the
+  lockfiles (`npm ci`, `bundle install`, `uv sync --frozen`…); an install never
+  rewrites a lockfile. A Rails `bin/setup` runs as `bin/setup --skip-server`.
+- **One database per worktree.** Copied `.env` files point every worktree at the same
+  database: parallel test runs reload each other's schema and deadlock, and a shared
+  development database leaks one card's migrations into another card's
+  `schema.rb`. SQLite files inside the project are already separate. For Rails with
+  Postgres or MySQL, `init` (or `sync` on an existing repo) asks once; on yes
+  (`worktree.database: "per_worktree"`) `run` suffixes the development and test names
+  in each worktree's own `config/database.yml` (`myapp_development` →
+  `myapp_development_eng_412`) and marks it `skip-worktree`. Git then hides the edit
+  from status, diff and `git add`, so it never reaches a commit, and the main
+  checkout keeps its names. `setup` runs `db:prepare` to create them. A card that
+  must change `database.yml` is told to lift `skip-worktree` first; an edit git
+  cannot see blocks the run instead of being lost.
+  Redis or search indexes need a per-worktree database number or prefix too.
+  `--prune` does not drop these databases; run `db:drop` before removing a worktree.
+- **No baseline conflicts.** `sync` inside a worktree defers `.shipit/sync-state.json`;
+  run `/shipit:sync` on main now and then to record what merged.
+- **When another card merges first.** Run the same card again. If its PR conflicts
+  with main, `run` merges main into the branch, the builder resolves and revalidates
+  within the card, and delivery pushes the merge to the same PR. A conflict that
+  changes the card's scope comes back to you. Never a rebase or force-push.
+- **Resume from the same worktree.** Another session can read the run's status but
+  continues it only from its own worktree.

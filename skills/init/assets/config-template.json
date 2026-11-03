@@ -88,7 +88,9 @@
     "base": "main",
     "link": [],
     "share_graph": false,
-    "setup": null
+    "setup": null,
+    "credentials": null,
+    "database": null
   },
   "ci": {
     "config": null,

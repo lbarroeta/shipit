@@ -148,6 +148,10 @@ def record(repo, config, inventory, baseline):
     if (baseline.get("version") == 2 and not source_changes(repo, config, baseline)
             and all(value[key] == baseline.get(key) for key in ("contracts", "managed"))):
         return {"status": "unchanged", "baseline": STATE}
+    # Parallel worktree PRs would all rewrite this committed file; the main checkout records it after merging.
+    if len({(path if path.is_absolute() else repo / path).resolve()
+            for path in (Path(git(repo, "rev-parse", flag)) for flag in ("--git-dir", "--git-common-dir"))}) == 2:
+        return {"status": "deferred", "baseline": STATE}
     destination = repo / STATE
     if destination.is_symlink() or destination.parent.is_symlink():
         raise ValueError("Refusing to write a shared context baseline from this checkout.")

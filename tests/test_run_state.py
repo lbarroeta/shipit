@@ -1,5 +1,6 @@
 """Exercise run preparation/recovery against disposable local Git repositories."""
 
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -112,6 +113,19 @@ class RunStateTests(unittest.TestCase):
                              validation=[{"command": "git diff --check", "exit_code": 0}])
         return self.synced(self.checkpoint(state, "implement", result))
 
+    def delivered(self):
+        state = self.implemented()
+        self.git(self.repo, "add", "product.txt")
+        self.git(self.repo, "commit", "-m", "Delivered fixture change")
+        self.git(self.repo, "push", "-u", "origin", "codex/42-product")
+        return self.checkpoint(state, "handoff", self.result(state, "handoff", delivery_status="completed"))
+
+    def worktree(self):
+        """Move the fixture into a linked worktree, as a separate session would; return the main checkout."""
+        main, self.repo = self.repo, self.directory / "session"
+        self.git(main, "worktree", "add", "--detach", str(self.repo))
+        return main
+
     def test_new_task_pulls_main_before_branching(self):
         self.git(self.repo, "switch", "-c", "old-task")
         (self.seed / "product.txt").write_text("latest remote\n")
@@ -122,6 +136,18 @@ class RunStateTests(unittest.TestCase):
         self.assertEqual((self.repo / "product.txt").read_text(), "latest remote\n")
         self.assertEqual(self.git(self.repo, "branch", "--show-current"), "codex/42-product")
         self.assertEqual(self.git(self.repo, "status", "--porcelain"), "")
+
+    def test_refused_main_update_returns_to_the_previous_branch(self):
+        self.git(self.repo, "switch", "-c", "old-task")
+        (Path(self.git(self.repo, "rev-parse", "--absolute-git-dir")) / "info/exclude").write_text("build.log\n")
+        (self.repo / "build.log").write_text("local, ignored\n")
+        (self.seed / "build.log").write_text("tracked upstream\n")
+        self.git(self.seed, "add", "build.log")
+        self.git(self.seed, "commit", "-m", "Track the log")
+        self.git(self.seed, "push")
+        self.assertIn("git merge", self.begin(success=False)["reason"])
+        self.assertEqual(self.git(self.repo, "branch", "--show-current"), "old-task")
+        self.assertEqual((self.repo / "build.log").read_text(), "local, ignored\n")
 
     def test_dirty_checkout_is_preserved_and_lock_released(self):
         self.git(self.repo, "switch", "-c", "user-task")
@@ -178,6 +204,249 @@ class RunStateTests(unittest.TestCase):
         self.git(self.repo, "worktree", "add", "-b", "other-task", str(other), "main")
         self.assertIn("already active", self.begin(success=False, repo=other)["reason"])
         self.owned(state, "pause", "--reason", "fixture pause")
+
+    def test_linked_worktree_branches_from_upstream_and_leaves_main_alone(self):
+        (self.seed / "product.txt").write_text("latest remote\n")
+        self.git(self.seed, "commit", "-am", "Remote update")
+        self.git(self.seed, "push")
+        main = self.worktree()
+        local_main = self.git(main, "rev-parse", "main")
+        (main / "product.txt").write_text("user edit in main\n")
+        state = self.begin(sync=False)
+        self.assertEqual(state["base_sha"], self.git(self.seed, "rev-parse", "HEAD"))
+        self.assertEqual(self.git(self.repo, "branch", "--show-current"), "codex/42-product")
+        self.assertEqual((self.repo / "product.txt").read_text(), "latest remote\n")
+        self.assertEqual(self.git(main, "rev-parse", "main"), local_main)
+        self.assertEqual((main / "product.txt").read_text(), "user edit in main\n")
+        self.assertEqual(state["worktree"]["main"], str(main.resolve()))
+        self.owned(state, "pause", "--reason", "fixture pause")
+        status = self.call("status", "--issue-key", self.task["key"], repo=main)
+        self.assertEqual(Path(status["repo"]), self.repo.resolve())
+        self.assertIn(f"continue it with --repo {self.repo.resolve()}", self.begin(success=False, repo=main)["reason"])
+
+    def test_several_cards_run_at_once_in_worktrees_the_helper_creates(self):
+        first = self.call("worktree", "--name", "ENG-412")
+        path = self.directory / "worktrees/repo/eng-412"
+        self.assertEqual(first, {"path": str(path.resolve()), "created": True})
+        self.assertEqual(self.call("worktree", "--name", "ENG-412")["created"], False)  # a repeated run reuses it
+        second = Path(self.call("worktree", "--name", "ENG 413!")["path"])
+        self.assertEqual(second.name, "eng-413")
+        one = self.call("begin", "--provider", "openai", "--task-file", str(self.task_file),
+                        "--branch", "codex/42-product", repo=path)
+        other = dict(self.task, key="github-issues:fixture/repo:43", id="43")
+        other_file = self.directory / "other.json"
+        other_file.write_text(json.dumps(other))
+        two = self.call("begin", "--provider", "openai", "--task-file", str(other_file),
+                        "--branch", "codex/43-other", repo=second)
+        self.assertEqual((one["status"], two["status"]), ("active", "active"))  # both hold their locks at once
+        self.assertEqual(self.git(self.repo, "branch", "--show-current"), "main")  # the main checkout never moves
+        self.assertIn("main checkout", self.call("worktree", "--name", "ENG-414", success=False, repo=path)["reason"])
+        (self.directory / "worktrees/repo/eng-415").mkdir()
+        self.assertIn("not a worktree", self.call("worktree", "--name", "ENG-415", success=False)["reason"])
+
+    def test_worktree_receives_ignored_env_files_without_overwrite(self):
+        (self.repo / ".gitignore").write_text(
+            ".env*\n!.env.example\nvendor/\nshared\ngraph-out/\n/config/master.key\n")
+        (self.repo / ".env.example").write_text("TOKEN=\n")
+        (self.repo / "config").mkdir()
+        (self.repo / "config/credentials.yml.enc").write_text("encrypted\n")
+        self.config["worktree"] = {"link": ["shared", "missing", "loose"], "share_graph": True}
+        self.config["graph"] = {"out": "graph-out"}
+        (self.repo / ".shipit/config.json").write_text(json.dumps(self.config))
+        self.git(self.repo, "add", ".gitignore", ".env.example", "config/credentials.yml.enc", ".shipit/config.json")
+        self.git(self.repo, "commit", "-m", "Ignore local files")
+        self.git(self.repo, "push")
+        for name, text in {".env": "TOKEN=main\n", "apps/web/.env.local": "PORT=3000\n", "vendor/.env": "vendored\n",
+                           "shared": "key\n", "loose": "visible\n", "graph-out/graph.json": "{}\n",
+                           "config/master.key": "secret\n"}.items():
+            (self.repo / name).parent.mkdir(parents=True, exist_ok=True)
+            (self.repo / name).write_text(text)
+        (self.repo / ".env").chmod(0o600)
+        main = self.worktree()
+        (self.repo / "apps/web").mkdir(parents=True)
+        (self.repo / "apps/web/.env.local").write_text("PORT=3001\n")
+        prepared = self.begin(sync=False)["worktree"]
+        self.assertEqual(prepared["copied"], [".env"])
+        self.assertEqual(prepared["linked"], ["shared", "graph-out"])
+        self.assertEqual(prepared["skipped"], [
+            {"path": "missing", "reason": "missing in the main checkout"},
+            {"path": "loose", "reason": "not ignored in this worktree"},
+            {"path": "config/master.key", "reason": "Rails credentials key not in worktree.link"}])
+        self.assertEqual((self.repo / ".env").read_text(), "TOKEN=main\n")
+        self.assertEqual((self.repo / ".env").stat().st_mode & 0o777, 0o600)
+        self.assertEqual((self.repo / "apps/web/.env.local").read_text(), "PORT=3001\n")
+        self.assertFalse((self.repo / "vendor/.env").exists())
+        self.assertTrue((self.repo / "shared").is_symlink())
+        self.assertTrue((self.repo / "graph-out").is_symlink())
+        self.assertFalse(os.path.lexists(self.repo / "loose"))
+        self.assertEqual(self.git(self.repo, "status", "--porcelain", "--untracked-files=all"), "")
+        # A file main does not ignore stays visible there: only already-ignored paths get an exact exclude.
+        self.assertIn("?? loose", self.git(main, "status", "--porcelain"))
+
+    def test_worktree_links_rails_credentials_key_when_listed(self):
+        (self.repo / ".gitignore").write_text("/config/credentials/*.key\n")
+        (self.repo / "config/credentials").mkdir(parents=True)
+        (self.repo / "config/credentials/test.yml.enc").write_text("encrypted\n")
+        self.config["worktree"] = {"link": ["config/credentials/test.key"], "credentials": "link"}
+        (self.repo / ".shipit/config.json").write_text(json.dumps(self.config))
+        self.git(self.repo, "add", ".gitignore", "config", ".shipit/config.json")
+        self.git(self.repo, "commit", "-m", "Rails credentials")
+        self.git(self.repo, "push")
+        (self.repo / "config/credentials/test.key").write_text("secret\n")
+        self.worktree()
+        prepared = self.begin(sync=False)["worktree"]
+        self.assertEqual(prepared["linked"], ["config/credentials/test.key"])
+        self.assertEqual(prepared["skipped"], [])
+        self.assertEqual((self.repo / "config/credentials/test.key").read_text(), "secret\n")
+
+    DATABASE_YML = ("default: &default\n  adapter: postgresql\n\n"
+                    "development:\n  <<: *default\n  database: app_development\n\n"
+                    "test:\n  <<: *default\n  database: app_test\n\n"
+                    "production:\n  <<: *default\n  database: app_production\n")
+
+    def localized_worktree(self):
+        self.config["worktree"] = {"database": "per_worktree"}
+        (self.repo / ".shipit/config.json").write_text(json.dumps(self.config))
+        (self.repo / "config").mkdir()
+        (self.repo / "config/database.yml").write_text(self.DATABASE_YML)
+        self.git(self.repo, "add", ".shipit/config.json", "config/database.yml")
+        self.git(self.repo, "commit", "-m", "Rails database")
+        self.git(self.repo, "push")
+        return self.worktree()
+
+    def test_worktree_database_is_localized_and_never_committed(self):
+        main = self.localized_worktree()
+        state = self.delivered()
+        text = (self.repo / "config/database.yml").read_text()
+        self.assertIn("database: app_development_session\n", text)
+        self.assertIn("database: app_test_session\n", text)
+        self.assertIn("database: app_production\n", text)
+        self.assertEqual((main / "config/database.yml").read_text(), self.DATABASE_YML)
+        self.assertEqual(self.git(self.repo, "show", "HEAD:config/database.yml") + "\n", self.DATABASE_YML)
+        self.assertEqual(self.git(self.repo, "status", "--porcelain"), "")
+        # main changes the same file: update merges the committed one and leaves it shared until delivered.
+        self.git(self.seed, "pull")
+        (self.seed / "config/database.yml").write_text(self.DATABASE_YML.replace("postgresql", "postgresql\n  pool: 5"))
+        self.git(self.seed, "add", "config/database.yml")
+        self.git(self.seed, "commit", "-m", "Pool size")
+        self.git(self.seed, "push")
+        state = self.owned(state, "update", "--reason", "PR conflicts with main")
+        self.assertEqual(state["stage"], "implement")
+        self.assertIn("pool: 5", (self.repo / "config/database.yml").read_text())
+        self.assertNotIn("_session", (self.repo / "config/database.yml").read_text())
+        self.assertFalse(self.git(self.repo, "ls-files", "-v", "config/database.yml").startswith("S "))
+
+    def test_update_localizes_database_again_when_main_left_it_alone(self):
+        self.localized_worktree()
+        state = self.delivered()
+        self.git(self.seed, "pull")
+        (self.seed / "other.txt").write_text("from main\n")
+        self.git(self.seed, "add", "other.txt")
+        self.git(self.seed, "commit", "-m", "Another card merged")
+        self.git(self.seed, "push")
+        self.assertEqual(self.owned(state, "update", "--reason", "Keep up with main")["stage"], "implement")
+        self.assertIn("database: app_test_session\n", (self.repo / "config/database.yml").read_text())
+        self.assertTrue(self.git(self.repo, "ls-files", "-v", "config/database.yml").startswith("S "))
+
+    def test_blocked_begin_keeps_worktree_databases_localized(self):
+        self.localized_worktree()
+        state = self.begin()
+        state = self.checkpoint(state, "plan", self.result(state, "plan"))
+        self.owned(state, "pause", "--reason", "fixture pause")
+        (self.repo / "product.txt").write_text("changed while paused\n")
+        self.assertIn("Run-owned files changed", self.begin(success=False)["reason"])
+        self.assertIn("database: app_test_session\n", (self.repo / "config/database.yml").read_text())
+        self.assertTrue(self.git(self.repo, "ls-files", "-v", "config/database.yml").startswith("S "))
+
+    def test_hidden_edit_to_localized_database_blocks_implementation(self):
+        self.localized_worktree()
+        state = self.begin()
+        state = self.checkpoint(state, "plan", self.result(state, "plan"))
+        path = self.repo / "config/database.yml"
+        path.write_text(path.read_text() + "  pool: 10\n")
+        (self.repo / "product.txt").write_text("updated\n")
+        result = self.result(state, "implement", files=["product.txt"],
+                             validation=[{"command": "git diff --check", "exit_code": 0}])
+        self.assertIn("localized for this worktree", self.checkpoint(state, "implement", result, success=False)["reason"])
+        # Resuming leaves the hidden edit in place instead of restoring the committed file over it.
+        self.git(self.repo, "checkout", "--", "product.txt")
+        self.owned(state, "pause", "--reason", "fixture pause")
+        self.begin(sync=False)
+        self.assertIn("pool: 10", path.read_text())
+
+    def test_main_checkout_keeps_a_developers_own_skip_worktree_database(self):
+        self.config["worktree"] = {"database": "per_worktree"}
+        (self.repo / ".shipit/config.json").write_text(json.dumps(self.config))
+        (self.repo / "config").mkdir()
+        (self.repo / "config/database.yml").write_text(self.DATABASE_YML)
+        self.git(self.repo, "add", ".shipit/config.json", "config/database.yml")
+        self.git(self.repo, "commit", "-m", "Rails database")
+        self.git(self.repo, "push")
+        local = self.DATABASE_YML.replace("app_development", "my_local_db")
+        (self.repo / "config/database.yml").write_text(local)
+        self.git(self.repo, "update-index", "--skip-worktree", "--", "config/database.yml")
+        self.assertIsNone(self.begin(sync=False)["worktree"])
+        self.assertEqual((self.repo / "config/database.yml").read_text(), local)
+
+    def test_suffix_database_names_touches_only_development_and_test(self):
+        spec = importlib.util.spec_from_file_location("run_state", HELPER)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        text = ("development:\n<% if ENV[\"PRIMARY\"] %>\n  primary:\n    database: \"app_dev\"  # main\n<% end %>\n  cache:\n"
+                "    database: <%= ENV.fetch(\"CACHE_DB\") { \"app_cache\" } %>\n"
+                "test:\n  database: storage/test.sqlite3\n  other: \n    database: ':memory:'\n"
+                "production:\n  database: app_production\n")
+        self.assertEqual(module.suffix_database_names(text, "_wt"), text
+                         .replace('"app_dev"', '"app_dev_wt"')
+                         .replace('} %>\n', '} %>_wt\n'))
+
+    def test_checkout_lock_names_its_worktree_for_the_metrics_hook(self):
+        main = self.worktree()
+        self.begin(sync=False)
+        locks = Path(self.git(main, "rev-parse", "--path-format=absolute", "--git-common-dir")) / "shipit/locks"
+        [checkout] = locks.glob("checkout-*.json")
+        self.assertEqual(json.loads(checkout.read_text())["repo"], self.git(self.repo, "rev-parse", "--show-toplevel"))
+
+    def test_update_merges_main_and_blocks_unresolved_conflicts(self):
+        state = self.delivered()
+        (self.seed / "product.txt").write_text("main changed too\n")
+        (self.seed / "other.txt").write_text("from main\n")
+        self.git(self.seed, "add", "product.txt", "other.txt")
+        self.git(self.seed, "commit", "-m", "Another card merged")
+        self.git(self.seed, "push")
+        state = self.owned(state, "update", "--reason", "PR conflicts with main")
+        self.assertEqual(state["stage"], "implement")
+        self.assertEqual(state["updates"][-1]["conflicts"], ["product.txt"])
+        self.assertEqual(set(state["artifacts"]), {"sync_before", "plan"})
+        files = ["other.txt", "product.txt"]
+        result = self.result(state, "implement", files=files,
+                             validation=[{"command": "git diff --check", "exit_code": 0}])
+        self.assertIn("Unresolved merge conflict", self.checkpoint(state, "implement", result, success=False)["reason"])
+        (self.repo / "product.txt").write_text("updated and main changed too\n")
+        state = self.synced(self.checkpoint(state, "implement", result))
+        self.owned(state, "verify")
+        self.git(self.repo, "add", "--", *files)
+        self.git(self.repo, "commit", "-m", "Merge main into the task branch")
+        state = self.checkpoint(state, "handoff", self.result(state, "handoff", delivery_status="completed"))
+        self.assertEqual(state["stage"], "qa")
+        self.assertEqual(self.git(self.repo, "rev-parse", "HEAD^2"), self.git(self.seed, "rev-parse", "HEAD"))
+        self.assertIn("already contains", self.owned(state, "update", "--reason", "Again", success=False)["reason"])
+
+    def test_update_refuses_when_remote_task_branch_moved(self):
+        state = self.delivered()
+        self.git(self.seed, "fetch", "origin", "codex/42-product")
+        self.git(self.seed, "switch", "-c", "elsewhere", "FETCH_HEAD")
+        (self.seed / "remote.txt").write_text("pushed elsewhere\n")
+        self.git(self.seed, "add", "remote.txt")
+        self.git(self.seed, "commit", "-m", "Branch updated on the remote")
+        self.git(self.seed, "push", "origin", "HEAD:codex/42-product")
+        self.git(self.seed, "switch", "main")
+        (self.seed / "other.txt").write_text("from main\n")
+        self.git(self.seed, "add", "other.txt")
+        self.git(self.seed, "commit", "-m", "Another card merged")
+        self.git(self.seed, "push")
+        self.assertIn("remote task branch", self.owned(state, "update", "--reason", "Stale", success=False)["reason"])
+        self.assertFalse((Path(self.git(self.repo, "rev-parse", "--absolute-git-dir")) / "MERGE_HEAD").exists())
 
     def test_resume_does_not_pull_main_again(self):
         state = self.begin()
