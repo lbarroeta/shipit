@@ -16,7 +16,7 @@ the results still apply to the final files; rerun affected checks after any drif
 | --- | --- | --- |
 | 1 | `test_one` on each test written | null, or has no `{path}` |
 | 2 | `test_one` on the test files covering each changed file | same |
-| 3 | `test_all` | **by default — see below** |
+| 3 | `test_all` | **always — CI owns it, see below** |
 | 4 | `lint` | null |
 | 5 | `typecheck` | null |
 | 6 | `build` | null, or no relevant build impact — see below |
@@ -37,8 +37,9 @@ commands. In the existing report sections, attach AC IDs to test evidence or
 manual/external scenarios rather than duplicating the plan in another matrix.
 
 - Required automated checks need actual execution. If no configured command can
-  run them (including when both `test_one` and `test_all` are unavailable), stop
-  with `Implementation Blocked` or `Implementation Incomplete` as applicable.
+  run them (including when `test_one` is unavailable — `test_all` is never a
+  substitute), stop with `Implementation Blocked` or `Implementation Incomplete`
+  as applicable.
   Name the affected AC/check and the missing command or evidence. Request the
   needed clarification or `/shipit:sync`; never invent a command or
   replace planned tests with manual QA to get green.
@@ -64,29 +65,24 @@ is a validation gap under Acceptance evidence.
 
 ## The full suite belongs to CI
 
-Step 3 does not run by default. Where automated coverage applies, steps 1 and 2
+Step 3 never runs, in any flow. Where automated coverage applies, steps 1 and 2
 cover tests written this run and affected behavior, including the plan's consumers
-and regressions. Use `Files Changed` to check the final scope. The whole suite is
-CI's job unless one of the conditions below requires it locally.
+and regressions. Use `Files Changed` to check the final scope; a shared fixture,
+global config or wide rename means more targeted `test_one` runs on the affected
+test files, not the whole suite.
 
-Run `test_all` only when one of these is true, and say which one:
+The report line is always `test_all → not run (CI owns the full suite)`. That is a
+complete answer, not a gap, and it never blocks `code-handoff`.
 
-- Automated tests are required and `test_one` is null or has no `{path}` — the
-  scoped loop is unavailable. Use configured `test_all` and report the loop as
-  degraded; if it is unavailable too, report the validation gap.
-- The plan's validation intent requires suite-wide regression coverage (a
-  shared-fixture change, a global config or initializer edit, a rename that crosses
-  the whole suite). The plan need not name the command.
-- Step 1 or 2 turned up a failure whose cause is plausibly repo-wide.
+`test_one` null or without `{path}` does not unlock `test_all`: required automated
+tests are then a validation gap under Acceptance evidence, fixed with
+`/shipit:sync`.
 
-Not covered by any of those → the report line is
-`test_all → not run (CI owns the full suite)`. That is a complete answer, not a gap,
-and it never blocks `code-handoff`.
-
-Two things this does not relax: `coverage_gate` still runs when it is configured,
-even if the repo's gate command drives the suite itself — red coverage blocks the
-merge, so it is worth the wall clock. And a failing scoped test is still a hard
-stop; scoping down is about what gets *proved*, never about what gets *ignored*.
+The same applies to `coverage_gate` when the configured command drives the whole
+suite itself: skip it with `coverage_gate → not run (drives the full suite; CI owns
+it)`. A gate that only reads diff coverage from tests already run here still runs.
+A failing scoped test is still a hard stop; scoping down is about what gets
+*proved*, never about what gets *ignored*.
 
 ## Placeholders
 
@@ -154,7 +150,8 @@ nothing.
 ## Coverage gates
 
 The most common cause of red CI on otherwise correct work. `tests.coverage_gates_merge`
-true → treat `coverage_gate` as mandatory, not advisory.
+true → treat `coverage_gate` as mandatory, not advisory — unless it drives the
+whole suite, in which case CI enforces it (see above).
 
 - Uncovered changed lines are fixed with **tests for the changed behaviour**.
 - Never with an exclusion, a threshold change, or a config edit.
@@ -164,8 +161,9 @@ true → treat `coverage_gate` as mandatory, not advisory.
 
 All of:
 
-- Every applicable non-null command in the chain ran, except `test_all` and
-  `build` when correctly skipped under their rules above.
+- Every applicable non-null command in the chain ran, except `test_all` (never
+  run), `build` and a suite-driving `coverage_gate` when skipped under their rules
+  above.
 - Every required command's final execution exited 0 and still covers the final
   files; expected TDD red and repaired failures are not final failures.
 - Each AC and planned regression retains its executed evidence or explicitly

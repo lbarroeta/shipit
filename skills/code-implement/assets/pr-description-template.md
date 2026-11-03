@@ -28,7 +28,8 @@ behavior. Combine what and why. Link the issue when available; no file inventory
 
 <Optional, normally up to 3 bullets: non-obvious decisions, compatibility changes,
 migration/deployment ordering, or concrete risks and mitigations supported by the
-evidence. Keep merge/deploy prerequisites visible. Omit this section when there
+evidence. Keep merge/deploy prerequisites visible; a plan `Rollout` section always
+lands here as its deploy order and rollback in one or two bullets. Omit this section when there
 is nothing specific to review; no generic "Low risk" or speculative hazards.
 Mention an exclusion only when it explains a likely review question.>
 

@@ -32,14 +32,14 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `language.pr` | string | PR title and body, review-thread replies. Default `en` |
 | `language.code` | string | Comments written in code. Default `en` |
 | `docs.agent_docs` | string[] | Agent instruction files and the local docs they link to. Symlinks resolved; each file listed once |
-| `docs.pointer` | string | File holding the `shipit:contract` and `shipit:design` blocks: `AGENTS.md` when `init` created it or it already carried a shipit block, otherwise `CLAUDE.local.md`. Read by `sync`, `doctor` and `design-system` to find the blocks. Absent → `AGENTS.md` |
-| `docs.owned_by_shipit` | string[] | Always `[".shipit/"]` |
+| `docs.pointer` | string | File holding the `shipit:contract`, `shipit:design` and `shipit:product` blocks: `AGENTS.md` when `init` created it or it already carried a shipit block, otherwise `CLAUDE.local.md`. Read by `sync`, `doctor` and `design-system` to find the blocks. Absent → `AGENTS.md` |
+| `docs.owned_by_shipit` | string[] | Always `[".shipit/"]`. `.shipit/docs/` inside it stays human-owned; see below |
 | `stack.languages` | string[] | With version pin files as evidence in `stack.md` |
 | `stack.frameworks` | string[] | Only from declared dependencies |
 | `stack.package_manager` | string \| null | Decided by lockfile |
 | `commands.*` | string \| null | Never written unverified. See placeholders below |
 | `commands_verified.<key>` | `{exit, at, proof, command}` | Exact proving command; proof is `resolve`, `version`, `help`, `dry-run`, or `real`. Only `real` proves execution of the operation |
-| `paths.plans` | string | Default `.shipit/plans` |
+| `paths.plans` | string | Default `.shipit/plans`. Where `code-plan` writes plans. Local scratch — `init` excludes it via `.git/info/exclude` |
 | `paths.tasks` | string | Default `.shipit/tasks`. Where `task-create` writes ticket drafts. Local scratch — `init` excludes it via `.git/info/exclude` |
 | `paths.rules` | string | Default `.shipit/rules` |
 | `paths.src` | string[] | Roots that hold product code |
@@ -74,9 +74,14 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `ci.required_jobs` | string[] | Jobs that gate the merge |
 | `unknown[]` | string[] | Every undetermined key |
 
-Everything under `.shipit/` is shipit's. The repo's own documentation — `docs/`,
-the README, agent docs — is linked from it, never copied into it, and edited only
-to apply a doc patch the user approved.
+Everything under `.shipit/` is where agents find context, but not all of it is
+shipit's. `.shipit/docs/` holds the repo's knowledge docs — architecture, how the
+project runs, design reference — and they stay the humans': `sync` watches and
+reviews them, never adopts or regenerates them. The README and agent docs are
+linked from the contract, never copied into it. Human docs, wherever they live,
+are edited only to apply a doc patch the user approved. Product docs move into
+`.shipit/` per `../../../references/product-context.md § Migration`; knowledge docs
+in `docs/` move into `.shipit/docs/` per `../SKILL.md § Knowledge docs migration`.
 
 ## Placeholders
 
@@ -91,7 +96,8 @@ Substituted at call time. Never bake the value in.
 | `{a}`, `{b}` | Two node names, in order | `graph.path` |
 
 A `test_one` without `{path}` is malformed: `code-implement` cannot target a single
-test, and the whole red-green loop degrades to running the full suite.
+test, the red-green loop is unavailable, and required tests become a validation
+gap. The full suite is never run locally as a fallback; CI owns it.
 
 ## Scope of `language`
 
@@ -161,13 +167,13 @@ and is independent of this list.
 ## `run.models`
 
 `run` uses native subagents, with one complete `{model, effort}` pair per stage.
-Defaults: Anthropic plan = Opus 5.5/high, sync and implement = Sonnet 5.5/high,
-handoff = Haiku 5.5/high; OpenAI plan = Astra 6/high, sync and implement = Sol 6.1/high,
-handoff = Luna 6/high. Runtime IDs are pinned in the run skill's
+Defaults: Anthropic plan and review = Opus 5.5/high, implement = Sonnet 5.5/high,
+sync = Sonnet 5.5/medium, handoff = Haiku 5.5/medium; OpenAI plan and review =
+Astra 6/high, implement = Sol 6.1/high, sync = Sol 6.1/medium, handoff = Luna 6/medium. Runtime IDs are pinned in the run skill's
 `assets/models.json`; aliases are not used. Both sync checkpoints share route `sync`.
 
 Example override: `run.models.openai.plan = {"model": "gpt-6.1-sol", "effort": "high"}`.
-Only `sync`, `plan`, `implement`, `handoff` are valid stage keys. Overrides must be complete
+Only `sync`, `plan`, `implement`, `review`, `handoff` are valid stage keys. Overrides must be complete
 pairs, available in the hosting runtime; Claude Code also needs a matching native
 agent definition. A mismatch blocks the run instead of inheriting the session
 model. `init` writes `{}`; `sync` preserves explicit overrides.

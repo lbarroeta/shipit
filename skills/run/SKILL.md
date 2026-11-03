@@ -1,6 +1,6 @@
 ---
 name: run
-description: Execute an existing issue or card from its ID or URL through shipit context sync, planning, implementation, final sync and handoff, using sequential native subagents with stage-specific models. Resume the same task or process human QA feedback. For non-developers with a defined task; not for drafting ideas or creating tickets. Supports Claude Code and local Codex.
+description: Execute an existing issue or card from its ID or URL through shipit context sync, planning, implementation, code review, final sync and handoff, using sequential native subagents with stage-specific models. Resume the same task or process human QA feedback. For non-developers with a defined task; not for drafting ideas or creating tickets. Supports Claude Code and local Codex.
 metadata:
   input: issue-id-or-url
   output: qa-delivery
@@ -10,8 +10,8 @@ metadata:
 # shipit run
 
 One conversation owns the task. You are the coordinator: prepare Git, delegate,
-wait, checkpoint and explain QA. **Do not perform the synchronizer, planner, builder or delivery
-agent's work yourself.** Use real native subagents, not role-playing or new
+wait, checkpoint and explain QA. **Do not perform the synchronizer, planner, builder, reviewer or
+delivery agent's work yourself.** Use real native subagents, not role-playing or new
 user-owned chats. Their model/effort pairs come from `assets/models.json`, with
 explicit per-repo overrides in `run.models` of `.shipit/config.json`.
 
@@ -59,13 +59,15 @@ checks collisions with the other worktrees' plans.
    routes again after its checkout is restored. For
    GitHub delivery check `gh` authentication and repo access before editing. Missing
    allowed capabilities block; withheld capabilities are skipped, never widened.
+   The review stage needs the ponytail plugin's `ponytail-review` skill in this
+   session; missing → stop with `code-review`'s install command before planning.
    Write the resolved task JSON to a temporary file outside the checkout, following
    `orchestration.md`. No tracker writes and no new ticket.
 3. **Begin or resume.** Run `scripts/run_state.py`'s `begin` with the task file,
    provider and branch chosen from the tracker or repo conventions. If neither
    supplies one, use `codex/<issue-id>-<slug>` in Codex or ask in Claude Code.
    First query `status`; it reads the run from any checkout. A saved qa/done result
-   with no new human feedback and no conflict with main (step 9) is
+   with no new human feedback and no conflict with main (step 10) is
    displayed without switching branches or acquiring locks: show its `qa_guide`
    and the PR link, then stop. Never dispatch a stage to rebuild them. A run whose
    `repo` is another checkout continues only from a session there; say which. Otherwise the
@@ -78,7 +80,7 @@ checks collisions with the other worktrees' plans.
    force-push or adopt an unrelated branch. Resume keeps the saved branch and
    checkout; it never pulls `main` again. If another task's branch is selected,
    it switches to the saved branch only when clean. Resolve and verify availability
-   of all four returned model/effort routes before any child runs. Retain owner
+   of all five returned model/effort routes before any child runs. Retain owner
    token and state path. In a linked worktree `main` is never checked out: the
    branch starts from the fetched upstream SHA, so the main checkout may stay
    dirty. `begin` then returns `worktree` (null in the main checkout) after copying
@@ -114,24 +116,39 @@ checks collisions with the other worktrees' plans.
    reports/results in the run directory under Git metadata. Checkpoint `implement`
    only with passing executed checks and full ownership manifest; generated plans
    remain in ownership but outside the report's delivery manifest.
-7. **Context after implementation.** Run the helper's `verify` before dispatch to
+7. **Review.** Run `verify`, then delegate `shipit:code-review` using route
+   `review` with plan, builder report, run-owned manifest, absolute skill path and
+   any user decision accepting a Must fix; say whether this is a re-review after a
+   repair round. Wait; checkpoint `review` only when the verdict is approved with
+   empty blockers — the helper rejects it if validated files changed. Changes
+   requested → save the blocked result and run `repair --result-file ... --reason
+   ...`: the builder fixes the Must fix and `in scope` Should fix findings inside
+   the plan, then review runs again as a re-review, where only Must fix blocks. One
+   automatic round only: a Must fix that persists pauses for the user, who decides —
+   another round (`repair --user-decision`), accepting the finding (re-dispatch
+   review with the decision), or `replan`.
+8. **Context after implementation.** Run the helper's `verify` before dispatch to
    check builder artifacts/files have not changed. Delegate `shipit:sync` in
    `after-implement` phase using the same `sync` route, with plan, builder report,
-   validated manifest and ownership. It returns a separate final delivery report
+   review report, validated manifest and ownership. Should fix, Nice to have and
+   Accepted by user findings go under the delivery report's `Known Risks or
+   Follow-ups`. It returns a separate final delivery report
    that includes context/doc edits and applicable final validation. Preserve the
    original builder report. Checkpoint `sync_after` only with current/updated
    context, no conflicts, no pending revalidation and passing context checks.
+   With `pr_body` allowed, the helper also rejects a report whose last
+   `## PR Preparation` section is not a template body; re-dispatch sync with its reason.
    A required product check failure uses `repair --result-file ... --reason ...`
    to return to the builder, then sync again; changed plan scope uses `replan` and
    the user's decision when needed. Never send stale builder hashes to delivery.
-8. **Delivery.** Run `verify` against the post-sync snapshot. Delegate
+9. **Delivery.** Run `verify` against the post-sync snapshot. Delegate
    `shipit:code-handoff` in `implementation` mode with its absolute skill path,
    immutable **sync_after delivery report**, original builder evidence, current
    allow-list and durable journal. Wait and verify actual outcomes; checkpoint
    `handoff` only when permitted steps finished or were deliberately skipped.
    Partial delivery stays at `handoff`; reconcile effects before retrying.
-9. **Human QA.** Present what changed, where to test, plain-language steps with
-   expected results, and what remains. The steps are the `qa_guide.steps` returned
+10. **Human QA.** Present what changed, where to test, plain-language steps with
+   expected results, and what remains, including pending product-doc patches. The steps are the `qa_guide.steps` returned
    by the `handoff` checkpoint, copied verbatim: the QA sections of the
    checkpointed final delivery report. `steps` null → read those sections from
    `qa_guide.report`; still none → report the missing QA guide as a gap. Never
@@ -142,15 +159,15 @@ checks collisions with the other worktrees' plans.
    A draft PR or green tests do not mean human QA passed. Record only explicit human
    results. On failure, attach the failed step/expected/actual evidence, invalidate
    implementation/final-sync/delivery checkpoints and delegate repair to the builder on the
-   same branch, followed by final sync before delivery. A scope change returns to the user and planner.
+   same branch, followed by review and final sync before delivery. A scope change returns to the user and planner.
    **Updating with main.** A delivered (qa/done) task whose PR conflicts with main
    (`gh pr view --json mergeable` → `CONFLICTING`), or whose user asks to update
    it: `begin`, then `update --reason`. It merges the fetched main without
    committing, lists `conflicts` and returns to implement. The builder resolves them
-   within the card's criteria and revalidates; final sync and delivery follow, and
+   within the card's criteria and revalidates; review, final sync and delivery follow, and
    delivery's commit completes the merge on the same PR. A conflict that changes
    what the card must do goes to the user and `replan`. Never rebase or force-push.
-10. **Pause cleanly.** After children finish, pause the run to release both locks
+11. **Pause cleanly.** After children finish, pause the run to release both locks
    while waiting for QA, a decision or after any failure. For incomplete work,
    persist the verified child result and full run-owned manifest using
    `pause --result-file`; those file hashes protect ownership on resume. No child may still be

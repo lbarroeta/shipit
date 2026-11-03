@@ -9,6 +9,9 @@ Resolve the intended project/repo and read current task scope/criteria. Goal mus
 still solve a current problem and fit the user's project/request. Check available
 recent issue updates and relevant repo/product evidence for already-delivered,
 superseded or contradictory work. Do not invent a strategy to declare work stale.
+With `.shipit/product/mvp.md`, a task for a `Deferred` or `Manual` story or a
+non-goal is not relevant until the MVP changes; MVP core-flow order ranks after
+explicit priority (`../../../references/product-context.md`).
 Legacy `Outcome` is a valid input for Goal; an older issue need not be renamed.
 Missing essential meaning or conflicting scope needs clarification. Already met,
 superseded, cancelled or out-of-project → explain and do not recommend/start.

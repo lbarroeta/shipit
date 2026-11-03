@@ -11,6 +11,11 @@ accepted decisions. Resolve referenced issues and current updates via the
 configured tracker. Apply readiness before the Planning status transition. Do
 not treat inaccessible inputs as empty or silently replace a source requirement.
 
+When the ticket cites a story and `.shipit/product/` exists, read that story's
+ACs, its MVP class and kept ACs, and its tech-design rows, per
+`../../../references/product-context.md`. A contradiction with the ticket is a
+blocker, not a choice. The status edits the change proves go in `Docs impact`.
+
 If local request criteria lack IDs, assign stable `AC-1`, `AC-2`, etc. in source
 order; do not renumber existing IDs. Clarifications are attached to the affected
 criterion, not used to erase it. Capture only sources and decisions relevant to

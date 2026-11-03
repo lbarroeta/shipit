@@ -318,7 +318,8 @@ Ignore any `<!-- shipit:contract -->` or `<!-- shipit:design -->` block you find
 shipit wrote it on a previous run. It is a pointer, not a source. A doc containing
 nothing else is not an agent doc and does not go into `docs.agent_docs`.
 
-Then add the headings of `docs/**/*.md` and `README.md` to the inventory, and
+Then add the headings of `docs/**/*.md`, `.shipit/docs/**/*.md` and `README.md` to
+the inventory, and
 **subtract**. Anything those docs already state is linked, not written again. What
 remains is what shipit records. A doc contradicting the repo is asked about, per
 SKILL.md § Existing documentation.

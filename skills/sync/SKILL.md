@@ -34,6 +34,15 @@ a newer schema → report the gap; never reset it from a template.
   is for first setup; it must not reset existing preferences during sync.
 - Preserve all `shipit:design` blocks and design files. Report design drift to
   `shipit:design-system`; do not turn a new implementation into an approved design.
+- Product context follows `../../references/product-context.md`: apply status
+  edits the delivered change proves, catch up status that landed outside a run
+  (its *Catching up*: tracker read-only, commits since the baseline, unclassified
+  open issues listed), propose decisions as patches, repair the
+  `shipit:product` block. Product docs outside `.shipit/` → report them as
+  migration candidates for `/shipit:init`; never move them here. Knowledge docs
+  in `docs/` are reported the same way.
+- `.shipit/docs/` holds human knowledge docs: review their drift against the rules
+  that link them, propose patches, never generate, rewrite or adopt them.
 - Human docs outside generated blocks are not owned. Correct a named factual
   section when the request/approved plan authorizes it; otherwise propose its exact
   patch. Preserve deliberate policies and decisions even if code violates them.
@@ -53,11 +62,12 @@ a newer schema → report the gap; never reset it from a template.
    `--check` reports drift and exits without migration, writes or graph updates.
 2. **Determine scope.** Before planning, reconcile accumulated drift that affects
    the task, plus shared configuration. After implementation, use the actual diff,
-   plan and report to find affected contracts/docs; check for additional external
-   changes. A report cannot hide files absent from its manifest. Read changes to
+   plan and report to find affected contracts/docs, product context included;
+   check for additional external changes. A report cannot hide files absent from its manifest. Read changes to
    manifests, CI, agent instructions, rule exemplars and related sources. A new
    HEAD alone does not require regeneration. Check external tracker reachability
    and referenced targets when relevant; local hashes cannot prove remote freshness.
+   Product docs present → include the product catch-up in scope.
    Check configured executables and companion availability even with unchanged
    sources: a different host or removed tool can invalidate availability evidence.
 3. **Migrate and rediscover.** Apply required config migrations per the reference.
@@ -100,7 +110,8 @@ a newer schema → report the gap; never reset it from a template.
    PRs would all conflict on the committed baseline. Report it as deferred to the
    main checkout, not as a failure; context edits still belong to the branch.
 7. **Report.** State phase, baseline status, changed/retired/preserved paths,
-   documentation conflicts, separate structural/semantic graph state, exact
+   documentation conflicts, product catch-up (applied with evidence, proposed,
+   unclassified issues, or `unknown`), separate structural/semantic graph state, exact
    validation and remaining unknowns, including `docs-lookup.md`'s one-line
    notice when a lookup could not be made.
    Use `language.plan`. Return `completed`, `blocked` or `failed`, with concrete
@@ -115,6 +126,8 @@ report; preserve the original builder report. Use
 `../code-implement/assets/pr-description-template.md`: update the delivery copy
 when sync changes reviewer-relevant behavior, documentation or check results;
 keep material risks and pending checks visible and full QA/evidence accessible.
+Keep `## PR Preparation` as the delivery report's last section, holding that
+template body; rewrite a builder copy that does not follow the template.
 Do not append a sync log to the body. Missing implementation facts return to the
 builder through the caller; never invent them. Never relabel a failed check as
 passing. A material contradiction with plan scope returns to the caller for
@@ -136,12 +149,14 @@ rediscovery, docs lookups and graph work. Otherwise continue the full workflow
 for the affected scope only. Return the sync report and owned paths for the
 planner/builder.
 After implementation, return the separate delivery report described above to the
-coordinator.
+coordinator. Carry the review report's Should fix, Nice to have, Accepted by
+user and Debt added entries into its `Known Risks or Follow-ups`, verbatim.
 
 ## Flags
 
 - `--check`: local inspection and relevant read-only checks; no writes or baseline
   certification. Report `current`, `stale`, or `unknown`, and what remains to inspect.
+  Product catch-up is listed as it would apply, not written.
   Version drift is listed by package and versions; docs lookups wait for a normal sync.
 - `--upgrade`: migrate only config using `references/reconciliation.md`. It does
   not certify docs or graph freshness or record a new context baseline. Normal

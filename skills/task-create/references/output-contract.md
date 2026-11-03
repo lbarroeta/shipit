@@ -22,7 +22,10 @@ type line (`Bug` / `Feature` / `Chore`, Priority `P0`–`P3`, Size `XS`–`XL`),
 
 Include **Out of scope** for real exclusions or likely scope misunderstandings;
 **Dependencies** for real prerequisites with specific unblock conditions;
-**Suggested order** for scheduling preferences and their rationale; **Assumptions**
+**Suggested order** for scheduling preferences and their rationale; **Related work**
+for the outcome the ticket advances and existing tickets it relates to (parent epic,
+overlap narrowed out, prior done/cancelled work, same area) with the relation and
+why it matters — a child lists only its own; **Assumptions**
 for reversible choices with a stated default/basis; **Blockers** for essential
 unresolved behaviour; **Labels** only for existing tracker labels. Delete empty
 conditional headings, never fill them with `N/A`.
@@ -102,6 +105,10 @@ Run silently before writing:
 - All essential boundaries are stated; no invented business rules or placeholders.
 - Every AC is observable and mapped to a reproducible scenario with all four parts.
 - Every true dependency has an unblock condition; hierarchy/order are separate.
+- The board survey ran or is reported as not run; no duplicate or overlap is
+  drafted without the user's decision; Related work cites real IDs, never guesses.
+- Priority is consistent with the outcome the board is driving, or the conflict
+  is stated.
 - Essential ambiguities stop readiness, while defined dependencies remain valid.
 - Epic children pass split-policy and can be read without the parent/conversation.
 - No product code, planned file list, commands or duplicated repo boilerplate.

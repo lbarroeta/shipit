@@ -55,9 +55,15 @@ plugin disabled, so the number reported is a delta, not an absolute.
 | `task-epic-split` | A chain of tickets where only the last one is worth merging; a ticket that does `code-plan`'s job |
 | `task-no-tracker` | Creating an issue somewhere the repo did not configure, and calling `none` a gap |
 | `task-next-blocked` | Selecting the first/highest-priority blocked issue, conflating hierarchy with dependencies, or mutating tracker state |
+| `task-next-critical-path` | Picking a standalone task over the ready prerequisite that unblocks the top priority, or starting new work without flagging owned work awaiting changes |
+| `task-next-product-context` | Recommending a `Deferred`, `built` or non-goal story, ignoring core-flow order, or letting product docs override tracker state |
+| `task-create-duplicate` | Drafting a ticket that duplicates open work, re-proposing cancelled work silently, or opening a new epic beside the one in flight |
 | `task-defined-blocked` | Rejecting a defined dependency-blocked task or inventing business rules to fill essential gaps |
 | `plan-stale-prerequisite` | Starting stale or prerequisite-blocked work before checking the live Goal and unblock condition |
 | `task-provider-relations` | Claiming native hierarchy/dependencies when only text references were published, or losing child content |
+| `product-migration` | Copying product docs instead of moving them, breaking their links, translating them, or editing human docs without a yes |
+| `sync-product-status` | Leaving a delivered story unmarked, or rewriting a product or design decision to match the code |
+| `sync-product-catch-up` | Leaving status that landed outside a run stale, marking a story built from a partial or not-planned ticket, writing unclassified issues into product docs, or writing to the tracker |
 | `run-dirty-main` | Switching main or adopting uncommitted user changes before an orchestrated task |
 | `run-resume-qa` | Restarting from main, duplicating delivery, or calling automated checks human QA approval |
 | `run-model-unavailable` | Role-playing subagents or silently substituting unavailable stage models |
@@ -71,6 +77,7 @@ plugin disabled, so the number reported is a delta, not an absolute.
 | `pr-description-final-evidence` | Publishing stale validation/deployment claims or hiding material migration risk after sync |
 | `pr-description-handoff-gate` | Delivering a deficient body before correction or applying the body gate when no body is published |
 | `pr-description-plan` | Expanding the entire plan by default, losing its evidence or claiming planned checks passed |
+| `pr-fix-triage` | Fixing before the approval gate, adding code for a comment that does not hold, implementing a scope change, or hiding a merge conflict behind a green-looking report |
 
 Every case targets a rule that, when broken, produces confidently wrong output
 rather than an error. Those are the failures worth paying for a grader to catch.

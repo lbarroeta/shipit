@@ -24,14 +24,15 @@ Produces, at the repo root:
 
 The whole contract lives in `.shipit/` and is committed. Ticket drafts,
 `CLAUDE.local.md` and the graph output stay local, and generated plans are never
-committed. The repo's own docs are linked from the contract, never copied into it.
+committed. The repo's own docs are linked from the contract, never copied into it;
+knowledge docs move into `.shipit/docs/` and stay the humans'.
 
 `init` runs in any repo state and never sends the user elsewhere to finish:
 
 | State | What `init` does |
 | --- | --- |
 | New — no contract, no docs | Detects and writes everything |
-| Documented — `docs/`, `AGENTS.md`, `CLAUDE.md` or other agent docs exist | Inventories them, writes only what they do not state |
+| Documented — `docs/`, `.shipit/docs/`, `AGENTS.md`, `CLAUDE.md` or other agent docs exist | Inventories them, writes only what they do not state |
 | Legacy — `.sdd/` exists (files or symlinks) | Migrates it per *Legacy migration*, then continues |
 | Initialized — `.shipit/config.json` exists | Re-inspects and reconciles with sync's merge; recorded answers are reused, never re-asked |
 
@@ -41,7 +42,8 @@ The repo's docs are the first source. Shipit complements them; a second copy of
 a fact is the drift this avoids.
 
 - **Inventory.** Agent docs (recipe 10), every local markdown file they link to
-  (one level), and the headings of `docs/**/*.md` and `README.md`. Read a body only
+  (one level), and the headings of `docs/**/*.md`, `.shipit/docs/**/*.md` and
+  `README.md`. Read a body only
   when its heading names a topic shipit records: stack, commands, conventions,
   layers, tests, branch and commit, design. Result: a map of topic → file.
 - **Covered and consistent** → link to the file; write nothing about it.
@@ -51,6 +53,12 @@ a fact is the drift this avoids.
   discrepancy table. A decision (policy, architecture, design) → the human wins;
   current code violating it never supersedes it.
 - **Not covered** → shipit writes it in `.shipit/`.
+- **Product docs** — PRD, MVP, brief, current state, tech design, backlog → they
+  move into `.shipit/` per `../../references/product-context.md § Migration`,
+  confirmed with the step-1 plan.
+- **Knowledge docs** — architecture, how the project runs, design reference in
+  `docs/` → they move into `.shipit/docs/` per *Knowledge docs migration*,
+  confirmed with the step-1 plan. They stay human docs after the move.
 
 Each `.shipit/` file states only what the repo's docs do not, and links the doc
 that covers the rest: `.shipit/conventions.md` links the team's conventions doc
@@ -153,10 +161,12 @@ linked worktree.
 - **Recorded answers are reused.** An existing config's `language`, tracker,
   `handoff.allow`, `run.models`, `paths`, worktree settings and `docs.pointer` are
   never re-asked or reset to defaults; sync's reconciliation policy applies.
-- **Ticket drafts are never committed.** `<paths.tasks>` is appended to
-  `.git/info/exclude`. A draft is scratch that stops being true the moment the issue
-  exists in the tracker, which is the source of truth from then on, and a stale copy
-  in the repo is worse than none.
+- **Ticket drafts and generated plans are never committed.** `<paths.tasks>` and
+  `<paths.plans>` are appended to `.git/info/exclude`. A draft is scratch that stops
+  being true the moment the issue exists in the tracker, which is the source of truth
+  from then on, and a stale copy in the repo is worse than none. A plan is context
+  for one task; its PR body carries it, and an untracked leftover blocks the next
+  run's clean-tree check. Plans already tracked stay tracked.
 - **Local files use `.git/info/exclude`, never `.gitignore`.** `.gitignore` is
   itself a shared, committed file — writing to it to keep something local is a
   contradiction. `.git/info/exclude` lives under `.git/`, is never committed, and
@@ -174,9 +184,9 @@ linked worktree.
 0. **Preflight.** `git rev-parse --show-toplevel` for the root; `git rev-parse --abbrev-ref origin/HEAD` for the default branch. Not a git repo → say so and stop: tier 0 is unmet. This is the only hard stop.
 1. **Diagnose.** Classify the repo per the state table above and show the plan
    before writing anything: what will be created, complemented, migrated and
-   proposed for deletion. A legacy `.sdd/` → one confirmation for the whole
-   migration. An existing config that fails to parse → report it and stop; never
-   reset it from the template.
+   proposed for deletion. A legacy `.sdd/`, product docs or knowledge docs to
+   migrate → one confirmation for each migration. An existing config that fails to parse →
+   report it and stop; never reset it from the template.
 2. **Graph.** Per *Graph*.
 3. **Ask the output languages.** Only when no config records them. One question,
    four answers, each defaulting to `en`: plans and reports (`plan`), tickets and
@@ -205,7 +215,7 @@ linked worktree.
     what the repo's docs do not state; an existing contract through sync's
     base/current/candidate merge (`../sync/references/reconciliation.md`).
 12. **Point at it.** Per *Discovery pointer*; record `docs.pointer`. Append
-    `<paths.tasks>` and any `CLAUDE.local.md` to `.git/info/exclude` when nothing
+    `<paths.tasks>`, `<paths.plans>` and any `CLAUDE.local.md` to `.git/info/exclude` when nothing
     already covers them — check with `git check-ignore -q` first.
 13. **Self-check and baseline.** Every factual claim shipit wrote has evidence. Every
     non-null command has a `commands_verified` entry. `unknown[]` matches what was
@@ -236,6 +246,25 @@ from step 1:
 6. Update the shipit blocks — contract and design — to the new paths. Links to
    moved files elsewhere in human docs are listed as proposed patches, applied
    only on yes.
+
+## Knowledge docs migration
+
+Knowledge docs in `docs/**` move to `.shipit/docs/<same relative path>` so agents
+find every piece of context in `.shipit/`. Same steps as
+`../../references/product-context.md § Migration`:
+
+1. List each candidate with its target: `docs/architecture/pipeline.md` →
+   `.shipit/docs/architecture/pipeline.md`. Product docs follow their own
+   migration, not this one. A doc that states rules or policies is not moved here:
+   propose its content for `.shipit/rules/<layer>.md` instead. One confirmation for
+   the list; the user may strike entries.
+2. `git mv` each tracked file; move untracked ones. A target that already exists
+   → show both and ask which wins; never merge silently.
+3. Rewrite relative links inside the moved files so they still resolve. Nothing
+   else in them changes: they stay human docs, never adopted into the baseline's
+   `managed` list.
+4. Links to the old paths in human docs and agent docs → list each as a proposed
+   patch; apply only on yes. Never leave a redirect stub or a symlink behind.
 
 ## Baseline
 
@@ -302,4 +331,5 @@ passed off as a completed baseline.
 - Every doc contradiction found, and how it was resolved.
 - Next step: `/shipit:task-create` for a need with no ticket yet, `/shipit:code-plan` for one
   that has. UI layers found and no `.shipit/design-system.md` → also
-  `/shipit:design-system`, once.
+  `/shipit:design-system`, once. No `.shipit/product/prd.md` → also
+  `/shipit:product-discovery`, once.

@@ -1,6 +1,6 @@
 # <imperative change, ≤70 chars>
 
-**<Bug | Feature | Chore>** · Priority: <P0–P3> · Size: <XS–XL; L/XL include driver> · Source: <request | url> · <YYYY-MM-DD> · shape: <task | epic>
+**<Bug | Feature | Chore>** · Priority: <P0–P3> · Size: <XS–XL; L/XL include driver> · Source: <request | url>; <story IDs it delivers, e.g. H3 — only with a PRD> · <YYYY-MM-DD> · shape: <task | epic>
 
 ## Problem
 
@@ -46,6 +46,14 @@ in Blockers below. Do not use parenthood or a preferred order as a dependency.>
 
 <Only a real scheduling preference with a reason. It does not block execution.>
 
+## Related work
+
+<Board context from the survey. Delete if the survey found nothing and no outcome
+is evidenced. Prerequisites go in Dependencies, not here.>
+
+- Advances: <active milestone/cycle, PRD goal, MVP core-flow step or epic, with source>
+- <ID/url> — <parent | overlap (this ticket covers only the remainder) | related | prior: done/cancelled>: <why it matters here>
+
 ## Subtasks
 
 <Epic only: an index followed by complete child sections. Single-task mode deletes
@@ -58,7 +66,7 @@ below own their acceptance/scenarios. Repeat essential context in every child.>
 
 ### Child #1 — <imperative title, ≤70 chars>
 
-**<Bug | Feature | Chore>** · Priority: <P0–P3> · Size: <XS–L> · Parent: <parent title/local parent; ID after creation>
+**<Bug | Feature | Chore>** · Priority: <P0–P3> · Size: <XS–L> · Source: <story IDs this child delivers; delete without a PRD> · Parent: <parent title/local parent; ID after creation>
 
 #### Problem
 
@@ -90,7 +98,7 @@ below own their acceptance/scenarios. Repeat essential context in every child.>
 
 - <ID/local #n>: <needed output>. Unblocks when <observable condition>.
 
-<Delete Dependencies if none; add Suggested order/Assumptions only if needed.
+<Delete Dependencies if none; add Related work/Suggested order/Assumptions only if needed.
 Repeat the complete child block for each child. AC IDs are local to each issue.>
 
 ## Labels

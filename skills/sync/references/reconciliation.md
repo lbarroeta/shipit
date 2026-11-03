@@ -15,8 +15,10 @@ not ownership or freshness; preserve it on no-op sync.
 
 Source inventory covers tracked and non-ignored untracked files, excluding graph
 outputs, `.shipit/`, plans/tasks and generated rules; contract fingerprints cover
-config, stack, conventions, design and rule files separately. The repo's own docs
-are sources: a changed human doc is drift worth reviewing. Ignored inputs,
+config, stack, conventions, design, rule, product-context and `.shipit/docs/` files separately.
+The repo's own docs are sources: a changed human doc is drift worth reviewing. A changed
+`.shipit/docs/` file is the same — review it against the rules that link it — but it is
+never adopted into `managed` nor regenerated. Ignored inputs,
 external docs, submodule internals, tracker state and graph semantic coverage need
 explicit inspection when relevant. An unchanged hash report alone is not proof
 those dependencies are current. A failed graph update never certifies the graph.
@@ -57,7 +59,7 @@ For config values, apply these policies even when a file looks wholly generated:
   Recheck unresolved or absent capabilities when reachable. Connection failure
   means unverified, not absent: preserve choices, record unknown, do not switch
   adapters. A connected tracker contradicting recorded identity requires resolution.
-- Maintain task, `CLAUDE.local.md` and graph exclusions through Git's resolved
+- Maintain task, plan, `CLAUDE.local.md` and graph exclusions through Git's resolved
   info/exclude path; do not assume `.git` is a directory in worktrees. A contract
   file that Git ignores is reported; never untrack files or change team policy.
 - `worktree.share_graph` follows actual graph location/exclusion; never overwrite
@@ -147,6 +149,8 @@ pending. After reconciliation and final source/doc edits, choose the update path
   unchanged content and prune deleted sources. The host agent can perform semantic
   extraction without a new API key. Preserve corpus exclusions, graph direction
   and output settings; do not expand indexing to excluded contracts or secrets.
+  `.shipit/docs/` holds human knowledge docs, not an excluded contract: when the
+  corpus indexes docs, it includes them.
 - No indexed drift and verified coverage: leave graph outputs unchanged.
 - Inside a coordinated `run`, at both checkpoints: run only the structural update
   when code changed and report semantic coverage as `stale` for the next

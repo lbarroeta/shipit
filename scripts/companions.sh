@@ -44,7 +44,7 @@ else
 fi
 
 echo
-echo "tier 1 — recommended (handoff needs these to reach GitHub)"
+echo "tier 1 — recommended (handoff needs these to reach GitHub; review needs ponytail)"
 if has gh; then
   if gh auth status >/dev/null 2>&1; then
     ok gh "authenticated as $(gh api user --jq .login 2>/dev/null || echo '?')"
@@ -55,6 +55,15 @@ if has gh; then
 else
   miss gh "handoff cannot open or update pull requests"
   note "macOS: brew install gh   ·   see https://cli.github.com for other platforms"
+fi
+
+if plugin_present ponytail; then
+  ok ponytail "code-review engine"
+else
+  miss ponytail "code-review and run's review stage cannot run"
+  note "claude plugin marketplace add DietrichGebert/ponytail"
+  note "claude plugin install ponytail@ponytail"
+  note "shipit's own rules override its test and report-length rules inside shipit skills"
 fi
 
 echo
@@ -103,19 +112,6 @@ else
   miss "context7 cli" "fine if the Context7 MCP is connected; otherwise API facts are unverified"
   note "MCP (preferred): claude mcp add --scope user --transport http context7 https://mcp.context7.com/mcp --header \"Authorization: Bearer <key>\""
   note "or CLI: npm install -g ctx7 && ctx7 login"
-fi
-
-echo
-echo "tier 3 — do NOT enable during an SDD cycle"
-if plugin_present ponytail; then
-  printf '  \033[33mpresent\033[0m %-18s %s\n' ponytail "turn it off while running shipit"
-  note "run: stop ponytail"
-  note "its persistent mode contradicts spec-driven tests and truncates reports"
-else
-  ok ponytail "absent — correct. the ladder is vendored in references/lean-ladder.md"
-  note "only install it for standalone /ponytail-audit and /ponytail-debt:"
-  note "claude plugin marketplace add DietrichGebert/ponytail"
-  note "claude plugin install ponytail@ponytail"
 fi
 
 echo

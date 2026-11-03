@@ -89,6 +89,16 @@ Surface · pattern: <surface> · <pattern from `design-system.md` § Screen patt
 
 States: <the `<paths.rules>/design.md` § 4 states this change renders>
 
+## Failure paths
+
+| AC | Situation | Expected behaviour | Proved by |
+| --- | --- | --- | --- |
+| <AC ID> | <invalid input, limit, unauthorized, concurrent write, external failure, unexpected state> | <message, status, rollback, retry, no-op> | <`Tests` row or `Manual QA` step> |
+
+<Required when an AC takes input, checks permissions, changes state or calls out;
+only situations the change can reach. Undecided expected behaviour → Blockers or
+Assumptions. Delete for copy/styling-only changes.>
+
 ## Tests
 
 | Test | Rule | Proves |
@@ -97,6 +107,25 @@ States: <the `<paths.rules>/design.md` § 4 states this change renders>
 
 <Each AC links through Files (or Evidence for already-met behavior) to Tests or
 Manual QA. Include affected consumers and negative paths when relevant.>
+
+## Rollout
+
+<Required for migrations, contracts other code consumes, cache key formats, or
+config/env changes. Delete otherwise.>
+
+- Compatibility: <old and new code side by side; expand now, contract in a later change>
+- Order: <migrations, services, workers — what deploys first and why>
+- Rollback: <how; irreversible steps and their approval in Decisions>
+
+## Change size
+
+<Required when the estimate is L. Delete otherwise.>
+
+| Slice | AC IDs | Stands alone because |
+| --- | --- | --- |
+| <preparatory refactor, then each behaviour slice> | <AC IDs> | <reason> |
+
+Recommendation: <which slice to plan first; the user decides on splitting the ticket>
 
 ## Docs impact
 

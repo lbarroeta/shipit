@@ -14,6 +14,8 @@ HELPER = ROOT / "skills/run/scripts/run_state.py"
 
 
 class RunStateTests(unittest.TestCase):
+    PR_BODY = "\n## PR Preparation\n\nShows updated text.\n\n## Validation\n\n`git diff --check` exit 0\n"
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
@@ -68,7 +70,12 @@ class RunStateTests(unittest.TestCase):
             state["mode"] = mode
         return state
 
+    def reviewed(self, state):
+        return self.checkpoint(state, "review", self.result(state, "review"))
+
     def synced(self, state):
+        if state["stage"] == "review":
+            state = self.reviewed(state)
         files = sorted(filter(None, (self.git(self.repo, "diff", "--name-only", "--no-renames", "HEAD")
                        + "\n" + self.git(self.repo, "ls-files", "--others", "--exclude-standard")).splitlines()))
         result = self.result(state, state["stage"], files=files, context_status="current",
@@ -83,7 +90,7 @@ class RunStateTests(unittest.TestCase):
     def result(self, state, stage, **extra):
         directory = Path(state["state_path"]).parent
         artifact = directory / f"{stage}.md"
-        artifact.write_text(f"{stage} evidence\n")
+        artifact.write_text(f"{stage} evidence\n" + (self.PR_BODY if stage == "sync_after" else ""))
         result = {"status": "completed", "artifact": str(artifact),
                   "requested": state["routes"]["sync" if stage.startswith("sync_") else stage], "effective": {"model": None, "effort": None},
                   "blockers": []}
@@ -625,20 +632,40 @@ class RunStateTests(unittest.TestCase):
         self.assertEqual(set(state["artifacts"]), {"sync_before", "plan"})
         self.assertEqual(state["qa"][0]["outcome"], "fail")
 
+    def test_final_sync_rejects_a_report_that_is_not_a_template_pr_body(self):
+        state = self.begin()
+        state = self.checkpoint(state, "plan", self.result(state, "plan"))
+        (self.repo / "product.txt").write_text("updated\n")
+        result = self.result(state, "implement", files=["product.txt"],
+                             validation=[{"command": "git diff --check", "exit_code": 0}])
+        state = self.reviewed(self.checkpoint(state, "implement", result))
+        result = self.result(state, "sync_after", files=["product.txt"], context_status="current",
+                             requires_revalidation=False,
+                             validation=[{"command": "git diff --check", "exit_code": 0}])
+        report = Path(state["state_path"]).parent / "sync_after.md"
+        for body, reason in (
+                ("## Summary\n\nDone.\n\n## Files Changed\n\n- product.txt\n", "PR Preparation"),
+                ("## PR Preparation\n\nDone.\n\n**Validation:** passes\n", "## Validation"),
+                ("## PR Preparation\n\nDone.\n\n## Validation\n\nok\n\n## QA\n\n1. Open\n", "report sections")):
+            report.write_text(f"# Report\n\n{body}")
+            self.assertIn(reason, self.checkpoint(state, "sync_after", result, success=False)["reason"])
+        report.write_text(f"# Report\n{self.PR_BODY}")
+        self.assertEqual(self.checkpoint(state, "sync_after", result)["stage"], "handoff")
+
     def test_delivered_run_returns_qa_steps_from_final_report(self):
         state = self.begin()
         state = self.checkpoint(state, "plan", self.result(state, "plan"))
         (self.repo / "product.txt").write_text("updated\n")
         result = self.result(state, "implement", files=["product.txt"],
                              validation=[{"command": "git diff --check", "exit_code": 0}])
-        state = self.checkpoint(state, "implement", result)
+        state = self.reviewed(self.checkpoint(state, "implement", result))
         self.assertNotIn("qa_guide", state)
         result = self.result(state, "sync_after", files=["product.txt"], context_status="current",
                              requires_revalidation=False,
                              validation=[{"command": "git diff --check", "exit_code": 0}])
         report = Path(state["state_path"]).parent / "sync_after.md"
         qa = "## QA Handoff\n\nEnvironment: staging\n\n## QA Steps For Non-Developer\n\n1. Open the page\n   - Expected: updated text"
-        report.write_text(f"# Report\n\n{qa}\n\n## Plan\n\nplan.md\n")
+        report.write_text(f"# Report\n\n{qa}\n\n## Plan\n\nplan.md\n{self.PR_BODY}")
         state = self.checkpoint(state, "sync_after", result)
         self.git(self.repo, "add", "product.txt")
         self.git(self.repo, "commit", "-m", "Delivered fixture change")
@@ -661,7 +688,8 @@ class RunStateTests(unittest.TestCase):
         result = self.result(state, "implement", files=["product.txt", ".shipit/stack.md"],
                              validation=[{"command": "git diff --check", "exit_code": 0}])
         state = self.checkpoint(state, "implement", result)
-        self.assertEqual(state["stage"], "sync_after")
+        self.assertEqual(state["stage"], "review")
+        state = self.reviewed(state)
         builder = Path(state["artifacts"]["implement"]["path"]).read_bytes()
         self.owned(state, "verify")
         result = self.result(state, "handoff", delivery_status="completed")
@@ -699,7 +727,7 @@ class RunStateTests(unittest.TestCase):
         (self.repo / "product.txt").write_text("updated\n")
         result = self.result(state, "implement", files=["product.txt"],
                              validation=[{"command": "check", "exit_code": 0}])
-        state = self.checkpoint(state, "implement", result)
+        state = self.reviewed(self.checkpoint(state, "implement", result))
         failed = self.result(state, "sync_after", status="blocked", files=["product.txt"],
                              blockers=["New required check failed"])
         state = self.owned(state, "repair", "--reason", "New check", "--result-file", str(failed))
@@ -709,7 +737,54 @@ class RunStateTests(unittest.TestCase):
         result = self.result(state, "implement", files=["product.txt"],
                              validation=[{"command": "new check", "exit_code": 0}])
         state = self.checkpoint(state, "implement", result)
-        self.assertEqual(state["stage"], "sync_after")
+        self.assertEqual(state["stage"], "review")
+
+    def built(self):
+        state = self.begin()
+        state = self.checkpoint(state, "plan", self.result(state, "plan"))
+        (self.repo / "product.txt").write_text("updated\n")
+        result = self.result(state, "implement", files=["product.txt"],
+                             validation=[{"command": "check", "exit_code": 0}])
+        return self.checkpoint(state, "implement", result)
+
+    def test_review_must_fix_returns_to_builder_once_then_needs_the_user(self):
+        state = self.built()
+        self.assertEqual(state["stage"], "review")
+        failed = self.result(state, "review", status="blocked", files=["product.txt"],
+                             blockers=["Must fix: empty input crashes"])
+        self.assertEqual(self.checkpoint(state, "review", failed, success=False)["status"], "blocked")
+        state = self.owned(state, "repair", "--reason", "Must fix", "--result-file", str(failed))
+        self.assertEqual(state["stage"], "implement")
+        self.assertEqual(set(state["artifacts"]), {"sync_before", "plan"})
+        (self.repo / "product.txt").write_text("fixed\n")
+        result = self.result(state, "implement", files=["product.txt"],
+                             validation=[{"command": "check", "exit_code": 0}])
+        state = self.checkpoint(state, "implement", result)
+        failed = self.result(state, "review", status="blocked", files=["product.txt"],
+                             blockers=["Must fix: still crashes"])
+        reason = self.owned(state, "repair", "--reason", "Again", "--result-file", str(failed),
+                            success=False)["reason"]
+        self.assertIn("--user-decision", reason)
+        state = self.owned(state, "repair", "--reason", "Again", "--result-file", str(failed),
+                           "--user-decision", "User asked for one more round")
+        self.assertEqual(state["stage"], "implement")
+        self.assertEqual(state["repairs"][-1]["user_decision"], "User asked for one more round")
+
+    def test_review_cannot_approve_changed_code(self):
+        state = self.built()
+        (self.repo / "product.txt").write_text("reviewer edit\n")
+        result = self.result(state, "review")
+        self.assertIn("Validated file changed", self.checkpoint(state, "review", result, success=False)["reason"])
+
+    def test_human_qa_failure_invalidates_review(self):
+        state = self.implemented()
+        self.assertIn("review", state["artifacts"])
+        self.git(self.repo, "add", "product.txt")
+        self.git(self.repo, "commit", "-m", "Delivered fixture change")
+        state = self.checkpoint(state, "handoff", self.result(state, "handoff", delivery_status="completed"))
+        state = self.owned(state, "qa", "--outcome", "fail", "--feedback", "Step 1 failed")
+        self.assertNotIn("review", state["artifacts"])
+        self.assertNotIn("review_repairs", state)
 
     def test_legacy_active_run_requires_explicit_reconciliation(self):
         state = self.begin()
@@ -731,7 +806,7 @@ class RunStateTests(unittest.TestCase):
         (self.repo / "product.txt").write_text("updated\n")
         result = self.result(state, "implement", files=["product.txt"],
                              validation=[{"command": "check", "exit_code": 0}])
-        state = self.checkpoint(state, "implement", result)
+        state = self.reviewed(self.checkpoint(state, "implement", result))
         (self.repo / ".shipit/stack.md").write_text("New evidence\n")
         result = self.result(state, "sync_after", status="blocked",
                              files=["product.txt", ".shipit/stack.md"], blockers=["Plan conflict"])
@@ -757,12 +832,14 @@ class RunStateTests(unittest.TestCase):
             "sync": {"model": "gpt-6.1-sol", "effort": "medium"},
             "plan": {"model": "gpt-6-astra", "effort": "high"},
             "implement": {"model": "gpt-6.1-sol", "effort": "high"},
+            "review": {"model": "gpt-6-astra", "effort": "high"},
             "handoff": {"model": "gpt-6-luna", "effort": "medium"},
         })
         self.assertEqual(self.call("routes", "--provider", "anthropic")["routes"], {
             "sync": {"model": "claude-sonnet-5-5", "effort": "medium"},
             "plan": {"model": "claude-opus-5-5", "effort": "high"},
             "implement": {"model": "claude-sonnet-5-5", "effort": "high"},
+            "review": {"model": "claude-opus-5-5", "effort": "high"},
             "handoff": {"model": "claude-haiku-5-5", "effort": "medium"},
         })
         self.config["run"] = {"models": {"openai": {"plan": {"model": "custom", "effort": "high"}}}}
