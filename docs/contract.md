@@ -136,6 +136,8 @@ scope. `/shipit:product-discovery` interviews you and writes the PRD;
 skips them; `code-plan` reads the story's ACs. Each task keeps the docs current:
 the plan's `Docs impact` lists the status the change proves — a story `(built)`,
 a delivered ticket, the current state — `code-implement` applies it, and `sync`
-catches what the plan missed. Scope, metrics and design are decisions: always
+catches what the plan missed. `sync` also catches up what landed outside a run:
+tickets the tracker shows completed, capabilities a later change removed, and
+open issues no story covers, listed for `product-mvp-cut`. Scope, metrics and design are decisions: always
 proposed as a patch and applied only on your yes. The rules live in
 [`references/product-context.md`](../references/product-context.md).

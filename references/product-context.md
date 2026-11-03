@@ -38,7 +38,7 @@ load the whole set.
 | `task-create` | PRD stories and non-goals, MVP class of those stories | Cite the story; flag a request that is a non-goal, `Deferred`, `Manual` or not in the PRD |
 | `task-next` | PRD goal, metrics and non-goals; MVP learning metric, core flow and story classes; `backlog.md` ticket↔story map; roadmap/current-state docs | Board outcome, relevance and ranking, after explicit priority; tracker stays authoritative |
 | `code-plan` | The cited story's ACs and MVP kept ACs; tech-design rows for it | Requirements and decisions; product status updates for `Docs impact` |
-| `sync` | Files the delivered change makes stale | Status updates per *Keeping it current* |
+| `sync` | Files the delivered change makes stale; `backlog.md` IDs and current-state docs for catch-up | Status updates per *Keeping it current* and *Catching up* |
 
 A ticket that contradicts a product doc — builds a non-goal, a `Deferred` story,
 or an AC the MVP dropped — is a conflict to expose, never resolved silently in
@@ -50,7 +50,7 @@ Two kinds of edit, never blurred:
 
 | Kind | Examples | Policy |
 | --- | --- | --- |
-| **Status** — a fact the delivered change proves | A story's ACs all delivered → `(built)` after its PRD title and `built` in its MVP note; a backlog ticket's published ID or delivery PR; a current-state or capabilities list gaining what was built; an open question answered by the delivered evidence; the doc's date | Applied without asking, citing the plan or PR |
+| **Status** — a fact the delivered change proves | A story's ACs all delivered → `(built)` after its PRD title and `built` in its MVP note; a backlog ticket's published ID or delivery PR; a current-state or capabilities list gaining what was built, or dropping what a change removed or replaced; an open question answered by the delivered evidence; the doc's date | Applied without asking, citing the plan, PR, commit or issue |
 | **Decision** — what or how | Adding, reclassifying or dropping a story; changing an AC, metric, non-goal, risk or tech-design choice | Proposed as an exact patch; applied only on the user's yes |
 
 Status flow per task: `code-plan` lists the status edits in `Docs impact` with
@@ -64,6 +64,35 @@ A coordinated `run` never waits on a question: status is applied as above, and
 decisions go to the delivery report's `Known Risks or Follow-ups` as pending
 patches, never as blockers, so the run advances; the coordinator shows them
 with the QA handoff.
+
+### Catching up
+
+Status also lands outside a run: a ticket merged by hand, a story finished over
+several tickets, a capability a later change removed. Every `sync` that writes —
+standalone, or `after-implement` in a run — catches up before it reports;
+`--check` lists what it would apply, and `before-plan` leaves it to
+`after-implement`. Each edit cites its
+evidence like any status edit.
+
+1. **Tracker, read-only.** One scoped listing through the configured adapter
+   (`skills/code-handoff/references/tracker-adapters.md`), not a call per ticket,
+   gives the state of every ticket `backlog.md` lists as published. A ticket
+   closed as completed → its delivery PR in the backlog when the tracker links
+   one. A story is `(built)` / `built` once completed tickets cover every AC the
+   MVP keeps; a ticket citing some ACs (`H16 (AC1)`) covers only those, and the
+   MVP note may name them. Closed as not planned or duplicate, or reopened → a
+   report line, never a mark. Unreachable tracker → product status `unknown`,
+   never `current`; the contract baseline does not depend on it.
+2. **Commits since the baseline.** Changes merged since the head in
+   `.shipit/sync-state.json` that add, remove or replace a capability a
+   current-state doc names → status edit, citing the PR or commit. A claim the
+   code contradicts with no change to explain it → proposed patch.
+3. **Unclassified work.** Open tracker issues in scope that no backlog row
+   cites and that cite no story → listed for `/shipit:product-mvp-cut`, never
+   written into a product doc.
+
+In a run, catch-up edits unrelated to the task go to the delivery report's
+`Files Changed` under their own line, so the reviewer sees them as bookkeeping.
 
 New stories and reclassifications belong to `product-mvp-cut`, which appends
 them to the PRD with the next free ID. Other skills point there.
