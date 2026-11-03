@@ -35,7 +35,9 @@ a newer schema → report the gap; never reset it from a template.
 - Preserve all `shipit:design` blocks and design files. Report design drift to
   `shipit:design-system`; do not turn a new implementation into an approved design.
 - Product context follows `../../references/product-context.md`: apply status
-  edits the delivered change proves, propose decisions as patches, repair the
+  edits the delivered change proves, catch up status that landed outside a run
+  (its *Catching up*: tracker read-only, commits since the baseline, unclassified
+  open issues listed), propose decisions as patches, repair the
   `shipit:product` block. Product docs outside `.shipit/` → report them as
   migration candidates for `/shipit:init`; never move them here. Knowledge docs
   in `docs/` are reported the same way.
@@ -65,6 +67,7 @@ a newer schema → report the gap; never reset it from a template.
    manifests, CI, agent instructions, rule exemplars and related sources. A new
    HEAD alone does not require regeneration. Check external tracker reachability
    and referenced targets when relevant; local hashes cannot prove remote freshness.
+   Product docs present → include the product catch-up in scope.
    Check configured executables and companion availability even with unchanged
    sources: a different host or removed tool can invalidate availability evidence.
 3. **Migrate and rediscover.** Apply required config migrations per the reference.
@@ -104,7 +107,8 @@ a newer schema → report the gap; never reset it from a template.
    outstanding drift before advancing the global baseline. No differences → no
    rewrites, including dates. A failed/partial run never certifies freshness.
 7. **Report.** State phase, baseline status, changed/retired/preserved paths,
-   documentation conflicts, separate structural/semantic graph state, exact
+   documentation conflicts, product catch-up (applied with evidence, proposed,
+   unclassified issues, or `unknown`), separate structural/semantic graph state, exact
    validation and remaining unknowns, including `docs-lookup.md`'s one-line
    notice when a lookup could not be made.
    Use `language.plan`. Return `completed`, `blocked` or `failed`, with concrete
@@ -149,6 +153,7 @@ user and Debt added entries into its `Known Risks or Follow-ups`, verbatim.
 
 - `--check`: local inspection and relevant read-only checks; no writes or baseline
   certification. Report `current`, `stale`, or `unknown`, and what remains to inspect.
+  Product catch-up is listed as it would apply, not written.
   Version drift is listed by package and versions; docs lookups wait for a normal sync.
 - `--upgrade`: migrate only config using `references/reconciliation.md`. It does
   not certify docs or graph freshness or record a new context baseline. Normal

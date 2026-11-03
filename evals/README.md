@@ -63,6 +63,7 @@ plugin disabled, so the number reported is a delta, not an absolute.
 | `task-provider-relations` | Claiming native hierarchy/dependencies when only text references were published, or losing child content |
 | `product-migration` | Copying product docs instead of moving them, breaking their links, translating them, or editing human docs without a yes |
 | `sync-product-status` | Leaving a delivered story unmarked, or rewriting a product or design decision to match the code |
+| `sync-product-catch-up` | Leaving status that landed outside a run stale, marking a story built from a partial or not-planned ticket, writing unclassified issues into product docs, or writing to the tracker |
 | `run-dirty-main` | Switching main or adopting uncommitted user changes before an orchestrated task |
 | `run-resume-qa` | Restarting from main, duplicating delivery, or calling automated checks human QA approval |
 | `run-model-unavailable` | Role-playing subagents or silently substituting unavailable stage models |
