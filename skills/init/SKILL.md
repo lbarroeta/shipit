@@ -61,8 +61,9 @@ a fact is the drift this avoids.
   confirmed with the step-1 plan. They stay human docs after the move.
 - **Domain terms** — a term the README, docs or product docs define, with its
   model or entity → seed `.shipit/glossary.md` per
-  `../../references/domain-model.md`, read only when such a definition exists.
-  None → no glossary. Never a decision record.
+  `../../references/domain-model.md`: one line per term, its `_Code_` and the
+  defining doc as `path:line`, never the doc's paragraph. None → no glossary.
+  Never a decision record.
 
 Each `.shipit/` file states only what the repo's docs do not, and links the doc
 that covers the rest: `.shipit/conventions.md` links the team's conventions doc
