@@ -45,6 +45,8 @@ Read narrow. Bulk-loading is the single biggest token sink in this flow.
 - Required: `references/discovery-protocol.md`. Every run does discovery, and it
   owns the graph-before-`rg` order (graphify is the supported graph tool; its
   read commands come from `config.json`, never from its own skill or docs).
+- Required only for a `Bug` ticket (the draft's type line, or the tracker's issue
+  type or label): `../../references/bug-diagnosis.md`, Phases 1–2.
 - Required only when UI is touched and `<paths.rules>/design.md` exists: that
   file, then the `.shipit/design-system.md` sections it points to for the surface and
   components involved. A layer rule's `shipit:design` block is the cue. Backend-only
@@ -72,7 +74,8 @@ Read narrow. Bulk-loading is the single biggest token sink in this flow.
   exists before naming it. `.shipit/config.json` records verified commands — use
   those, and never invent a sibling.
 - No verification commands and no red/green sequencing in the plan. `code-implement`
-  owns both.
+  owns both. A `Bug` plan's red command in `Diagnosis` is evidence already run, not
+  an instruction.
 - Tracker issue id present → preserve it in the slug: `<issue-id>-<slug>`.
 - UI touched → the plan includes `Manual QA`. With a design contract present it
   also carries `Design`: the pattern, the existing components by path, the states
@@ -154,6 +157,9 @@ planner owns this same transition and returns a blocked result to the coordinato
    graph on disk → stale config, protocol § 0 covers it. Find one analogue per new
    file, verify affected consumers/effects/tests, and resolve essential unknowns.
    Check the stack failure modes the change reaches, per `senior-stance.md`.
+   `Bug` ticket → discovery opens with `bug-diagnosis.md` Phases 1–2 and fills
+   `Diagnosis`; no red-capable loop → blocked, not planned. A loop file stays
+   untracked and is named in `Diagnosis`.
    Stop when the evidence criteria are met, not after a fixed number of searches.
 5. **Responsibilities.** Place each responsibility under `senior-stance.md` § Design
    principles: the unit that owns it, the extension point it uses, the collaborators

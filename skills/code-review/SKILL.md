@@ -26,6 +26,8 @@ next stage can act on. It never edits code.
 - Required when the diff touches an entry point, authorization, scoped data, trust
   boundary input, secrets, or query/shell construction:
   `../code-implement/references/security-standards.md`.
+- Required when the plan has `Diagnosis`: `../../references/bug-diagnosis.md`
+  § Phase 5 and § Phase 6.
 - Source beyond the diff: the callers, callees and tests of what changed — what
   `ponytail-review` § Understand first asks for. A graph query before `rg` when
   `graph` is set and its output is present. Nothing else.
@@ -64,6 +66,10 @@ next stage can act on. It never edits code.
      paths` row is implemented with its expected behaviour and proved; no behaviour
      change outside the plan; files outside the plan's `Files` carry a reason.
    - **Repo contract**: the touched layers' and tests' rules.
+   - **Bug fix** (plan has `Diagnosis`): the regression test sits at a correct
+     seam and exercises the real bug pattern, or the report records why none
+     exists; a shallower test presented as coverage is a Should fix. A surviving
+     `[DEBUG-` tag or throwaway harness is a Must fix.
    - **Senior stance**: `senior-stance.md` — framework idiom, stack failure modes,
      test quality and speed, operability, design principles — applied to the lines
      changed.

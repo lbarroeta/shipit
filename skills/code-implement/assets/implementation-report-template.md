@@ -63,6 +63,13 @@ results separately retain their full ownership manifest for validation.
 | --- | --- | --- |
 | `<path>` | `.shipit/rules/tests/<kind>.md` | <AC IDs/regression and behaviour> |
 
+## Diagnosis
+
+<Bug plans only; delete otherwise.>
+
+Confirmed hypothesis: <cause, and the probe that proved it>
+Phase 6: original loop `<command>` → <green | red> · regression test <`path` green | no correct seam — why> · `[DEBUG-` grep → <none left> · throwaway harness → <deleted | none>
+
 ## Validation Commands Run
 
 Exact commands, placeholders substituted, with exit codes. Tie results to the

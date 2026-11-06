@@ -24,6 +24,8 @@ verified with commands that are known to run in this repo.
   failure modes of the detected stack, test quality, operability, SOLID and Clean
   Code.
 - Required: `references/validation-standards.md`. Every run validates.
+- Required only when the plan has `Diagnosis`: `../../references/bug-diagnosis.md`,
+  Phases 3–6.
 - Required only when the plan touches UI and `<paths.rules>/design.md` exists:
   that file, and the `.shipit/design-system.md` sections the plan's `Design` names.
   Backend-only → never.
@@ -105,6 +107,10 @@ verified with commands that are known to run in this repo.
    the required validation gap under `validation-standards.md` and point to
    `/shipit:sync`. Never fall back to `test_all`; never silently skip the loop.
    A plan requiring no automated tests does not need an artificial red/green loop.
+   Plan with `Diagnosis` → this step is `bug-diagnosis.md` Phases 3–6, starting
+   from its red command, hypotheses and seam. A loop file `Diagnosis` names is
+   the plan's, not user work. The report states the confirmed hypothesis and the
+   Phase 6 results.
 4. **Implement.** The smallest correct change. Repo patterns over new structure —
    including their comment density — then the framework's idiom at the installed
    version, SOLID and Clean Code, per `senior-stance.md`. Apply the ladder as stance, not as licence to
@@ -215,8 +221,8 @@ Include the exact failing command output when the stop came from repeated failur
 
 Use `assets/implementation-report-template.md`. Sections in that order: QA Handoff,
 QA Steps For Non-Developer, Plan, Summary, Files Changed, Tests Added/Updated,
-Validation Commands Run, Security Notes, Handoff, Known Risks or Follow-ups,
-PR Preparation.
+Diagnosis (Bug plans only), Validation Commands Run, Security Notes, Handoff,
+Known Risks or Follow-ups, PR Preparation.
 
 ## Flag
 
