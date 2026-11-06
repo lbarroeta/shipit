@@ -34,6 +34,8 @@ Read narrow. Bulk-loading is the single biggest token sink in this flow.
   `.shipit/rules/tests/<kind>.md` for each test planned. Only those.
 - Required: `references/input-baseline.md` for explicit inputs and repo state.
 - Required: `references/ambiguity-policy.md` for decision precedence and blockers.
+- Required only when several or dependent essential gaps are open:
+  `../../references/grilling.md` for the question rounds.
 - Required: `references/output-contract.md`. It owns sections, detail budget, and
   prohibited output; this file does not restate it.
 - Required: `../../references/lean-ladder.md`, relative to this skill directory,
@@ -165,8 +167,10 @@ planner owns this same transition and returns a blocked result to the coordinato
 7. **Scope gate.** Run the ladder over the `Files` table. Every `Create` row
    passes rungs 1–4 or it does not ship. What the gate rejects goes to
    `Out of scope` as `skipped: <X>, add when <Y>`.
-8. **Ambiguity.** `references/ambiguity-policy.md`. Essential gap → blocked
-   artifact and precise question. Nonessential bounded gap → evidenced assumption.
+8. **Ambiguity.** `references/ambiguity-policy.md`. Several or dependent
+   essential gaps → `../../references/grilling.md` rounds first. Essential gap
+   left → blocked artifact and precise question. Nonessential bounded gap →
+   evidenced assumption.
 9. **Gates.** UI touched → `Manual QA` filled, UI states in `Notes`, and `Design`
    filled when `<paths.rules>/design.md` exists. Migration, consumed contract,
    cache key or config change → `Rollout` filled. Docs made
