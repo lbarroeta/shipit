@@ -35,3 +35,15 @@ plugin is a required companion for code-review and run's review stage.
 
 Two rules in lean-ladder.md deliberately override ponytail inside the shipit
 flow — see that file's "Where this overrides ponytail" section.
+
+This product includes work derived from mattpocock/skills.
+
+  skills — https://github.com/mattpocock/skills
+  Commit 4ae2317
+  Copyright (c) 2026 Matt Pocock
+  Licensed under the MIT License
+
+What was derived: text adapted from its `grilling`, `domain-modeling`,
+`to-tickets`, `diagnosing-bugs`, `retro` and `pr` skills. The `retro` skill
+became skills/retro/SKILL.md; the `pr` skill's Merge Danger section became the
+Merge danger section of skills/code-implement/assets/pr-description-template.md.

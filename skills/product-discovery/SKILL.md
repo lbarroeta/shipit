@@ -35,6 +35,8 @@ reads it to find out what to answer.
 - `.shipit/product/prd.md` exists → update it: keep confirmed content and IDs,
   interview only for what is missing or what the user says changed.
 - On the first save, write the pointer block per `product-context.md § Pointer`.
+- Domain terms that crystallize in the interview go to `.shipit/glossary.md` as
+  they resolve, per `../../references/domain-model.md § Working with it`.
 - No product code, git or tracker writes. The file is ready for the user to
   commit; `code-handoff` has no mode for it.
 

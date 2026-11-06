@@ -69,10 +69,13 @@ refactored button — is a later `/shipit:task-create` or `/shipit:code-plan`.
   the whole set, or a delegation covers what was not confirmed. Anything short of
   that is `Status: draft` with every pending decision and what depends on it.
 - **Never touch product code.** No edit outside the two design files, the marked
-  blocks, and a preview file outside the repo. No install, no git, no tracker, no
-  write to `.shipit/config.json`.
+  blocks, `.shipit/glossary.md` and a preview file outside the repo. No install,
+  no git, no tracker, no write to `.shipit/config.json`.
 - **Language.** Interview and report follow `language.plan`. The design files stay
   English, like the rest of the contract; a user's own words may be quoted.
+- **Domain terms.** A product or UI term the user resolves in the interview goes
+  to `.shipit/glossary.md` when resolved, per
+  `../../references/domain-model.md § Working with it`.
 - **Idempotent.** Each file exists once and each block once per file, replaced in
   place. A second run updates; it never appends a copy.
 

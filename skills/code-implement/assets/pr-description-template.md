@@ -33,6 +33,16 @@ lands here as its deploy order and rollback in one or two bullets. Omit this sec
 is nothing specific to review; no generic "Low risk" or speculative hazards.
 Mention an exclusion only when it explains a likely review question.>
 
+## Merge danger
+
+**Door:** <one-way or two-way. One-way: no cheap rollback — destructive migration,
+data backfill, external contract change. A one-way door is always stated.>
+
+**Blast radius:** <one phrase: consumers, layout, mobile, all tenants…>
+
+<Optional: one line of ramifications. Omit the whole section for a two-way change
+with no blast radius worth naming.>
+
 ## Validation
 
 <State what final checks prove, with relevant exact commands and final results

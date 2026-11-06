@@ -34,15 +34,22 @@ Read narrow. Bulk-loading is the single biggest token sink in this flow.
   `.shipit/rules/tests/<kind>.md` for each test planned. Only those.
 - Required: `references/input-baseline.md` for explicit inputs and repo state.
 - Required: `references/ambiguity-policy.md` for decision precedence and blockers.
+- Required only when several or dependent essential gaps are open:
+  `../../references/grilling.md` for the question rounds.
 - Required: `references/output-contract.md`. It owns sections, detail budget, and
   prohibited output; this file does not restate it.
 - Required: `../../references/lean-ladder.md`, relative to this skill directory,
   for the scope gate.
 - Required: `../../references/senior-stance.md` — the stack-specific senior judgement,
   test quality, operability, SOLID and Clean Code behind discovery and decisions.
+- Required when `.shipit/glossary.md` exists: the terms the request and the
+  touched area name, and any decision record they cite or whose title matches, per
+  `../../references/domain-model.md`.
 - Required: `references/discovery-protocol.md`. Every run does discovery, and it
   owns the graph-before-`rg` order (graphify is the supported graph tool; its
   read commands come from `config.json`, never from its own skill or docs).
+- Required only for a `Bug` ticket (the draft's type line, or the tracker's issue
+  type or label): `../../references/bug-diagnosis.md`, Phases 1–2.
 - Required only when UI is touched and `<paths.rules>/design.md` exists: that
   file, then the `.shipit/design-system.md` sections it points to for the surface and
   components involved. A layer rule's `shipit:design` block is the cue. Backend-only
@@ -70,7 +77,8 @@ Read narrow. Bulk-loading is the single biggest token sink in this flow.
   exists before naming it. `.shipit/config.json` records verified commands — use
   those, and never invent a sibling.
 - No verification commands and no red/green sequencing in the plan. `code-implement`
-  owns both.
+  owns both. A `Bug` plan's red command in `Diagnosis` is evidence already run, not
+  an instruction.
 - Tracker issue id present → preserve it in the slug: `<issue-id>-<slug>`.
 - UI touched → the plan includes `Manual QA`. With a design contract present it
   also carries `Design`: the pattern, the existing components by path, the states
@@ -152,6 +160,9 @@ planner owns this same transition and returns a blocked result to the coordinato
    graph on disk → stale config, protocol § 0 covers it. Find one analogue per new
    file, verify affected consumers/effects/tests, and resolve essential unknowns.
    Check the stack failure modes the change reaches, per `senior-stance.md`.
+   `Bug` ticket → discovery opens with `bug-diagnosis.md` Phases 1–2 and fills
+   `Diagnosis`; no red-capable loop → blocked, not planned. A loop file stays
+   untracked and is named in `Diagnosis`.
    Stop when the evidence criteria are met, not after a fixed number of searches.
 5. **Responsibilities.** Place each responsibility under `senior-stance.md` § Design
    principles: the unit that owns it, the extension point it uses, the collaborators
@@ -162,11 +173,17 @@ planner owns this same transition and returns a blocked result to the coordinato
    through `output-contract.md` § Failure paths; every kept row gets a decided
    expected behaviour and its proof. Resolve essential
    choices using the decision precedence; record real dependency ordering only.
+   Name symbols and `Decisions` in glossary terms; a conflicting term is an
+   ambiguity. A new term, or a `Decisions` entry that is hard to reverse,
+   surprising and a real trade-off, becomes a proposed patch in `Docs impact`
+   per `domain-model.md`.
 7. **Scope gate.** Run the ladder over the `Files` table. Every `Create` row
    passes rungs 1–4 or it does not ship. What the gate rejects goes to
    `Out of scope` as `skipped: <X>, add when <Y>`.
-8. **Ambiguity.** `references/ambiguity-policy.md`. Essential gap → blocked
-   artifact and precise question. Nonessential bounded gap → evidenced assumption.
+8. **Ambiguity.** `references/ambiguity-policy.md`. Several or dependent
+   essential gaps → `../../references/grilling.md` rounds first. Essential gap
+   left → blocked artifact and precise question. Nonessential bounded gap →
+   evidenced assumption.
 9. **Gates.** UI touched → `Manual QA` filled, UI states in `Notes`, and `Design`
    filled when `<paths.rules>/design.md` exists. Migration, consumed contract,
    cache key or config change → `Rollout` filled. Docs made

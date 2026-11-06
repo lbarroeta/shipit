@@ -30,6 +30,9 @@ If a competitor is named or obvious, read its site, pricing, and app-store
 listing. Report in 3–5 lines what it offers and where the gap is: feature,
 experience, or business model. Never ask the user to describe what you can read.
 
+Rounds 3–5 put each question in the format of `../../../references/grilling.md`
+§ Rounds: numbered, titled, with a recommended answer that "yes" accepts.
+
 ## Round 3 — Shape (up to 4 multiple-choice questions)
 
 Use the runtime's interactive question tool when it has one; otherwise ask in

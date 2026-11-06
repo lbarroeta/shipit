@@ -41,6 +41,10 @@ Ask and stop dependent planning when missing/contradictory evidence changes:
 How many lines a reversal takes is not the test. A one-line permission or refund
 rule can be essential; a conventional file layout need not block a plan.
 
+More than one essential blocker open, or blockers that depend on each other →
+resolve them first with the rounds in `../../../references/grilling.md`.
+`## Blockers` then records only what stays open.
+
 ```markdown
 ## Blockers
 

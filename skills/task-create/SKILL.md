@@ -31,8 +31,12 @@ context that makes it hard to pick up. Decide with evidence and say why.
 - Required in epic mode only: `references/split-policy.md`.
 - Required when `.shipit/product/` exists: the PRD stories, non-goals and MVP
   class the request touches, per `../../references/product-context.md § Who reads what`.
+- Required when `.shipit/glossary.md` exists: the terms the request names, per
+  `../../references/domain-model.md`.
 - Optional when uncertainty needs classification:
   `../code-plan/references/ambiguity-policy.md`.
+- Required only when more than one essential unknown is open:
+  `../../references/grilling.md`.
 - Ground narrowly: one graph query or two `rg` passes, at most three relevant
   files initially. Read a specific additional source when needed to settle a
   material scope or business-rule question; stop before implementation discovery.
@@ -64,6 +68,9 @@ context that makes it hard to pick up. Decide with evidence and say why.
   evidence. No source-code inspection is an acceptance test.
 - **Concise, complete.** Cut repetition and boilerplate; there is no fixed line,
   bullet or scenario quota. Do not cut a scope boundary or expected result to fit.
+- **Domain language.** Draft in the glossary's canonical terms; challenge a
+  conflicting or fuzzy term per `domain-model.md § Working with it`. Unresolved →
+  `Blockers`; a new term → a proposed patch in the report, never written here.
 - **No invented business rules.** Use the request, verified repo behaviour or an
   explicit authorized decision. Ask for essential missing scope, security, data,
   monetary or external-contract behaviour before finalizing. A convenient default
@@ -128,8 +135,9 @@ context that makes it hard to pick up. Decide with evidence and say why.
 6. **Split gate.** Epic only: apply `references/split-policy.md`. Use the index for
    navigation and the full child sections for issue bodies. Identify true
    prerequisites with unblock conditions; keep preferred order separate.
-7. **Ambiguity gate.** Ask on essential unknowns. Preserve a partial local draft
-   with `Blockers` if unanswered; mark it not ready. Known dependencies belong in
+7. **Ambiguity gate.** Ask on essential unknowns, in the rounds of
+   `../../references/grilling.md` when more than one is open. Preserve a partial
+   local draft with `Blockers` if unanswered; mark it not ready. Known dependencies belong in
    `Dependencies` and do not invalidate a fully defined blocked task.
 8. **Self-check and write.** Apply output-contract checks, fix, then write
    `<paths.tasks>/<slug>.md` (default `.shipit/tasks`). Local scratch; once published,

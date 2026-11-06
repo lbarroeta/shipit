@@ -35,6 +35,8 @@ mode — run by the user, and each step only as far as `handoff.allow` permits. 
   that calls a library API no cited analogue shows at the installed version, a
   comment that claims an API behaves a certain way, or a red check on an unknown
   method, signature or deprecation.
+- `../../references/bug-diagnosis.md` only for an approved CI `fix` whose root
+  cause the log does not already show.
 - Never bulk-load rules or docs. A three-line fix does not justify reading the
   layer's whole rule set.
 
@@ -187,7 +189,9 @@ time it appears.
    its reason or question to the report. For each: reproduce with
    `commands.test_one` (CI items) → confirm the expected red → minimal fix →
    targeted test green → next item. One item at a time; batching fixes makes it
-   impossible to say which change resolved which thread.
+   impossible to say which change resolved which thread. A red check whose cause
+   the log does not show: the failing check run locally is the `bug-diagnosis.md`
+   Phase 1 loop; continue from Phase 2.
 4. **Validate.** The full chain from
    `../code-implement/references/validation-standards.md`, relative to this skill
    directory — same order, same reporting, same contract-drift rule. Exact
