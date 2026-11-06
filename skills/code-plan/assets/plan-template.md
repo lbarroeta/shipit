@@ -46,6 +46,15 @@ body. Required when planning a tracker issue or a draft with dependencies.>
 symbols. State graph-assisted/source-only discovery and material freshness or
 coverage gaps. Keep only findings needed to justify this plan.>
 
+## Diagnosis
+
+<Only for a `Bug` ticket, per `bug-diagnosis.md` Phases 1–2. Delete otherwise.>
+
+- Red command: `<invocation>` → <redacted output: the user's exact symptom>
+- Minimised repro: <only the load-bearing elements>
+- Hypotheses: <3–5 ranked, each "if X, changing Y makes it disappear" — or the one confirmed>
+- Regression seam: `<path>` at <seam> | no correct seam — <why>
+
 ## Decisions
 
 <Essential choices with accepted source/evidence. Reference controlling repo

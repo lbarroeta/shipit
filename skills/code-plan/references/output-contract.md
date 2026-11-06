@@ -75,6 +75,11 @@ Conditional sections carry content or are deleted; never fill them with `N/A`:
 - `Readiness`: required for tracker issues or drafts with dependencies. Record
   current relevance and verified prerequisite evidence, not a duplicate ticket.
 - `Worktree`: required only when created/reused; actual path, branch and base.
+- `Diagnosis`: required for a `Bug` ticket (`../../../references/bug-diagnosis.md`).
+  The red command with its redacted output, the minimised repro, the ranked
+  hypotheses or the one confirmed, and the regression test's seam — or `no correct
+  seam` and why. No red-capable loop → `Blockers` with what was tried and what is
+  needed; the rest of the plan is not drafted from a theory.
 - `Decisions`: essential choices with source/evidence and why. Cite controlling
   rules instead of repeating them. Explain exceptions to reuse/local patterns;
   apply `ambiguity-policy.md` precedence. No need to list every minor choice.
@@ -138,6 +143,7 @@ Apply these checks privately; do not emit the checklist:
 - Essential choices follow precedence; no business/security/contract guesses are
   hidden as assumptions. Blockers prevent a ready claim.
 - Real dependencies are sequenced; independent edits have no artificial phases.
+- `Bug` → `Diagnosis` holds a red command already run, or the plan is blocked.
 - Conditional UI/design/docs/worktree sections are present when required, and
   `Rollout` / `Change size` when their triggers hold.
 - No product code, verification command recipes, repetition, or empty sections.
