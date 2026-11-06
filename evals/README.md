@@ -78,6 +78,7 @@ plugin disabled, so the number reported is a delta, not an absolute.
 | `pr-description-final-evidence` | Publishing stale validation/deployment claims or hiding material migration risk after sync |
 | `pr-description-handoff-gate` | Delivering a deficient body before correction or applying the body gate when no body is published |
 | `pr-description-plan` | Expanding the entire plan by default, losing its evidence or claiming planned checks passed |
+| `retro-mechanical-vs-rule` | Proposing a product-code edit, writing a command the evidence never ran, or turning a mechanical violation into a prose rule instead of a check |
 | `pr-fix-triage` | Fixing before the approval gate, adding code for a comment that does not hold, implementing a scope change, or hiding a merge conflict behind a green-looking report |
 
 Every case targets a rule that, when broken, produces confidently wrong output

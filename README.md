@@ -31,7 +31,8 @@ repository's rules at every step:
    `handoff.allow`. In Claude Code, a `run`'s PR ends with its total time and
    tokens, broken down per skill.
 6. **Keeps context current.** `sync` updates the contract and docs as the code
-   changes, without overwriting human decisions.
+   changes, without overwriting human decisions. `retro` turns what went wrong in a
+   run into fixes to the agent's environment — checks, rules, commands, pointers.
 
 For an existing ticket, `/shipit:run ENG-412` chains steps 3–6, with a sync before
 and after, in Claude Code and Codex.
@@ -59,6 +60,7 @@ without your yes.
 | `/shipit:pr-fix` | Triages review comments (`--comments`), red CI (`--ci`) and merge conflicts — what applies, what does not and why — then fixes what you approve | The PR has feedback |
 | `/shipit:run` | sync → plan → implement → review → sync → handoff for an existing ticket | You have a ticket and want it done |
 | `/shipit:status` | Lists in-flight tasks with their PR and tracker state | Anytime; `--prune` removes merged worktrees |
+| `/shipit:retro` | Proposes fixes to the agent's environment (checks, rules, commands, pointers) as exact patches; never product code | After a run or session that went badly or cost too much |
 
 In OpenCode the commands are `/shipit-<name>`, and `run` is not available.
 

@@ -99,11 +99,12 @@ commitment, explicit order and verified dependencies, then explains its choice,
 alternatives and blockers. It is read-only and never marks work started. `code-plan` repeats the Goal and
 prerequisite checks before its startup status transition.
 
-Plus two for visibility:
+Plus three for visibility:
 
 ```
 /shipit:doctor      do I have everything, and what does each gap cost
 /shipit:status      every in-flight worktree, its PR, its tracker state
+/shipit:retro       after a run: environment fixes as exact patches, on your yes
 ```
 
 ## Maintaining repository context
