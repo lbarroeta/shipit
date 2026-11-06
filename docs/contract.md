@@ -16,6 +16,8 @@ the contract, never copied into it.
 | `.shipit/rules/<layer>.md` | agents | Layer rules derived from real files |
 | `.shipit/rules/tests/<kind>.md` | agents | Test shape, extracted from a real test |
 | `.shipit/docs/**/*.md` | agents, you | Your knowledge docs; `sync` reviews their drift, never rewrites them |
+| `.shipit/glossary.md` | agents, you | Domain terms: canonical name, definition, terms to avoid; optional, created lazily |
+| `.shipit/decisions/NNNN-<slug>.md` | agents, you | Hard-to-reverse decisions with context and alternatives; optional, created lazily |
 
 The config always lives at `.shipit/config.json`: it is how every skill finds the
 rest. `paths.plans`, `paths.tasks` and `paths.rules` can move those three.
@@ -141,3 +143,12 @@ tickets the tracker shows completed, capabilities a later change removed, and
 open issues no story covers, listed for `product-mvp-cut`. Scope, metrics and design are decisions: always
 proposed as a patch and applied only on your yes. The rules live in
 [`references/product-context.md`](../references/product-context.md).
+
+## Domain language
+
+`.shipit/glossary.md` fixes the domain's vocabulary, so tickets, plans and
+identifiers name one concept one way; `.shipit/decisions/` records only decisions
+that are hard to reverse, surprising and a real trade-off. `init` seeds terms only
+from definitions already in your docs; after that, a new term or record is a
+decision, written only on your yes. The rules live in
+[`references/domain-model.md`](../references/domain-model.md).

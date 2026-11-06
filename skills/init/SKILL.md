@@ -59,6 +59,10 @@ a fact is the drift this avoids.
 - **Knowledge docs** — architecture, how the project runs, design reference in
   `docs/` → they move into `.shipit/docs/` per *Knowledge docs migration*,
   confirmed with the step-1 plan. They stay human docs after the move.
+- **Domain terms** — a term the README, docs or product docs define, with its
+  model or entity → seed `.shipit/glossary.md` per
+  `../../references/domain-model.md`, read only when such a definition exists.
+  None → no glossary. Never a decision record.
 
 Each `.shipit/` file states only what the repo's docs do not, and links the doc
 that covers the rest: `.shipit/conventions.md` links the team's conventions doc
@@ -212,7 +216,7 @@ linked worktree.
     write, per *Existing documentation*.
 11. **Write.** `config.json` from `assets/config-template.json`, or merged into the
     existing one; the markdown files from their templates in `assets/`, holding only
-    what the repo's docs do not state; an existing contract through sync's
+    what the repo's docs do not state; the glossary seed, when step 4 found one; an existing contract through sync's
     base/current/candidate merge (`../sync/references/reconciliation.md`).
 12. **Point at it.** Per *Discovery pointer*; record `docs.pointer`. Append
     `<paths.tasks>`, `<paths.plans>` and any `CLAUDE.local.md` to `.git/info/exclude` when nothing

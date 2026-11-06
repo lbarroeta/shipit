@@ -111,7 +111,8 @@ as a reason to rework code it does not touch.
 - **Dependency inversion.** Inject or pass collaborators that cross a boundary
   (I/O, external services, clock, randomness) the way the repo already does, so the
   unit is testable. An interface with a single implementation is still `yagni:`.
-- **Clean Code.** Names that say intent in the domain's language; small functions
+- **Clean Code.** Names that say intent in the domain's language
+  (`.shipit/glossary.md` when it exists, per `domain-model.md`); small functions
   at one level of abstraction; guard clauses over nested conditionals; no boolean
   flag arguments selecting behaviour; no magic numbers or strings the repo would
   name; commands and queries kept apart, with no hidden side effects; errors

@@ -26,6 +26,8 @@ verified with commands that are known to run in this repo.
 - Required: `references/validation-standards.md`. Every run validates.
 - Required only when the plan has `Diagnosis`: `../../references/bug-diagnosis.md`,
   Phases 3–6.
+- Required when `.shipit/glossary.md` exists: the terms the plan's `Files` name,
+  per `../../references/domain-model.md`.
 - Required only when the plan touches UI and `<paths.rules>/design.md` exists:
   that file, and the `.shipit/design-system.md` sections the plan's `Design` names.
   Backend-only → never.
@@ -113,8 +115,9 @@ verified with commands that are known to run in this repo.
    Phase 6 results.
 4. **Implement.** The smallest correct change. Repo patterns over new structure —
    including their comment density — then the framework's idiom at the installed
-   version, SOLID and Clean Code, per `senior-stance.md`. Apply the ladder as stance, not as licence to
-   deviate from the plan. A deliberate shortcut leaves a debt marker with its
+   version, SOLID and Clean Code, per `senior-stance.md`. New identifiers name
+   the glossary's canonical term, in English (`_Code_` when set). Apply the
+   ladder as stance, not as licence to deviate from the plan. A deliberate shortcut leaves a debt marker with its
    ceiling and upgrade trigger. External API not shown by a cited analogue, or a
    check failing on one → `docs-lookup.md` first, never from memory; that lookup
    is the new evidence the 3-attempt rule needs. UI work uses the components, tokens and states the
@@ -124,7 +127,8 @@ verified with commands that are known to run in this repo.
    the rules applied directly and a line under `Known Risks or Follow-ups`. Dated
    after it → the contract gate fails: `Design` is missing.
 5. **Docs sync.** The plan has a `Docs impact` section → apply each listed edit,
-   scoped to the named sections, and list the docs in `Files Changed`. No doc
+   scoped to the named sections, and list the docs in `Files Changed`. A
+   glossary or decision-record patch only once the user approved it. No doc
    rewrites. If the implementation drifted in a way that hits a docs trigger the
    plan missed, update the doc and note it under `Known Risks or Follow-ups`.
 6. **Validate.** `references/validation-standards.md`, against the final code,

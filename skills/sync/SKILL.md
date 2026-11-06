@@ -41,6 +41,9 @@ a newer schema → report the gap; never reset it from a template.
   `shipit:product` block. Product docs outside `.shipit/` → report them as
   migration candidates for `/shipit:init`; never move them here. Knowledge docs
   in `docs/` are reported the same way.
+- `.shipit/glossary.md` and `.shipit/decisions/` follow
+  `../../references/domain-model.md`: review the drift it names, apply status,
+  propose decisions as patches; never write a term or record to match the code.
 - `.shipit/docs/` holds human knowledge docs: review their drift against the rules
   that link them, propose patches, never generate, rewrite or adopt them.
 - Human docs outside generated blocks are not owned. Correct a named factual

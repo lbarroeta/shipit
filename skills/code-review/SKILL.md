@@ -23,6 +23,8 @@ next stage can act on. It never edits code.
 - Required: `../../references/senior-stance.md` and
   `../../references/lean-ladder.md`, relative to this skill directory.
 - Required: the ponytail plugin's `ponytail-review` skill.
+- Required when `.shipit/glossary.md` exists: the terms the diff's new or renamed
+  identifiers touch, per `../../references/domain-model.md`.
 - Required when the diff touches an entry point, authorization, scoped data, trust
   boundary input, secrets, or query/shell construction:
   `../code-implement/references/security-standards.md`.
@@ -65,7 +67,8 @@ next stage can act on. It never edits code.
    - **Plan conformance**: each AC has its change and evidence; each `Failure
      paths` row is implemented with its expected behaviour and proved; no behaviour
      change outside the plan; files outside the plan's `Files` carry a reason.
-   - **Repo contract**: the touched layers' and tests' rules.
+   - **Repo contract**: the touched layers' and tests' rules; a new or renamed
+     name that uses a glossary `_Avoid_` term or another concept's name.
    - **Bug fix** (plan has `Diagnosis`): the regression test sits at a correct
      seam and exercises the real bug pattern, or the report records why none
      exists; a shallower test presented as coverage is a Should fix. A surviving
