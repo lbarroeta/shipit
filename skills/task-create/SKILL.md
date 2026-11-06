@@ -31,6 +31,8 @@ context that makes it hard to pick up. Decide with evidence and say why.
 - Required in epic mode only: `references/split-policy.md`.
 - Required when `.shipit/product/` exists: the PRD stories, non-goals and MVP
   class the request touches, per `../../references/product-context.md § Who reads what`.
+- Required when `.shipit/glossary.md` exists: the terms the request names, per
+  `../../references/domain-model.md`.
 - Optional when uncertainty needs classification:
   `../code-plan/references/ambiguity-policy.md`.
 - Ground narrowly: one graph query or two `rg` passes, at most three relevant
@@ -64,6 +66,9 @@ context that makes it hard to pick up. Decide with evidence and say why.
   evidence. No source-code inspection is an acceptance test.
 - **Concise, complete.** Cut repetition and boilerplate; there is no fixed line,
   bullet or scenario quota. Do not cut a scope boundary or expected result to fit.
+- **Domain language.** Draft in the glossary's canonical terms; challenge a
+  conflicting or fuzzy term per `domain-model.md § Working with it`. Unresolved →
+  `Blockers`; a new term → a proposed patch in the report, never written here.
 - **No invented business rules.** Use the request, verified repo behaviour or an
   explicit authorized decision. Ask for essential missing scope, security, data,
   monetary or external-contract behaviour before finalizing. A convenient default

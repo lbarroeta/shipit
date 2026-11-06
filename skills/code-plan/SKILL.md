@@ -40,6 +40,9 @@ Read narrow. Bulk-loading is the single biggest token sink in this flow.
   for the scope gate.
 - Required: `../../references/senior-stance.md` — the stack-specific senior judgement,
   test quality, operability, SOLID and Clean Code behind discovery and decisions.
+- Required when `.shipit/glossary.md` exists: the terms the request and the
+  touched area name, and any decision record they cite or whose title matches, per
+  `../../references/domain-model.md`.
 - Required: `references/discovery-protocol.md`. Every run does discovery, and it
   owns the graph-before-`rg` order (graphify is the supported graph tool; its
   read commands come from `config.json`, never from its own skill or docs).
@@ -162,6 +165,10 @@ planner owns this same transition and returns a blocked result to the coordinato
    through `output-contract.md` § Failure paths; every kept row gets a decided
    expected behaviour and its proof. Resolve essential
    choices using the decision precedence; record real dependency ordering only.
+   Name symbols and `Decisions` in glossary terms; a conflicting term is an
+   ambiguity. A new term, or a `Decisions` entry that is hard to reverse,
+   surprising and a real trade-off, becomes a proposed patch in `Docs impact`
+   per `domain-model.md`.
 7. **Scope gate.** Run the ladder over the `Files` table. Every `Create` row
    passes rungs 1–4 or it does not ship. What the gate rejects goes to
    `Out of scope` as `skipped: <X>, add when <Y>`.
