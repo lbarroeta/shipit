@@ -120,6 +120,24 @@ class RunStateTests(unittest.TestCase):
         self.git(self.repo, "push", "-u", "origin", "codex/42-product")
         return self.checkpoint(state, "handoff", self.result(state, "handoff", delivery_status="completed"))
 
+    def baseline(self):
+        """Record a current sync baseline on main, as sync on the main checkout does after a run."""
+        for name in (".shipit/stack.md", ".shipit/conventions.md"):
+            (self.seed / name).write_text(f"# {name}\n")
+        (self.seed / ".shipit/config.json").write_text(json.dumps(self.config))
+        self.git(self.seed, "add", ".shipit")
+        self.git(self.seed, "commit", "-m", "Contract")
+        inventory = self.directory / "inventory.json"
+        inventory.write_text(json.dumps({"managed": [".shipit/config.json", ".shipit/stack.md",
+                                                     ".shipit/conventions.md"], "unresolved": []}))
+        result = subprocess.run([sys.executable, str(ROOT / "skills/sync/scripts/context_state.py"),
+                                 "--repo", str(self.seed), "record", "--inventory", str(inventory)],
+                                text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.git(self.seed, "add", ".shipit/sync-state.json")
+        self.git(self.seed, "commit", "-m", "Record context baseline")
+        self.git(self.seed, "push")
+
     def worktree(self):
         """Move the fixture into a linked worktree, as a separate session would; return the main checkout."""
         main, self.repo = self.repo, self.directory / "session"
@@ -406,6 +424,50 @@ class RunStateTests(unittest.TestCase):
         locks = Path(self.git(main, "rev-parse", "--path-format=absolute", "--git-common-dir")) / "shipit/locks"
         [checkout] = locks.glob("checkout-*.json")
         self.assertEqual(json.loads(checkout.read_text())["repo"], self.git(self.repo, "rev-parse", "--show-toplevel"))
+
+    def test_context_skips_sync_before_when_baseline_is_current(self):
+        self.config["commands"] = {"test_one": "git diff --check {path}"}
+        self.baseline()
+        state = self.begin(sync=False)
+        self.assertEqual(state["stage"], "sync_before")
+        state = self.owned(state, "context")
+        self.assertTrue(state["context"]["skipped"])
+        self.assertEqual(state["stage"], "plan")
+        self.assertTrue(Path(state["artifacts"]["sync_before"]["path"]).is_file())
+        self.assertEqual(state["agents"][-1], {"stage": "sync_before", "agent_id": None, "requested": None,
+                                               "effective": None, "skipped": "context unchanged"})
+        self.assertIn("only applicable before planning", self.owned(state, "context", success=False)["reason"])
+        self.assertEqual(self.checkpoint(state, "plan", self.result(state, "plan"))["stage"], "implement")
+
+    def test_context_dispatches_sync_without_baseline_or_after_source_changes(self):
+        state = self.begin(sync=False)
+        checked = self.owned(state, "context")
+        self.assertFalse(checked["context"]["skipped"])
+        self.assertIn("uninitialized", checked["context"]["reason"])
+        self.assertEqual(checked["stage"], "sync_before")
+        self.assertEqual(self.synced(checked)["stage"], "plan")
+        self.owned(checked, "pause", "--reason", "fixture")
+        self.baseline()
+        (self.seed / "product.txt").write_text("changed on main\n")
+        self.git(self.seed, "commit", "-am", "Another card merged")
+        self.git(self.seed, "push")
+        self.task["key"] = "github-issues:fixture/repo:43"
+        self.task_file.write_text(json.dumps(self.task))
+        state = self.call("begin", "--provider", "openai", "--task-file", str(self.task_file),
+                          "--branch", "codex/43-product")
+        checked = self.owned(state, "context")
+        self.assertFalse(checked["context"]["skipped"])
+        self.assertIn("context changed", checked["context"]["reason"])
+        self.assertEqual(checked["context"]["inspect"]["source_changes"], ["product.txt"])
+
+    def test_context_dispatches_sync_when_a_configured_executable_is_missing(self):
+        self.config["commands"] = {"lint": "no-such-tool-7f3a --check"}
+        self.baseline()
+        state = self.begin(sync=False)
+        checked = self.owned(state, "context")
+        self.assertFalse(checked["context"]["skipped"])
+        self.assertEqual(checked["context"]["reason"], "executables missing: no-such-tool-7f3a")
+        self.assertEqual(checked["stage"], "sync_before")
 
     def test_update_merges_main_and_blocks_unresolved_conflicts(self):
         state = self.delivered()
