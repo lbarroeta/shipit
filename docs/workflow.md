@@ -17,7 +17,9 @@ criteria, switches to `main`, fetches its remote and merges the upstream SHA wit
 equivalent of `git pull --ff-only` also preserves ignored local files. Five sequential
 native subagent stages then sync context, plan, implement/validate, sync context
 again and deliver
-under `handoff.allow`. The coordinator waits for each result; missing models,
+under `handoff.allow`. When the committed sync baseline already matches the checkout
+and every configured command still resolves, the first sync is settled by the stdlib
+helper in seconds and no synchronizer subagent runs. The coordinator waits for each result; missing models,
 blocked criteria or failed validation stop the pipeline. Pending user changes are
 never stashed or discarded. Your repo must already have `.shipit/config.json`, Python
 3.10+, a clean checkout and `main` tracking a remote `main`.

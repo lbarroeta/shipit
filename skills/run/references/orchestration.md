@@ -80,7 +80,8 @@ SKILL.md path (resolve its references relative to that path); saved task/plan/re
 paths; run owner/state path; model/effort pair; user-authorized scope; run-owned
 paths; result/artifact destination; allowed effects; and the concrete outcome it
 must return. Also pass what earlier stages already verified, inline: the planner
-gets the sync report's stack/command evidence and context status; the builder gets
+gets the sync report's stack/command evidence and context status (the `context`
+helper's artifact when sync-before was skipped); the builder gets
 the plan's `Files`, `Sequence` and `Tests` sections and the same command evidence.
 A child reads source only for the files those sections name and does not
 rediscover the stack, the commands or the graph. Use unique report/result names

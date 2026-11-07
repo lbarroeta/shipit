@@ -652,6 +652,44 @@ def require_pr_body(path):
                       "keep only the pr-description-template.md body as the report's last section.")
 
 
+def context_check(repo, state, run_dir):
+    """Advance past sync_before without a subagent when the committed baseline proves the context current."""
+    if state["stage"] != "sync_before":
+        raise Blocked("Context check is only applicable before planning.")
+    helper = Path(__file__).resolve().parents[2] / "sync/scripts/context_state.py"
+    probe = subprocess.run([sys.executable, str(helper), "--repo", str(repo), "inspect"],
+                           capture_output=True, text=True)
+    try:
+        inspected = json.loads(probe.stdout)
+    except ValueError as exc:
+        raise Blocked(f"context_state.py inspect: {probe.stderr.strip() or probe.stdout.strip()}") from exc
+    config = config_at(repo)
+    graph = config.get("graph") or {}
+    # A removed tool invalidates command evidence even when no source changed; sync would catch it.
+    tools = {}
+    for value in [*config.get("commands", {}).values(),
+                  *(graph.get(key) for key in ("query", "explain", "path", "update"))]:
+        if isinstance(value, str) and value.strip():
+            token = value.split()[0]
+            tools[token] = bool(shutil.which(token)) or (repo / token).is_file()
+    missing = sorted(name for name, present in tools.items() if not present)
+    report = {"inspect": inspected, "executables": tools}
+    if inspected.get("status") != "unchanged" or missing:
+        reason = (f"executables missing: {', '.join(missing)}" if missing
+                  else f"context {inspected.get('status', 'unknown')}; dispatch shipit:sync before-plan")
+        return {"skipped": False, "reason": reason, **report}
+    artifact = run_dir / "sync_before-skipped.md"
+    artifact.write_text("# Context check\n\nsync-before skipped: the committed baseline matches the checkout "
+                        "and every configured executable is present.\n\n```json\n"
+                        + json.dumps(report, indent=2) + "\n```\n")
+    state["artifacts"]["sync_before"] = {"path": str(artifact), "sha256": file_digest(artifact)}
+    state["owned_files"] = {name: file_digest(repo / name) for name in changed_paths(repo)}
+    state["agents"].append({"stage": "sync_before", "agent_id": None, "requested": None,
+                            "effective": None, "skipped": "context unchanged"})
+    state["stage"] = "plan"
+    return {"skipped": True, "artifact": str(artifact), **report}
+
+
 def checkpoint(repo, state, args):
     expected = {"sync_before": "plan", "plan": "implement", "implement": "review",
                 "review": "sync_after", "sync_after": "handoff", "handoff": "qa"}
@@ -741,7 +779,7 @@ def main():
     tree.add_argument("--name", required=True, help="The card's ID; names its worktree folder")
     status = commands.add_parser("status")
     status.add_argument("--issue-key", required=True)
-    for command in ("checkpoint", "pause", "qa", "verify", "replan", "repair", "update"):
+    for command in ("checkpoint", "context", "pause", "qa", "verify", "replan", "repair", "update"):
         sub = commands.add_parser(command)
         sub.add_argument("--issue-key", required=True)
         sub.add_argument("--owner", required=True)
@@ -807,6 +845,8 @@ def main():
                     for key in ("implement", "review", "sync_after", "handoff"):
                         state["artifacts"].pop(key, None)
                     state["stage"] = "implement"
+                elif args.command == "context":
+                    output_extra = context_check(repo, state, run_dir)
                 elif args.command == "verify":
                     if state["stage"] not in {"review", "sync_after", "handoff"}:
                         raise Blocked("Validation verification is only applicable before delivery.")
@@ -832,6 +872,8 @@ def main():
             if args.command == "pause":
                 release(locks, args.owner)
         output = {"state_path": str(state_path), **state}
+        if args.command == "context":
+            output["context"] = output_extra
         if state["stage"] in {"qa", "done"}:
             output["qa_guide"] = qa_guide(state)
     print(json.dumps(output, ensure_ascii=False))

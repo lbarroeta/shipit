@@ -97,7 +97,12 @@ hand inside a linked worktree is prepared the same way. The planner always gets
    again on a resume with no checkpointed artifact (a failed setup is retried); a
    non-zero exit blocks with its output. Null `setup` with a lockfile present → warn
    that the builder may lack dependencies and point to `/shipit:sync` on main, which fills it.
-4. **Context before planning.** Delegate `shipit:sync` in `before-plan` phase
+4. **Context before planning.** Run the helper's `context` first. `skipped: true`
+   → the committed sync baseline matches the checkout and every configured
+   executable resolves; the stage is checkpointed from the helper's artifact, no
+   synchronizer runs, and the planner receives context status `current` with
+   `config.json`'s commands as evidence. `skipped: false` → delegate `shipit:sync`
+   in `before-plan` phase
    using route `sync` and the absolute `skills/sync/SKILL.md` path. Pass issue,
    checkout, ownership and report/result paths. The synchronizer inspects first
    and reconciles only drift that touches shared configuration or the issue's
