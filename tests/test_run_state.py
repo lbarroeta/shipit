@@ -15,7 +15,7 @@ HELPER = ROOT / "skills/run/scripts/run_state.py"
 
 
 class RunStateTests(unittest.TestCase):
-    PR_BODY = "\n## PR Preparation\n\nShows updated text.\n\n## Validation\n\n`git diff --check` exit 0\n"
+    PR_BODY = "\n## PR Preparation\n\nShows updated text.\n\nCloses #42\n\n## Validation\n\n`git diff --check` exit 0\n"
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -873,11 +873,27 @@ class RunStateTests(unittest.TestCase):
         for body, reason in (
                 ("## Summary\n\nDone.\n\n## Files Changed\n\n- product.txt\n", "PR Preparation"),
                 ("## PR Preparation\n\nDone.\n\n**Validation:** passes\n", "## Validation"),
-                ("## PR Preparation\n\nDone.\n\n## Validation\n\nok\n\n## QA\n\n1. Open\n", "report sections")):
+                ("## PR Preparation\n\nDone.\n\n## Validation\n\nok\n\n## QA\n\n1. Open\n", "report sections"),
+                ("## PR Preparation\n\nDone. See #42.\n\n## Validation\n\nok\n", "Closes #42"),
+                ("## PR Preparation\n\nCloses #421\n\n## Validation\n\nok\n", "Closes #42")):
             report.write_text(f"# Report\n\n{body}")
             self.assertIn(reason, self.checkpoint(state, "sync_after", result, success=False)["reason"])
+        # The PR lives in another repo than the issue: a bare #42 would name that repo's issue.
+        self.git(self.repo, "config", f"url.{self.remote}.insteadOf", "https://github.com/other/app.git")
+        self.git(self.repo, "remote", "set-url", "origin", "https://github.com/other/app.git")
         report.write_text(f"# Report\n{self.PR_BODY}")
+        self.assertIn("Closes fixture/repo#42", self.checkpoint(state, "sync_after", result, success=False)["reason"])
+        report.write_text("# Report\n\n## PR Preparation\n\nFixes fixture/repo#42\n\n## Validation\n\nok\n")
         self.assertEqual(self.checkpoint(state, "sync_after", result)["stage"], "handoff")
+
+    def test_pr_body_check_blocks_a_malformed_github_issue_key(self):
+        spec = importlib.util.spec_from_file_location("run_state", HELPER)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        report = self.directory / "report.md"
+        report.write_text(f"# Report\n{self.PR_BODY}")
+        with self.assertRaisesRegex(module.Blocked, "github-issues:<owner>/<repo>:<number>"):
+            module.require_pr_body(report, "github-issues:fixture/repo")
 
     def test_delivered_run_returns_qa_steps_from_final_report(self):
         state = self.begin()
