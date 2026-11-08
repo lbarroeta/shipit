@@ -22,7 +22,13 @@ gaps take priority. Detail inside a collapsed block does not count toward it.
 
 ```markdown
 <2-3 sentences at most: concrete problem, previous behavior, and resulting
-behavior. Combine what and why. Link the issue when available; no file inventory.>
+behavior. Combine what and why. No file inventory.>
+
+<Issue link, own line, exactly as `code-handoff/references/tracker-adapters.md`
+says for `tracker.adapter`. `github-issues`: `Closes #<n>` (`Closes <owner>/<repo>#<n>`
+when the issue lives in another repo) — a URL, bare `#<n>` or "Issue: #<n>" neither
+links the PR nor closes the issue on merge. Bare `#<n>` only when this PR leaves
+work on the issue. No linked issue → omit the line.>
 
 ## Review notes
 

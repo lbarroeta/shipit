@@ -15,7 +15,7 @@ HELPER = ROOT / "skills/run/scripts/run_state.py"
 
 
 class RunStateTests(unittest.TestCase):
-    PR_BODY = "\n## PR Preparation\n\nShows updated text.\n\n## Validation\n\n`git diff --check` exit 0\n"
+    PR_BODY = "\n## PR Preparation\n\nShows updated text.\n\nCloses #42\n\n## Validation\n\n`git diff --check` exit 0\n"
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -873,10 +873,12 @@ class RunStateTests(unittest.TestCase):
         for body, reason in (
                 ("## Summary\n\nDone.\n\n## Files Changed\n\n- product.txt\n", "PR Preparation"),
                 ("## PR Preparation\n\nDone.\n\n**Validation:** passes\n", "## Validation"),
-                ("## PR Preparation\n\nDone.\n\n## Validation\n\nok\n\n## QA\n\n1. Open\n", "report sections")):
+                ("## PR Preparation\n\nDone.\n\n## Validation\n\nok\n\n## QA\n\n1. Open\n", "report sections"),
+                ("## PR Preparation\n\nDone. See #42.\n\n## Validation\n\nok\n", "Closes #42"),
+                ("## PR Preparation\n\nCloses #421\n\n## Validation\n\nok\n", "Closes #42")):
             report.write_text(f"# Report\n\n{body}")
             self.assertIn(reason, self.checkpoint(state, "sync_after", result, success=False)["reason"])
-        report.write_text(f"# Report\n{self.PR_BODY}")
+        report.write_text("# Report\n\n## PR Preparation\n\nFixes fixture/repo#42\n\n## Validation\n\nok\n")
         self.assertEqual(self.checkpoint(state, "sync_after", result)["stage"], "handoff")
 
     def test_delivered_run_returns_qa_steps_from_final_report(self):

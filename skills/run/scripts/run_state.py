@@ -636,7 +636,7 @@ def qa_guide(state):
     return {"report": str(path), "steps": "\n".join(lines).strip() or None}
 
 
-def require_pr_body(path):
+def require_pr_body(path, issue_key=""):
     """Delivery publishes `## PR Preparation`, so it must hold a template body, not a report."""
     lines = Path(path).read_text().splitlines()
     if "## PR Preparation" not in lines:
@@ -650,6 +650,14 @@ def require_pr_body(path):
     if extra:
         raise Blocked(f"PR Preparation body carries report sections {extra}; "
                       "keep only the pr-description-template.md body as the report's last section.")
+    if issue_key.startswith("github-issues:"):
+        _, slug, number = issue_key.split(":", 2)
+        body = "\n".join(lines[lines.index("## PR Preparation") + 1:])
+        # Only a closing keyword makes GitHub link the PR and close the issue on merge.
+        target = rf"(?:{re.escape(slug)})?#{number}|https://github\.com/{re.escape(slug)}/issues/{number}"
+        if not re.search(rf"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?\s+(?:{target})\b", body, re.I):
+            raise Blocked(f"PR Preparation body needs `Closes #{number}` on its own line so GitHub links "
+                          "the PR to the issue and closes it on merge; a URL or bare reference does neither.")
 
 
 def context_check(repo, state, run_dir):
@@ -716,7 +724,7 @@ def checkpoint(repo, state, args):
     if args.stage == "sync_after" and str(artifact) == state["artifacts"]["implement"]["path"]:
         raise Blocked("Final sync must write a separate delivery report; preserve builder evidence.")
     if args.stage == "sync_after" and "pr_body" in config_at(repo).get("handoff", {}).get("allow", ALLOW_DEFAULT):
-        require_pr_body(artifact)
+        require_pr_body(artifact, state["issue_key"])
     if args.stage.startswith("sync_"):
         if result.get("context_status") not in {"current", "updated"}:
             raise Blocked("Sync needs current or updated context; partial/unknown context cannot advance.")

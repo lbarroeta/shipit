@@ -154,7 +154,8 @@ rest has nothing to check.
    summarize final validation, keep material risks/prerequisites/pending checks
    visible, and retain complete applicable QA inline, in details or at a verified
    team-accessible link. Reject unsupported claims, report dumps, generic filler
-   and inaccessible evidence links. Apply the template's relevance guidance;
+   and inaccessible evidence links. A `github-issues` body without the template's
+   `Closes #<n>` line is deficient too. Apply the template's relevance guidance;
    its word target alone is not a failure. In plan mode use the plan-body rule
    below instead of claiming implementation or validation has happened.
    Return a deficient implementation/review body to its producer through the
