@@ -640,6 +640,8 @@ def origin_slug(repo):
     """`owner/repo` of a github.com origin, or None when origin is elsewhere or unset."""
     url = subprocess.run(["git", "-C", str(repo), "config", "--get", "remote.origin.url"],
                          capture_output=True, text=True).stdout.strip()
+    # shortcut: SSH host aliases and GitHub Enterprise hosts read as unknown, so a bare #n passes;
+    # match the configured host once such a remote shows up.
     match = re.search(r"github\.com[:/]([^/]+/[^/]+?)(?:\.git)?/?$", url)
     return match and match[1].lower()
 
