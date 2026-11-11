@@ -17,7 +17,7 @@ next stage can act on. It never edits code.
 ## Context budget
 
 - Required: the plan, the implementation report, `.shipit/config.json` and
-  `.shipit/conventions.md`.
+  `.shipit/conventions.md`. No plan → § Hard rules **No plan**.
 - Required: the `.shipit/rules/<layer>.md` for each layer the diff touches and the
   `.shipit/rules/tests/<kind>.md` for each test it adds or changes. Only those.
 - Required: `../../references/senior-stance.md` and
@@ -40,6 +40,13 @@ next stage can act on. It never edits code.
   with `# Review Blocked`, naming the fix: `claude plugin marketplace add
   DietrichGebert/ponytail` then `claude plugin install ponytail@ponytail` (Codex:
   the ponytail Codex plugin). Never improvise a review without it.
+- **No plan.** Standalone with no plan (and so no implementation report) → review
+  the diff anyway; never stop to ask for one. Skip plan conformance and the bug-fix
+  check, and say so in `Checked`. "Behaviour change outside the plan" is not a
+  finding; `in scope` means the fix stays in the diff's files and adds no
+  abstraction. Title the report with the branch name in place of
+  `<ISSUE-ID> <title>`. Next step on changes requested: fix by hand, then
+  `--rereview` — `code-implement` needs a plan.
 - **Read-only.** No edits to product code, tests, plans, reports or config. No git
   writes, no PR or tracker writes, no test runs — the builder's validation stands
   and CI owns the full suite. Read-only `git diff`/`git log` and graph queries only.
