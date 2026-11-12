@@ -214,8 +214,9 @@ A single reference never creates a worktree.
 6. **Resume.** The same command again reuses the worktrees and resumes each saved
    run; one card alone resumes in its worktree per step 3.
 
-Run metrics follow the session's own checkout, so these PRs carry none (`run
-metrics: n/a`). Worktrees stay after delivery: `/shipit:status --prune` removes
+Run metrics count per card worktree: name the card's worktree path in every
+delegation so its agents' tokens land on that card; the coordinator's own turns are
+shared evenly between the cards running. Worktrees stay after delivery: `/shipit:status --prune` removes
 those whose PR merged; drop a per-worktree database there first (`db:drop`).
 
 ## Communication and failure handling

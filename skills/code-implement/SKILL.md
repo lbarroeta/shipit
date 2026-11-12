@@ -141,9 +141,10 @@ verified with commands that are known to run in this repo.
    design contract → each `rules/design.md` § Verify check, as met, not met, or
    not checked, with evidence or the missing prerequisite.
 7. **QA guide.** Preserve every planned manual/external scenario, including
-   backend checks, with its AC, prerequisites, expected result and actual status.
+   backend checks, with its prerequisites, expected result and actual status.
    Non-developer checks become plain-language actions in the browser or external
-   service: URL/environment, role, setup data, numbered steps, expected results,
+   service: URL/environment, role, setup data, a `- [ ]` checklist of steps with no
+   AC IDs or other internal labels, expected results,
    screenshots needed and pass/fail notes. No framework names, class names or
    terminal commands there; technical checks belong in Validation with their
    executor and evidence or next step. Backend only → say
@@ -152,8 +153,8 @@ verified with commands that are known to run in this repo.
 8. **PR text.** Compose the title and body from
    `assets/pr-description-template.md` into the report. Write it; do not post it.
    Lead with problem and resulting behavior; summarize final validation and keep
-   material risks and pending checks visible. Preserve full QA/evidence using the
-   template's details/link rules. Apply its relevance and length guidance before
+   material risks and pending checks visible. Copy the QA steps verbatim into the
+   body's visible `## QA steps` section; evidence follows the template's details rules. Apply its relevance and length guidance before
    returning the report; do not export the report's full section structure.
 9. **Return for context sync.** Return the implementation report, full changed-file
    manifest and exact validation evidence to the caller. The next stages are

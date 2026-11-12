@@ -18,7 +18,8 @@ this run, carries the patch, and names the mistake or cost it prevents next run.
 - Run id or issue given: the run directory is the
   `$(git rev-parse --git-common-dir)/shipit/runs/*/` whose `state.json` carries that
   `issue_key` or `issue_url`. Read its plan, builder report, review result and
-  delivery report. Metrics: `mcp__shipit__run_metrics` on the run's branch, else the
+  delivery report. Metrics: `mcp__shipit__run_metrics` with `repo` set to the run's
+  `state.json` `repo`, else the
   `## Run metrics` section of its PR body. No metrics → Tool economy is `n/a`, never
   estimated.
 - Otherwise the current session; a session log path the user passes replaces it.

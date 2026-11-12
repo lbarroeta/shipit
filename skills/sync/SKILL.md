@@ -128,7 +128,8 @@ exact new checks and links to original evidence. Handoff receives this final
 report; preserve the original builder report. Use
 `../code-implement/assets/pr-description-template.md`: update the delivery copy
 when sync changes reviewer-relevant behavior, documentation or check results;
-keep material risks and pending checks visible and full QA/evidence accessible.
+keep material risks and pending checks visible and the QA steps copied verbatim
+into the body's visible `## QA steps` section.
 Keep `## PR Preparation` as the delivery report's last section, holding that
 template body; rewrite a builder copy that does not follow the template.
 Do not append a sync log to the body. Missing implementation facts return to the

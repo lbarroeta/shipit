@@ -18,7 +18,8 @@ Lead with the concrete problem and resulting behavior, then validation. Add revi
 notes only when they change how someone should assess or deploy the change.
 Aim for 100–180 visible words for a normal change, fewer for a trivial one. This is
 an editorial target, not a minimum or a hard cap: material risks and verification
-gaps take priority. Detail inside a collapsed block does not count toward it.
+gaps take priority. Detail inside a collapsed block and the `## QA steps` section do
+not count toward it.
 
 ```markdown
 <2-3 sentences at most: concrete problem, previous behavior, and resulting
@@ -57,15 +58,20 @@ human/external QA visible, including who must act and essential prerequisites
 when known. Do not narrate TDD red or repaired failures; retain their evidence in
 the report. Required pre-delivery checks still block delivery when missing.>
 
-<details>
-<summary>QA steps and supporting evidence</summary>
+## QA steps
 
-<When applicable, copy complete non-developer QA steps and their statuses verbatim,
-including backend checks in external services. Preserve developer-only manual
-checks with their executor, prerequisites, expected results and observed evidence
-or pending status. Put lengthy command evidence here when needed; distinguish
-final results from earlier attempts. This detail supports the visible summary,
-never replaces a visible risk or pending-check notice.>
+<When the report has non-developer QA steps: copy that section's checklist and its
+notes verbatim, visible, never collapsed and never a pointer to the report, which
+reviewers cannot open (run's checkpoint rejects either). Omit the section when the
+report has none.>
+
+<details>
+<summary>Supporting evidence</summary>
+
+<Optional. Developer-only manual checks with their executor, prerequisites,
+expected results and observed evidence or pending status, and lengthy command
+evidence; distinguish final results from earlier attempts. This detail supports
+the visible summary, never replaces a visible risk or pending-check notice.>
 
 </details>
 ```

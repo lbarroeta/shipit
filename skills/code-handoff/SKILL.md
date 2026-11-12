@@ -152,8 +152,8 @@ rest has nothing to check.
 6. When `pr_body` is allowed and a body will be published, check the prepared body
    before delivery effects. It must explain the problem and resulting behavior,
    summarize final validation, keep material risks/prerequisites/pending checks
-   visible, and retain complete applicable QA inline, in details or at a verified
-   team-accessible link. Reject unsupported claims, report dumps, generic filler
+   visible, and carry the report's QA steps verbatim in a visible `## QA steps`
+   section, never collapsed or behind a link. Reject unsupported claims, report dumps, generic filler
    and inaccessible evidence links. A `github-issues` body without the template's
    issue line (`Closes #<n>`, or bare `#<n>` only when this PR leaves work on the
    issue) is deficient too. Apply the template's relevance guidance;
@@ -266,7 +266,7 @@ exists before a branch does.
   The body is only the text after the `## PR Preparation` heading, minus its title
   line — never the whole report or any other section of it. No such section, no
   `## Validation` heading in it, or report headings in it (`Summary`, `Files
-  Changed`, `QA…`) → preflight failure: return it to the producer, publish nothing.
+  Changed`, `QA Handoff`; the template's own `## QA steps` is allowed) → preflight failure: return it to the producer, publish nothing.
 - **Run metrics** — coordinated `shipit:run` only, when `pr_body` is allowed and
   the `mcp__shipit__run_metrics` tool is available. Call it
   immediately before each body write, so its totals cover the whole run up to

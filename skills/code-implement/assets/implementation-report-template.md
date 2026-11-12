@@ -23,13 +23,15 @@ passes only on explicit human results. Omit when no manual/external QA applies.>
 No framework names. No class, file, or function names. No terminal commands. If a
 step cannot be described without one of those, it belongs in Validation instead.
 
-Preserve the plan's scenarios and AC IDs, including backend checks in external
-services. Pending steps describe expected results, never results already observed.
+Preserve the plan's scenarios, including backend checks in external services, as a
+checklist the tester ticks off. No AC IDs, story IDs or other internal labels in a
+step: the tester does not know them; AC coverage lives in Validation. Pending steps
+describe expected results, never results already observed.
 
-1. <AC ID: action a person takes in the browser or external service>
-   - Expected: <what they should see>
-2. <action>
-   - Expected: <what they should see>
+- [ ] <action a person takes in the browser or external service>
+  - Expected: <what they should see>
+- [ ] <action>
+  - Expected: <what they should see>
 
 Screenshots needed: <which screens, or "none">
 

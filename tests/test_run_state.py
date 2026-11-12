@@ -907,8 +907,14 @@ class RunStateTests(unittest.TestCase):
                              requires_revalidation=False,
                              validation=[{"command": "git diff --check", "exit_code": 0}])
         report = Path(state["state_path"]).parent / "sync_after.md"
-        qa = "## QA Handoff\n\nEnvironment: staging\n\n## QA Steps For Non-Developer\n\n1. Open the page\n   - Expected: updated text"
-        report.write_text(f"# Report\n\n{qa}\n\n## Plan\n\nplan.md\n{self.PR_BODY}")
+        qa = "## QA Handoff\n\nEnvironment: staging\n\n## QA Steps For Non-Developer\n\n- [ ] Open the page\n  - Expected: updated text"
+        steps = "- [ ] Open the page\n  - Expected: updated text"
+        # Reviewers cannot open the report, and a collapsed block hides the steps: both are rejected.
+        for qa_body in ("\n## QA steps\n\nSee the implementation report.\n",
+                        f"\n## QA steps\n\n<details>\n<summary>QA</summary>\n\n{steps}\n\n</details>\n"):
+            report.write_text(f"# Report\n\n{qa}\n\n## Plan\n\nplan.md\n{self.PR_BODY}{qa_body}")
+            self.assertIn("- [ ] Open the page", self.checkpoint(state, "sync_after", result, success=False)["reason"])
+        report.write_text(f"# Report\n\n{qa}\n\n## Plan\n\nplan.md\n{self.PR_BODY}\n## Merge danger\n\n**Door:** two-way\n\n## QA steps\n\n{steps}\n")
         state = self.checkpoint(state, "sync_after", result)
         self.git(self.repo, "add", "product.txt")
         self.git(self.repo, "commit", "-m", "Delivered fixture change")
