@@ -4,6 +4,7 @@
 import argparse
 import contextlib
 import hashlib
+import itertools
 import json
 import os
 from pathlib import Path
@@ -629,6 +630,8 @@ def qa_guide(state):
     path = Path(artifact["path"])
     lines, keep = [], False
     for line in path.read_text().splitlines() if path.is_file() else []:
+        if line == "## PR Preparation":
+            break  # the PR body repeats the steps; the report's own sections come first
         if line.startswith("## "):
             keep = line[3:].strip().upper().startswith("QA")
         if keep:
@@ -656,10 +659,29 @@ def require_pr_body(path, issue_key="", repo=None):
     if "## Validation" not in headings:
         raise Blocked("PR Preparation body needs the template's `## Validation` heading "
                       "(and `## Review notes` when applicable), not bold labels or `Validation:` prose.")
-    extra = [heading for heading in headings if heading not in {"## Review notes", "## Validation"}]
+    extra = [heading for heading in headings
+             if heading not in {"## Review notes", "## Merge danger", "## Validation", "## QA steps"}]
     if extra:
         raise Blocked(f"PR Preparation body carries report sections {extra}; "
                       "keep only the pr-description-template.md body as the report's last section.")
+    # The report stays under .git where no reviewer can open it, so the body shows the steps, never points at them.
+    start = lines.index("## PR Preparation")
+    steps, keep = [], False
+    for line in lines[:start]:
+        if line.startswith("## "):
+            keep = line[3:].strip().upper().startswith("QA STEPS")
+        elif keep and line.strip():
+            steps.append(line.strip())
+    body = lines[start + 1:]
+    qa = body[body.index("## QA steps") + 1:] if "## QA steps" in body else []
+    # Visible means before any collapsed block or the next section.
+    shown = {line.strip() for line in itertools.takewhile(
+        lambda line: not line.startswith("## ") and not line.strip().startswith("<details"), qa)}
+    missing = [step for step in steps if step not in shown]
+    if missing:
+        raise Blocked(f"PR Preparation body must copy the report's QA steps verbatim into a visible "
+                      f"`## QA steps` section, not collapsed or linked; missing: {missing[0]!r}"
+                      + (f" and {len(missing) - 1} more" if len(missing) > 1 else ""))
     if issue_key.startswith("github-issues:"):
         match = re.fullmatch(r"github-issues:([\w.-]+/[\w.-]+):(\d+)", issue_key)
         if not match:

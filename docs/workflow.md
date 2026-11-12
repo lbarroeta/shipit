@@ -253,8 +253,8 @@ PR descriptions lead with the problem and resulting behavior, then final
 validation. Review notes cover concrete decisions, risks or deployment ordering
 only when relevant. Aim for 100–180 visible words for ordinary changes, fewer for
 trivial ones; material risks and pending checks stay visible even when longer.
-Full QA and supporting evidence stay in a details block or a verified link the
-team can access. `code-implement` drafts the body, `sync` reconciles it with final
+QA steps sit visible in their own `## QA steps` section, as a checklist the tester
+ticks off; supporting evidence stays in a details block. `code-implement` drafts the body, `sync` reconciles it with final
 evidence, and `code-handoff` checks it before delivery and publishes it verbatim.
 
 ## Parallel worktrees — opt-in
@@ -305,8 +305,8 @@ runs in your current checkout, as always:
 ```
 
 A session you open yourself inside a linked worktree is prepared the same way. The
-same command again reuses the worktrees. Run metrics are per session checkout, so
-multi-card PRs carry none.
+same command again reuses the worktrees. Run metrics are counted per card worktree;
+the coordinator's own tokens are shared evenly between the cards it runs.
 
 - **`main` is left alone.** The task branch starts from the fetched upstream tip; the
   main checkout is never switched or required to be clean.
