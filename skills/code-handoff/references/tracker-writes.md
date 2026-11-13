@@ -10,7 +10,7 @@ Which capability unlocks which section:
 | --- | --- |
 | `tracker_comment` | the `Comment` lines, and the universal comment rules below |
 | `tracker_status` | the `Transitions` and `Terminal` lines |
-| `issue_create` | the `### Create` subsection, plus `task` mode in `SKILL.md` |
+| `issue_create` | the `### Create` subsection, read by `../../task-handoff/SKILL.md` |
 
 Branch naming and PR issue-linking are **not** here — they are always allowed and
 live in `tracker-adapters.md`. Read only the section for `tracker.adapter`; the
@@ -50,7 +50,7 @@ A missing or draft PR never advances the card.
   issue is still created, the body retains its complete typed contract, and the report says `priority unmapped` / `size unmapped`.
   A failure setting the field after the issue exists is `partial`, not a reason to
   delete the issue: the `## Created` line for that issue gets `— pending: <field or relation>`,
-  and a re-run retries exactly those fields (see `task` mode in `SKILL.md`).
+  and a re-run retries exactly those fields (see `task-handoff`).
 - **A comment carries the QA steps and the PR link. Nothing else.** No summary, no
   validation result, no file list, no diff narration, no restating the ticket back
   to the person who wrote it. The PR is where the change is described; the ticket is

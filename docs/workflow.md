@@ -189,7 +189,7 @@ behaviour needs a decision before publishing or planning; shipit does not invent
 business rules to complete the template.
 
 By default the draft is the deliverable. With `issue_create` in `handoff.allow`,
-`code-handoff` publishes the reviewed draft after authorization. It uses the configured
+`task-handoff` publishes the reviewed draft after authorization. It uses the configured
 provider's available capabilities for parent and blocking relations. Unsupported
 relations stay explicit in issue prose and are reported as requiring manual
 linking; a text reference is never claimed as a native relation.

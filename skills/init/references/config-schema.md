@@ -153,7 +153,7 @@ reported as `skipped (not in handoff.allow)`, never as an error.
 | `tracker_comment` | one comment per mode — QA steps and the PR link |
 | `tracker_status` | the review transition after a ready PR is delivered |
 | `thread_replies` | replying to and resolving review threads after `pr-fix` |
-| `issue_create` | `code-handoff`'s `task` mode: creating the issues a draft describes |
+| `issue_create` | `task-handoff`: creating the issues a draft describes |
 
 Defaults to `branch`, `commit`, `push`, `pr_body`, `pr_ready` and `tracker_status`.
 `init` writes them explicitly so the file says what it allows rather than relying

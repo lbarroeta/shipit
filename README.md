@@ -56,6 +56,7 @@ without your yes.
 | `/shipit:code-plan` | Writes the implementation plan for a ticket | Before coding |
 | `/shipit:code-implement` | Executes the plan, runs the checks, prepares QA steps | After the plan |
 | `/shipit:code-review` | Reviews the change with `ponytail-review`, the plan and the repo's rules; read-only | After implementing |
+| `/shipit:task-handoff` | Creates the draft's issues in the tracker (needs `issue_create`) | A ticket draft is approved |
 | `/shipit:code-handoff` | Branch, commit, push, PR, tracker status | Work is ready for review |
 | `/shipit:pr-fix` | Triages review comments (`--comments`), red CI (`--ci`) and merge conflicts — what applies, what does not and why — then fixes what you approve | The PR has feedback |
 | `/shipit:run` | sync → plan → implement → review → sync → handoff for an existing ticket | You have a ticket and want it done |
