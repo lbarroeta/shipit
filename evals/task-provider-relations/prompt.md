@@ -2,7 +2,7 @@
 max_turns: 25
 ---
 
-Deliver this already-reviewed shipit:task-create epic draft using handoff task mode.
+Deliver this already-reviewed shipit:task-create epic draft using shipit:task-handoff.
 I authorize creating its parent, children and supported relations. Config selects
 Linear team Platform and handoff.allow includes issue_create. The draft has a
 parent and two complete child sections with Problem, Goal, scope, exclusions, AC

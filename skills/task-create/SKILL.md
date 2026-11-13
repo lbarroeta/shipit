@@ -1,6 +1,6 @@
 ---
 name: task-create
-description: Use when a need, bug, feature or chore must become a clear tracker ticket or an epic with independently understandable children. Works as a senior project manager would — surveying the board for duplicates and overlapping work before drafting, then placing the ticket in its outcome, epic and dependency chain. Draft what and why against the repo contract; code-plan owns how. Publishing uses code-handoff only when issue_create is allowed and the finished draft is authorized.
+description: Use when a need, bug, feature or chore must become a clear tracker ticket or an epic with independently understandable children. Works as a senior project manager would — surveying the board for duplicates and overlapping work before drafting, then placing the ticket in its outcome, epic and dependency chain. Draft what and why against the repo contract; code-plan owns how. Publishing uses task-handoff only when issue_create is allowed and the finished draft is authorized.
 model: claude-sonnet-5-5
 effort: high
 metadata:
@@ -15,7 +15,7 @@ Turn a need into work another person can pick up without reconstructing the
 conversation. `task-create` defines what and why, `task-next` recommends executable
 work, `code-plan` decides how, and `code-implement` executes it.
 
-The deliverable is a local draft. `code-handoff` in `task` mode owns tracker publishing,
+The deliverable is a local draft. `task-handoff` owns tracker publishing,
 only when `handoff.allow` lists `issue_create`. Adapter `none` is a valid local
 workflow, not a blocker.
 
@@ -53,7 +53,7 @@ context that makes it hard to pick up. Decide with evidence and say why.
 ## Hard rules
 
 - **No product code, file plan, commands, git or tracker writes.** The skill drafts;
-  `code-handoff` publishes. Grounding citations may name existing `path:line` evidence,
+  `task-handoff` publishes. Grounding citations may name existing `path:line` evidence,
   never prescribe files to change.
 - **Prose language.** Drafts use `language.task`, reports use `language.plan`.
   Legacy string `language` applies to both; absent → `en`. Identifiers stay English.
@@ -114,7 +114,7 @@ context that makes it hard to pick up. Decide with evidence and say why.
 - **Type, Priority and Size required.** `Bug`, `Feature` or `Chore`; `P0`–`P3`;
   `XS`–`XL`. Rubrics live in `output-contract.md`. Only epic parents are `XL`.
 - **Never edit config.** Missing `tracker.create`/fields → report drift and suggest
-  `/shipit:init`. Preserve `language.task`, `paths.tasks` and handoff `task` mode.
+  `/shipit:init`. Preserve `language.task`, `paths.tasks` and `task-handoff`.
 
 ## Workflow
 
@@ -147,7 +147,7 @@ context that makes it hard to pick up. Decide with evidence and say why.
 9. **Show and deliver.** Show the finished draft/path. `--dry-run`, withheld
    `issue_create`, adapter `none`, or unresolved ambiguity → stop at the draft.
    Otherwise obtain authorization for this concrete draft; explicit authorization
-   already given for publishing it is sufficient. Invoke `code-handoff` in `task` mode
+   already given for publishing it is sufficient. Invoke `task-handoff`
    with the path; only handoff reports what reached the tracker. Respect provider
    capabilities and preserve unsupported relations in prose with an honest report.
 10. **Optional plan.** `--plan` selects one executable task after readiness checks.

@@ -117,7 +117,7 @@ not belong here.>
 
 ## Created
 
-<!-- Handoff task mode records one line per created issue immediately:
+<!-- task-handoff records one line per created issue immediately:
 - #<local n or parent> — <ISSUE-ID> — <url>
 Failed post-create writes: — pending: <priority|size|parent|dependency:<reference>>.
 An unsupported mapping is reported, not pending. Keep this ledger empty until

@@ -12,6 +12,6 @@ Load the shipit `code-handoff` skill and run it.
 
 This skill performs external side effects (push, PR body, and whatever else
 `handoff.allow` permits). Confirm
-the mode — `task`, `plan`, `implementation`, or `review` — before writing anything.
+the mode — `plan`, `implementation`, or `review` — before writing anything.
 
 Request: $ARGUMENTS
