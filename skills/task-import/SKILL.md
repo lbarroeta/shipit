@@ -33,6 +33,11 @@ work lives in one tracker can send imports to the team's. Absent → `tracker`.
 Below, *the target* is whichever block applies. `/shipit:sync --import-tracker
 <adapter>` sets `import`.
 
+A `linear` target is searched, written and read back only through the Linear MCP
+server connected in this session — never a CLI or a hand-built API call. Not
+connected → `blocked: Linear MCP not connected` before any card is read; connect
+it with `/mcp`.
+
 ## Source
 
 The provider comes from the card URL, never from a guess:
