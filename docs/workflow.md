@@ -74,6 +74,7 @@ The individual cycle remains available:
 /shipit:design-system  interview → design contract       once per repo with UI; re-run to update
         │
 /shipit:task-create a need becomes a ticket, or an epic  when there is no ticket yet
+/shipit:task-import a client's card becomes a ticket     when the card lives in the client's tracker
         │
 /shipit:sync             reconcile context before planning
         │
@@ -194,6 +195,21 @@ provider's available capabilities for parent and blocking relations. Unsupported
 relations stay explicit in issue prose and are reported as requiring manual
 linking; a text reference is never claimed as a native relation.
 
+### From a client's card
+
+When the work already exists as a card in the client's tracker,
+`/shipit:task-import <card url> [<card url> …]` reads it — Jira, Shortcut or
+GitHub Issues — and runs `task-create` with the card as the request. Several URLs
+are drafted one by one, then duplicates, open questions and the authorization to
+publish are asked in a single round. Attachments are linked under `Problem`, not
+copied. The ticket keeps its structure,
+and the sentences inside are written the way a teammate would explain the work:
+everyday words, the person affected, the client's own names for things. The board
+survey finds a card imported before, what the client left out is asked rather
+than invented, and publishing is the same authorized `task-handoff`, into
+`tracker.create.project`. The client's tracker is never written to, and an import
+without that project stops at the draft.
+
 The draft lands at `.shipit/tasks/<slug>.md` and is excluded from git — once the issue
 exists, the tracker is the source of truth, and a stale copy
 in the repo is worse than none. Re-running the delivery on a draft that already
@@ -227,7 +243,7 @@ tracker → `create.supported` goes `false`, `task-create` still writes the draf
 issue types are always enumerated from your workspace and matched by name; an id
 copied from someone else's workspace writes to the wrong place, silently.
 
-`task-create`, `task-next`, `code-plan`, `code-implement`, and `pr-fix` never run `git commit`, `git push`, or a
+`task-create`, `task-import`, `task-next`, `code-plan`, `code-implement`, and `pr-fix` never run `git commit`, `git push`, or a
 PR command. Only `code-handoff` does — and what `code-handoff` may do is a config list, not a
 judgement call:
 

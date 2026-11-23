@@ -52,6 +52,7 @@ without your yes.
 | `/shipit:product-mvp-cut` | Decides which PRD stories ship first | After the PRD |
 | `/shipit:design-system` | Interviews you and records colors, components and UI rules | Once per repo with a UI |
 | `/shipit:task-create` | Turns a need into a ticket, or an epic with children | No ticket exists yet |
+| `/shipit:task-import` | Reads one or several of a client's Jira, Shortcut or GitHub Issues cards and runs `task-create` on each, in plain human wording with attachments linked, for your tracker and project | The work exists as a card in the client's tracker |
 | `/shipit:task-next` | Recommends the next ticket to take, and why | Choosing what to work on |
 | `/shipit:code-plan` | Writes the implementation plan for a ticket | Before coding |
 | `/shipit:code-implement` | Executes the plan, runs the checks, prepares QA steps | After the plan |
