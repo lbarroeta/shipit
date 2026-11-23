@@ -1,6 +1,6 @@
 ---
 name: task-import
-description: Use when a card a client wrote in their own tracker — Jira, Shortcut or GitHub Issues — must become an issue in the team's configured tracker (Linear), attached to the configured project. Takes one card URL or several, reads each and hands it to task-create as the request, with its attachments linked, asking for plain, human wording inside the usual ticket structure; task-create drafts, checks the board and publishes. Do not use to write a ticket from a need with no card (`task-create`), and never to write back to the client's tracker.
+description: Use when a card a client wrote in their own tracker — Jira, Shortcut or GitHub Issues — must become an issue in the team's tracker — the `import` block of `.shipit/config.json` when set (e.g. Linear while the repo works in Shortcut), else `tracker` — attached to its project. Takes one card URL or several, reads each and hands it to task-create as the request, with its attachments linked, asking for plain, human wording inside the usual ticket structure; task-create drafts, checks the board and publishes. Do not use to write a ticket from a need with no card (`task-create`), and never to write back to the client's tracker.
 model: claude-sonnet-5-5
 metadata:
   input: client-card-urls
@@ -19,11 +19,24 @@ the project check. One card becomes one ticket.
 
 ## Context budget
 
-- Required: the card URLs and `.shipit/config.json` (`tracker`, `handoff.allow`).
+- Required: the card URLs and `.shipit/config.json` (`import`, `tracker`, `handoff.allow`).
 - The source card: title, description, type, priority, labels, reporter, status,
   comments, attachment and link URLs. Nothing else from that tracker.
 - Everything else is read by `task-create` under its own budget.
 - No `.shipit/config.json` → say run `/shipit:init` first.
+
+## Target
+
+Imports land in the config block `import` when it is set — same keys as
+`tracker` (`adapter`, `create.team`, `create.project`, …) — so a repo whose own
+work lives in one tracker can send imports to the team's. Absent → `tracker`.
+Below, *the target* is whichever block applies. `/shipit:sync --import-tracker
+<adapter>` sets `import`.
+
+A `linear` target is searched, written and read back only through the Linear MCP
+server connected in this session — never a CLI or a hand-built API call. Not
+connected → `blocked: Linear MCP not connected` before any card is read; connect
+it with `/mcp`.
 
 ## Source
 
@@ -79,8 +92,10 @@ Passed to `task-create` with the request, for every sentence it writes:
 ## Workflow
 
 1. **Preflight.** Load config. Resolve each card's provider from its URL. Provider
-   equals `tracker.adapter` → that card is already in the team's tracker; skip it
-   and say plan it with `/shipit:code-plan <ID>`.
+   equals the target's adapter → that card is already in the team's tracker; skip
+   it, and when the target is `tracker` say plan it with `/shipit:code-plan <ID>`.
+   Name the target's adapter; if the user expected another tracker, the fix is
+   `/shipit:sync --import-tracker <adapter>`, never an import into the same one.
 2. **Read** each card through its mechanism.
 3. **Invoke `task-create`** for the card with:
    - the request: the card's title, description, the comments that change it,
@@ -90,12 +105,15 @@ Passed to `task-create` with the request, for every sentence it writes:
    - `Source: <card url>`, and the card URL and ID as board-survey search terms,
      so a card imported before is found as a duplicate;
    - the Voice rules above;
-   - `--single`, and `--dry-run` when it was passed here or when
-     `tracker.create.project` is absent, `null` or `"unknown"` — an import is
-     never published without its project. Report that as
-     `blocked: tracker.create.project is not set` and suggest `/shipit:sync`.
+   - the target block, when it is `import`, for `task-create` to read in place
+     of `tracker`;
+   - `--single`, and `--dry-run` when it was passed here or when the target's
+     `create.project` is absent, `null` or `"unknown"` — an import is never
+     published without its project. Report that as
+     `blocked: <target>.create.project is not set` and suggest `/shipit:sync`,
+     with `--import-tracker <adapter>` when the target is `import`.
 4. **Verify the project.** When `task-create` reports a created issue, read it
-   back. Its project is not `tracker.create.project` → `partial: project not
+   back. Its project is not the target's `create.project` → `partial: project not
    attached`, with the issue ID. Never create a project.
 
 ## Batch

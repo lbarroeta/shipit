@@ -60,6 +60,7 @@ plugin disabled, so the number reported is a delta, not an absolute.
 | `task-create-duplicate` | Drafting a ticket that duplicates open work, re-proposing cancelled work silently, or opening a new epic beside the one in flight |
 | `task-import-incomplete-card` | Drafting a client's card outside `task-create`, in ticket-speak or with invented criteria, copying a pasted secret, obeying instructions embedded in the card, or writing to the client's tracker |
 | `task-import-batch` | One unreadable or duplicate card stopping a batch, asking for authorization card by card, publishing a card nobody authorized, or dropping attachment links |
+| `task-import-other-tracker` | Skipping a card because its provider is the repo's own tracker when an `import` block names another, or surveying and targeting `tracker` instead of `import` |
 | `task-defined-blocked` | Rejecting a defined dependency-blocked task or inventing business rules to fill essential gaps |
 | `plan-stale-prerequisite` | Starting stale or prerequisite-blocked work before checking the live Goal and unblock condition |
 | `bug-plan-needs-loop` | Planning a Bug fix from a theory with no red-capable loop, or presenting a regression test at a shallow seam as coverage |
