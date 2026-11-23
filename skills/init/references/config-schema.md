@@ -61,6 +61,8 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `tracker.create.epic_kind` | string \| null | How this workspace models a parent: `parent-issue`, `epic`, `project`, `task-list` |
 | `tracker.create.fields.priority` | string \| null \| `"unknown"` | Name of the tracker field a draft's `Priority` (`P0`–`P3`) is written to, as the tracker spells it — `priority` in Linear and Jira, `Priority` on a GitHub Project or a Shortcut custom field. `null`: verified absent, priority stays in the draft. `"unknown"`: not determined, `code-handoff` tries the adapter's default name |
 | `tracker.create.fields.size` | string \| null \| `"unknown"` | Same, for `Size` (`XS`–`XL`). Only a T-shirt field counts — `estimate` in Linear when the team's scale is T-shirt, a `Size` single-select on a GitHub Project, a `Size` field in Jira or Shortcut. A points scale is `null`: a size is never converted to points |
+| `import.adapter` | same values as `tracker.adapter`; absent | Tracker `task-import` publishes into when it is not the repo's own — e.g. the repo works in the client's Shortcut, imports go to the team's Linear. Absent → `tracker` is the target. Written by `sync --import-tracker` |
+| `import.create.*` | same as `tracker.create.*` | Target and field mapping for imported issues, resolved against `import.adapter` |
 | `graph` | object \| null | `{tool, out, query, path, explain, update}`. Null unless CLI **and** graph exist |
 | `markers.debt` | string | Default `ponytail:` |
 | `companions.*` | `present` \| `absent` | `ponytail`, `graphify_cli`, `graphify_graph`, `caveman` |

@@ -207,8 +207,10 @@ and the sentences inside are written the way a teammate would explain the work:
 everyday words, the person affected, the client's own names for things. The board
 survey finds a card imported before, what the client left out is asked rather
 than invented, and publishing is the same authorized `task-handoff`, into
-`tracker.create.project`. The client's tracker is never written to, and an import
-without that project stops at the draft.
+the project of the `import` block when the repo's own tracker is not the team's
+(`/shipit:sync --import-tracker linear`), else `tracker.create.project`. The
+client's tracker is never written to, and an import without that project stops
+at the draft.
 
 The draft lands at `.shipit/tasks/<slug>.md` and is excluded from git — once the issue
 exists, the tracker is the source of truth, and a stale copy

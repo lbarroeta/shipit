@@ -42,6 +42,15 @@ Read `handoff.allow` from `.shipit/config.json`. **Absent → `["branch", "commi
   `### Create` subsection only. The other adapters are noise.
 - Never read product code, plans or the diff.
 
+## Flags
+
+- `--target <block>` — read that config block (same keys as `tracker`, e.g.
+  `import`) in place of `tracker` everywhere below, `tracker-writes.md`'s adapter
+  section included. Absent → `tracker`.
+
+<!-- shortcut: the target is not recorded in the draft, so a hand re-run without
+`--target import` publishes into `tracker`. Record it in the draft if that bites. -->
+
 ## Hard rules
 
 - **Write nothing but the ledger.** The `## Created` block of the draft being

@@ -55,7 +55,7 @@ For config values, apply these policies even when a file looks wholly generated:
 - Refresh evidence-derived stack, source/test roots, commands/proofs, CI, tests,
   layers and companion availability. A manual override identifiable against base
   is kept if valid; a conflict is surfaced, not silently reverted.
-- Keep recorded tracker adapter/target and explicit field names while still valid.
+- Keep recorded tracker and `import` adapter/target and explicit field names while still valid.
   Recheck unresolved or absent capabilities when reachable. Connection failure
   means unverified, not absent: preserve choices, record unknown, do not switch
   adapters. A connected tracker contradicting recorded identity requires resolution.

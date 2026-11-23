@@ -115,6 +115,10 @@ context that makes it hard to pick up. Decide with evidence and say why.
   `XS`–`XL`. Rubrics live in `output-contract.md`. Only epic parents are `XL`.
 - **Never edit config.** Missing `tracker.create`/fields → report drift and suggest
   `/shipit:init`. Preserve `language.task`, `paths.tasks` and `task-handoff`.
+- **Caller's target block.** A caller may name another config block with
+  `tracker`'s keys (`task-import` passes `import`): read it in place of `tracker`
+  for the survey, target and field mapping, pass `--target <block>` to
+  `task-handoff`, and name that flag in any handoff command the report suggests.
 
 ## Workflow
 

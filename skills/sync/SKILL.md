@@ -169,3 +169,6 @@ user and Debt added entries into its `Known Risks or Follow-ups`, verbatim.
   changes, using init's accepted formats; validate and reconcile dependent fields.
   A tracker change re-resolves its target and mappings; never keep another
   adapter's target accidentally. These flags are incompatible with `--check`.
+- `--import-tracker <adapter>`: the same for the `import` block, the tracker
+  `task-import` publishes into; `tracker` is untouched. `none` removes the block.
+  Incompatible with `--check`.
