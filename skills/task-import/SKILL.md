@@ -105,7 +105,8 @@ Passed to `task-create` with the request, for every sentence it writes:
    - `--single`, and `--dry-run` when it was passed here or when the target's
      `create.project` is absent, `null` or `"unknown"` — an import is never
      published without its project. Report that as
-     `blocked: <target>.create.project is not set` and suggest `/shipit:sync`.
+     `blocked: <target>.create.project is not set` and suggest `/shipit:sync`,
+     with `--import-tracker <adapter>` when the target is `import`.
 4. **Verify the project.** When `task-create` reports a created issue, read it
    back. Its project is not the target's `create.project` → `partial: project not
    attached`, with the issue ID. Never create a project.

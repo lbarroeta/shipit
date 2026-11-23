@@ -170,5 +170,8 @@ user and Debt added entries into its `Known Risks or Follow-ups`, verbatim.
   A tracker change re-resolves its target and mappings; never keep another
   adapter's target accidentally. These flags are incompatible with `--check`.
 - `--import-tracker <adapter>`: the same for the `import` block, the tracker
-  `task-import` publishes into; `tracker` is untouched. `none` removes the block.
+  `task-import` publishes into; `tracker` is untouched. An import needs a
+  project: enumerate the chosen team's projects into `import.create.project`
+  the way init's recipe 7b fills the team — one → write it, several → ask once.
+  `none` removes the block.
   Incompatible with `--check`.
