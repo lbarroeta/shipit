@@ -81,6 +81,7 @@ extracted from:
 | `product-mvp-cut` | not yet measured | not yet measured | new |
 | `run` | not yet measured | not yet measured | new; native subagent work is additional |
 | `retro` | not yet measured | not yet measured | new |
+| `qa` | not yet measured | not yet measured | new |
 
 The four equivalent skills cost **~380 always-on against the originals' ~442**, and
 the two heaviest got materially cheaper per invocation — the contract removed the

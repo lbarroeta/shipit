@@ -165,7 +165,9 @@ hand inside a linked worktree is prepared the same way. The planner always gets
    checkpointed final delivery report. `steps` null → read those sections from
    `qa_guide.report`; still none → report the missing QA guide as a gap. Never
    re-run sync, planning, building or delivery to regenerate QA steps. Reachable environment/account/setup available
-   → "Ready for QA". Missing environment → "Implemented; QA blocked", with the
+   → "Ready for QA", and offer `/shipit:qa <ID>`: it runs each criterion in a hidden
+   browser, one video each, while the user keeps working; its proposed results are
+   evidence for the human, never a recorded result. Missing environment → "Implemented; QA blocked", with the
    missing prerequisite, never terminal instructions for the non-developer. Backend
    only → report what automated validation covered and any applicable non-UI checks.
    A draft PR or green tests do not mean human QA passed. Record only explicit human

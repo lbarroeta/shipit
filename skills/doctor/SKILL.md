@@ -106,6 +106,7 @@ reading this should know whether they can proceed, in one line.
 | pointer absent | shipit skills still read the contract by path, but every other agent working in this repo ignores it and codes to its own priors. Fix: `/shipit:init`. |
 | `unknown[]` non-empty | Those verification steps do not exist. Named in every implement report. |
 | `ponytail` | `code-review` and `run`'s review stage cannot run. Planning, implementing and standalone delivery are unaffected. |
+| `playwright` | `qa` cannot run its checks; it offers the one-time install itself. Everything else is unaffected. |
 
 ## Why `--fix` cannot do everything
 
