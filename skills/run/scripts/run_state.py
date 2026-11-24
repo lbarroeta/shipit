@@ -161,7 +161,7 @@ def routes(repo, provider):
         raise Blocked("run and run.models must be objects.")
     overrides = run_config.get("models", {}).get(provider, {})
     if not isinstance(overrides, dict) or set(overrides) - set(selected):
-        raise Blocked("run.models must contain only sync, plan, implement, review and handoff routes.")
+        raise Blocked("run.models must contain only sync, plan, implement, review, handoff and qa routes.")
     selected.update(overrides)
     for stage, route in selected.items():
         if (not isinstance(route, dict) or set(route) != {"model", "effort"}

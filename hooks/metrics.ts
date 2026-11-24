@@ -12,8 +12,9 @@ export const STAGE_BY_AGENT: Record<string, string> = {
   'run-builder': 'code-implement',
   'run-reviewer': 'code-review',
   'run-delivery': 'code-handoff',
+  'run-qa': 'qa',
 }
-const ORDER = ['run', 'sync', 'code-plan', 'code-implement', 'code-review', 'code-handoff']
+const ORDER = ['run', 'sync', 'code-plan', 'code-implement', 'code-review', 'code-handoff', 'qa']
 
 export const empty = (): Totals => ({ ms: 0, stages: {} })
 

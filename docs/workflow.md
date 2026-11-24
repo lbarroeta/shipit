@@ -38,6 +38,7 @@ are never moved backwards; `run` resumes at later stages do not repeat the trans
 | Implement | Sonnet 5.5 / high | Sol 6.1 / high |
 | Review | Opus 5.5 / high | Astra 6 / high |
 | Handoff | Haiku 5.5 / medium | Luna 6 / medium |
+| QA (after handoff) | Sonnet 5.5 / high | Sol 6.1 / high |
 
 These are pinned IDs, not moving aliases. Optional per-repo overrides live under
 `run.models.<anthropic|openai>.<stage>` as complete `{model, effort}` pairs;
@@ -58,7 +59,9 @@ diff. Repeating an issue resumes its saved branch and checkpoints without pullin
 main again or duplicating delivery. Give QA feedback in the same chat: failures
 return to the builder on that branch. Ready for QA includes where to test, setup
 and complete plain-language steps. Missing test environment is reported as QA
-blocked; a PR or green tests never means human QA passed. One card runs in the
+blocked; a PR or green tests never means human QA passed. With a reachable local
+environment `run` also runs `qa` itself after delivery and shows its recorded,
+proposed results: evidence for the human, never the QA result. One card runs in the
 current checkout; `/shipit:run ENG-412 ENG-413` runs several at once, each in a
 worktree `run` creates — see [Parallel `run` sessions](#parallel-run-sessions).
 

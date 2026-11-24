@@ -1083,6 +1083,7 @@ class RunStateTests(unittest.TestCase):
             "implement": {"model": "gpt-6.1-sol", "effort": "high"},
             "review": {"model": "gpt-6-astra", "effort": "high"},
             "handoff": {"model": "gpt-6-luna", "effort": "medium"},
+            "qa": {"model": "gpt-6.1-sol", "effort": "high"},
         })
         self.assertEqual(self.call("routes", "--provider", "anthropic")["routes"], {
             "sync": {"model": "claude-sonnet-5-5", "effort": "medium"},
@@ -1090,6 +1091,7 @@ class RunStateTests(unittest.TestCase):
             "implement": {"model": "claude-sonnet-5-5", "effort": "high"},
             "review": {"model": "claude-opus-5-5", "effort": "high"},
             "handoff": {"model": "claude-haiku-5-5", "effort": "medium"},
+            "qa": {"model": "claude-sonnet-5-5", "effort": "high"},
         })
         self.config["run"] = {"models": {"openai": {"plan": {"model": "custom", "effort": "high"}}}}
         (self.repo / ".shipit/config.json").write_text(json.dumps(self.config))

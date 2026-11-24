@@ -1,6 +1,6 @@
 ---
 name: run
-description: Execute one or more existing issues or cards from their IDs or URLs through shipit context sync, planning, implementation, code review, final sync and handoff, using native subagents with stage-specific models; several cards run in parallel, each in a worktree run creates. Resume the same task or process human QA feedback. For non-developers with a defined task; not for drafting ideas or creating tickets. Supports Claude Code and local Codex.
+description: Execute one or more existing issues or cards from their IDs or URLs through shipit context sync, planning, implementation, code review, final sync, handoff and recorded QA checks, using native subagents with stage-specific models; several cards run in parallel, each in a worktree run creates. Resume the same task or process human QA feedback. For non-developers with a defined task; not for drafting ideas or creating tickets. Supports Claude Code and local Codex.
 metadata:
   input: issue-id-or-url
   output: qa-delivery
@@ -10,8 +10,8 @@ metadata:
 # shipit run
 
 One conversation owns the task, or the several it was given. You are the coordinator: prepare Git, delegate,
-wait, checkpoint and explain QA. **Do not perform the synchronizer, planner, builder, reviewer or
-delivery agent's work yourself.** Use real native subagents, not role-playing or new
+wait, checkpoint and explain QA. **Do not perform the synchronizer, planner, builder, reviewer,
+delivery or QA agent's work yourself.** Use real native subagents, not role-playing or new
 user-owned chats. Their model/effort pairs come from `assets/models.json`, with
 explicit per-repo overrides in `run.models` of `.shipit/config.json`.
 
@@ -84,7 +84,7 @@ hand inside a linked worktree is prepared the same way. The planner always gets
    force-push or adopt an unrelated branch. Resume keeps the saved branch and
    checkout; it never pulls `main` again. If another task's branch is selected,
    it switches to the saved branch only when clean. Resolve and verify availability
-   of all five returned model/effort routes before any child runs. Retain owner
+   of all six returned model/effort routes before any child runs. Retain owner
    token and state path. In a linked worktree `main` is never checked out: the
    branch starts from the fetched upstream SHA, so the main checkout may stay
    dirty. `begin` then returns `worktree` (null in the main checkout) after copying
@@ -159,19 +159,33 @@ hand inside a linked worktree is prepared the same way. The planner always gets
    allow-list and durable journal. Wait and verify actual outcomes; checkpoint
    `handoff` only when permitted steps finished or were deliberately skipped.
    Partial delivery stays at `handoff`; reconcile effects before retrying.
-10. **Human QA.** Present what changed, where to test, plain-language steps with
+10. **QA checks, then the human.** Right after the `handoff` checkpoint, with the
+   locks still held, delegate `shipit:qa` in `check` phase using route `qa`
+   (`orchestration.md § QA checks`) when the change has a screen to test and an
+   environment to test it in: `qa.services` not empty, or a local URL in the QA guide
+   or from the user. The child runs each acceptance criterion of the task snapshot in
+   a hidden browser, against the code before (`base_sha`) and after the change, one
+   video each. Wait; verify its report, `results.json` and every listed video exist
+   and that the checkout is back on the task branch and clean. Nothing is
+   checkpointed: its results are proposals. A blocked child → relay its exact
+   question or missing prerequisite. No environment → "Implemented; QA blocked",
+   with the missing prerequisite, never terminal instructions for the non-developer.
+   Backend only → no child; report what automated validation covered and any
+   applicable non-UI checks.
+   Then present what changed, where to test, plain-language steps with
    expected results, and what remains, including pending product-doc patches. The steps are the `qa_guide.steps` returned
    by the `handoff` checkpoint, copied verbatim: the QA sections of the
    checkpointed final delivery report. `steps` null → read those sections from
    `qa_guide.report`; still none → report the missing QA guide as a gap. Never
-   re-run sync, planning, building or delivery to regenerate QA steps. Reachable environment/account/setup available
-   → "Ready for QA", and offer `/shipit:qa <ID>`: it runs each criterion in a hidden
-   browser, one video each, while the user keeps working; its proposed results are
-   evidence for the human, never a recorded result. Missing environment → "Implemented; QA blocked", with the
-   missing prerequisite, never terminal instructions for the non-developer. Backend
-   only → report what automated validation covered and any applicable non-UI checks.
-   A draft PR or green tests do not mean human QA passed. Record only explicit human
-   results. On failure, attach the failed step/expected/actual evidence, invalidate
+   re-run sync, planning, building or delivery to regenerate QA steps. With them,
+   the child's table: each criterion, its proposed result, what it did before the
+   change, its video, and any QA step that is not a criterion of the issue. "Ready
+   for QA": ask the human to watch and confirm or correct each criterion.
+   A draft PR, green tests or a proposed `pass` do not mean human QA passed. Record only explicit human
+   results. Once recorded, and before pausing or repairing, delegate `shipit:qa` in
+   `publish` phase with the confirmed results: it adds them to the PR's `## QA
+   Evidence` section when `pr_body` is allowed. A saved qa/done run shown again
+   (step 3) never runs the checks a second time unless the user asks. On failure, attach the failed step/expected/actual evidence, invalidate
    implementation/final-sync/delivery checkpoints and delegate repair to the builder on the
    same branch, followed by review and final sync before delivery. A scope change returns to the user and planner.
    **Updating with main.** A delivered (qa/done) task whose PR conflicts with main
@@ -212,7 +226,11 @@ A single reference never creates a worktree.
 4. **One card's trouble stays its own.** A blocker, decision or failure pauses that
    card (step 11) while the others continue. Ask the user per card, naming it.
 5. **QA per card.** Present step 10 for each card as it reaches QA, its worktree as
-   where to test. Feedback names its card and goes to that card's builder.
+   where to test. Feedback names its card and goes to that card's builder. One QA
+   child at a time: the cards share the ports in `qa.services`, and a server left
+   answering by another worktree serves that card's code. A card's child must have
+   started the local services itself; one already answering → it returns blocked
+   naming the port, and that card waits for its turn.
 6. **Resume.** The same command again reuses the worktrees and resumes each saved
    run; one card alone resumes in its worktree per step 3.
 

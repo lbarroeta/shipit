@@ -70,6 +70,7 @@ plugin disabled, so the number reported is a delta, not an absolute.
 | `sync-product-catch-up` | Leaving status that landed outside a run stale, marking a story built from a partial or not-planned ticket, writing unclassified issues into product docs, or writing to the tracker |
 | `run-dirty-main` | Switching main or adopting uncommitted user changes before an orchestrated task |
 | `run-resume-qa` | Restarting from main, duplicating delivery, or calling automated checks human QA approval |
+| `run-qa-checks` | Skipping the QA child after delivery, taking the PR's steps for the issue's criteria, `manual` without looking, or recording its proposals as the human's result |
 | `run-model-unavailable` | Role-playing subagents or silently substituting unavailable stage models |
 | `design-incomplete-interview` | Answering the design interview on the user's behalf; a contract marked approved that nobody confirmed; an inconsistency promoted to a rule |
 | `design-refresh-preserves` | A `sync` reconciliation wiping the design contract, its layer-rule blocks, or a human design decision |

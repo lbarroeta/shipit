@@ -59,9 +59,9 @@ without your yes.
 | `/shipit:code-review` | Reviews the change with `ponytail-review`, the plan and the repo's rules; read-only | After implementing |
 | `/shipit:task-handoff` | Creates the draft's issues in the tracker (needs `issue_create`) | A ticket draft is approved |
 | `/shipit:code-handoff` | Branch, commit, push, PR, tracker status | Work is ready for review |
-| `/shipit:qa` | Runs each acceptance criterion in a hidden browser, one video each, and proposes pass/fail for you to confirm, then posts the videos on the PR; your screen stays yours | The change is ready for QA |
+| `/shipit:qa` | Runs each acceptance criterion in a hidden browser, one video each, against the code before and after the change, and proposes pass/fail for you to confirm, then adds the videos to the PR body; your screen stays yours. Starts the local servers listed in `qa.services` that are not running, and stops them after. `run` does this by itself after delivery | The change is ready for QA |
 | `/shipit:pr-fix` | Triages review comments (`--comments`), red CI (`--ci`) and merge conflicts — what applies, what does not and why — then fixes what you approve | The PR has feedback |
-| `/shipit:run` | sync → plan → implement → review → sync → handoff for an existing ticket | You have a ticket and want it done |
+| `/shipit:run` | sync → plan → implement → review → sync → handoff → recorded QA for an existing ticket | You have a ticket and want it done |
 | `/shipit:status` | Lists in-flight tasks with their PR and tracker state | Anytime; `--prune` removes merged worktrees |
 | `/shipit:retro` | Proposes fixes to the agent's environment (checks, rules, commands, pointers) as exact patches; never product code | After a run or session that went badly or cost too much |
 
