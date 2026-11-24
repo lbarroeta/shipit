@@ -89,6 +89,8 @@ The individual cycle remains available:
 /shipit:code-handoff     branch, commit, push, PR body           delivery side effects
                     tracker + threads only if allowed
         │
+/shipit:qa          criteria in a hidden browser, a video each   before you sign QA off
+        │
 /shipit:pr-fix      review comments + red CI             as needed
                     `--comments` / `--ci` to scope
 ```

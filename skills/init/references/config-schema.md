@@ -150,7 +150,7 @@ reported as `skipped (not in handoff.allow)`, never as an error.
 | `branch` | creating or switching to the delivery branch |
 | `commit` | staging and committing the manifest |
 | `push` | pushing the branch |
-| `pr_body` | creating a ready-for-review PR, and replacing its body |
+| `pr_body` | creating a ready-for-review PR, and replacing its body; `qa`'s one evidence comment on it, after the human confirms |
 | `pr_ready` | marking an existing draft PR ready for review |
 | `tracker_comment` | one comment per mode — QA steps and the PR link |
 | `tracker_status` | the review transition after a ready PR is delivered |

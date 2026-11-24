@@ -44,7 +44,7 @@ else
 fi
 
 echo
-echo "tier 1 — recommended (handoff needs these to reach GitHub; review needs ponytail)"
+echo "tier 1 — recommended (handoff needs these to reach GitHub; review needs ponytail; qa needs Playwright's Chromium)"
 if has gh; then
   if gh auth status >/dev/null 2>&1; then
     ok gh "authenticated as $(gh api user --jq .login 2>/dev/null || echo '?')"
@@ -64,6 +64,19 @@ else
   note "claude plugin marketplace add DietrichGebert/ponytail"
   note "claude plugin install ponytail@ponytail"
   note "shipit's own rules override its test and report-length rules inside shipit skills"
+fi
+
+# Playwright keeps its browsers in one per-machine cache, shared by every project.
+# shortcut: any Chromium there counts; qa itself installs the pinned one if it differs.
+pw_cache="${PLAYWRIGHT_BROWSERS_PATH:-$HOME/.cache/ms-playwright}"
+[ -z "${PLAYWRIGHT_BROWSERS_PATH:-}" ] && [ "$(uname)" = Darwin ] && pw_cache="$HOME/Library/Caches/ms-playwright"
+pw_pin=$(grep -o 'playwright==[0-9.]*' "$(dirname "$0")/../skills/qa/assets/qa-template.py")
+if ls -d "$pw_cache"/chromium* >/dev/null 2>&1; then
+  ok playwright "$pw_cache"
+else
+  miss playwright "qa cannot run its checks; everything else works"
+  note "once per machine, ~100 MB: uv run --with $pw_pin playwright install --only-shell chromium"
+  note "qa offers this itself the first time it needs it"
 fi
 
 echo
