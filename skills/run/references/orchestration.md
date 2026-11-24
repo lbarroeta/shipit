@@ -114,6 +114,7 @@ which main already reviewed.
 With a merge in progress, pass delivery the last `updates` entry's `upstream` SHA:
 `code-handoff § Merge in progress` checks it against `MERGE_HEAD`, stages the
 manifest and closes the merge with a plain commit; never abort, rebase or force-push it.
+QA: `check` or `publish` phase of `shipit:qa`, route `qa`; no product, plan or report edits (§ QA checks).
 Each child saves a result JSON and returns its path plus a short summary:
 
 ```json
@@ -208,9 +209,38 @@ do not append to the checkpointed builder artifact. Link both reports in final
 delivery. Standalone code-implement returns its report for sync and explicit handoff; it
 does not dispatch sync or delivery internally.
 
+## QA checks
+
+The `handoff` checkpoint leaves the run at `qa` with the checkout clean on the task
+branch: the state a browser check needs. Before pausing, dispatch `shipit:qa` in
+`check` phase with route `qa`, absolute `skills/qa/SKILL.md` path, the saved task
+snapshot (its `acceptance_criteria` are the criteria; the PR's QA steps only say
+how to reach them), `qa_guide`, PR URL, task branch, `base_sha`, base URL and
+report/result paths. Skip it for a backend-only change or with no environment, and
+say which. There is no `qa` checkpoint and the child's result never reaches the
+helper's `qa` command.
+
+Its result adds `folder` (the attempt folder, under the Git common directory's
+`shipit/qa/`) and `qa`: `[{"ac", "outcome", "before", "video"}]` with outcome
+`pass`, `fail`, `unclear` or `manual`. Verify before presenting: the report and
+`<folder>/results.json` exist and agree, each video is a non-empty file, `git
+status` is clean and HEAD is the task branch — the child switches to `base_sha` for
+its baseline and must come back. A child that returns elsewhere is a failure to
+reconcile, never something to commit over. `before: pass` beside `pass` on a
+criterion the change was meant to satisfy means the check does not see the change:
+show it as unproven, not as passed. Data the UI could not create comes back
+`manual` with the record missing; inserting it needs the user's own words, passed
+on to a new `check` dispatch.
+
+After the human's result is recorded with the helper's `qa` command, dispatch
+`publish` phase with the confirmed results and `folder`; on `fail`, the builder
+gets the failed criterion's expected, actual and video path, and the next
+`handoff` checkpoint runs the checks again in a new folder.
+
 ## Human QA
 
-After handoff, present `qa_guide.steps` verbatim with the PR link, then wait for
+After handoff and the QA checks, present `qa_guide.steps` verbatim with the PR
+link and the proposed results, then wait for
 the user's actual test results; release locks while waiting. The QA guide already
 exists in the final delivery report: never dispatch a stage to produce it again.
 On the next invocation reacquire through `begin`, then record:
@@ -238,5 +268,5 @@ implement like a QA failure, recording `{reason, upstream, conflicts}` under
 `updates`. It refuses when the branch already contains main or when the remote
 task branch has commits this checkout lacks (for example GitHub's "Update branch"):
 reconcile delivery first.
-Do not mark pass from automated checks or another agent's opinion. Give the builder
+Do not mark pass from automated checks, the QA child's proposals or another agent's opinion. Give the builder
 the recorded feedback; keep any corrective work inside the original criteria.

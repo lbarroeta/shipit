@@ -6,13 +6,14 @@ user-owned chat creation as a substitute. Load only the relevant section.
 
 The default route pairs are in `../assets/models.json`. The helper's `routes`
 command applies `.shipit/config.json` overrides at
-`run.models.<anthropic|openai>.<sync|plan|implement|review|handoff>`, each a complete
+`run.models.<anthropic|openai>.<sync|plan|implement|review|handoff|qa>`, each a complete
 `{"model": "...", "effort": "..."}` pair. Do not modify global session settings.
-Route keys are `sync`, `plan`, `implement`, `review` and `handoff`. Checkpoints are
+Route keys are `sync`, `plan`, `implement`, `review`, `handoff` and `qa`. Checkpoints are
 `sync_before`, `plan`, `implement`, `review`, `sync_after`, and `handoff`; both sync
-checkpoints use route `sync` and `skills/sync/SKILL.md`. The code stages retain
+checkpoints use route `sync` and `skills/sync/SKILL.md`. Route `qa` has no checkpoint: it
+runs `skills/qa/SKILL.md` at stage `qa`, and only the human's result moves that stage. The code stages retain
 their existing skill paths. Native agent names are `run-sync`, `run-planner`,
-`run-builder`, `run-reviewer` and `run-delivery`. Public skill names are not checkpoint keys.
+`run-builder`, `run-reviewer`, `run-delivery` and `run-qa`. Public skill names are not checkpoint keys.
 Check availability and restrictions through the runtime's exposed capabilities;
 if access cannot be proven until spawn, the spawn failure is a blocker, not
 permission to switch model. `begin` returns routes after pulling `main`, so they
@@ -30,6 +31,7 @@ The plugin ships native definitions under its root `agents/`:
 | implement | `shipit:run-builder` | `claude-sonnet-5-5` | `high` |
 | review | `shipit:run-reviewer` | `claude-opus-5-5` | `high` |
 | handoff | `shipit:run-delivery` | `claude-haiku-5-5` | `medium` |
+| qa (after handoff) | `shipit:run-qa` | `claude-sonnet-5-5` | `high` |
 
 Use the native Agent tool with the corresponding scoped subagent type. Give it
 the absolute checkout, skill path and message contract; each definition instructs
@@ -54,6 +56,7 @@ substitute or cap values. Do not ask the model to certify its own identity.
 | implement | `gpt-6.1-sol` | `high` |
 | review | `gpt-6-astra` | `high` |
 | handoff | `gpt-6-luna` | `medium` |
+| qa (after handoff) | `gpt-6.1-sol` | `high` |
 
 Use the exposed native spawn, message/follow-up and wait controls. Depending on
 the host these are `spawn_agent` / `send_message` / `wait` or the collaboration

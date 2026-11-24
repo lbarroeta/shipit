@@ -76,6 +76,7 @@ downgraded to `null` after failing verification. `doctor` and `init` print it.
 | `worktree.database` | `per_worktree` \| `shared` \| null | Rails with a server database only, asked once (recipe 12). `per_worktree` → `run` suffixes development/test names in each worktree's `config/database.yml`, marked `skip-worktree`; never committed |
 | `ci.config` | string \| null | The CI file |
 | `ci.required_jobs` | string[] | Jobs that gate the merge |
+| `qa.services[]` | object[] | **Empty at init.** Local servers `qa` starts when their `url` does not answer, and stops after its run. Each: `name`, `url` (local only — any other host is never started), `start` (shell command), optional `cwd` (relative to the repo root; a sibling repo is `../<repo>`) and `timeout` in seconds (default 180). Added by the user or `sync`; no detection |
 | `unknown[]` | string[] | Every undetermined key |
 
 Everything under `.shipit/` is where agents find context, but not all of it is
@@ -150,7 +151,7 @@ reported as `skipped (not in handoff.allow)`, never as an error.
 | `branch` | creating or switching to the delivery branch |
 | `commit` | staging and committing the manifest |
 | `push` | pushing the branch |
-| `pr_body` | creating a ready-for-review PR, and replacing its body; `qa`'s one evidence comment on it, after the human confirms |
+| `pr_body` | creating a ready-for-review PR, and replacing its body; `qa`'s `## QA Evidence` section in it, after the human confirms |
 | `pr_ready` | marking an existing draft PR ready for review |
 | `tracker_comment` | one comment per mode — QA steps and the PR link |
 | `tracker_status` | the review transition after a ready PR is delivered |
@@ -173,12 +174,12 @@ and is independent of this list.
 
 `run` uses native subagents, with one complete `{model, effort}` pair per stage.
 Defaults: Anthropic plan and review = Opus 5.5/high, implement = Sonnet 5.5/high,
-sync = Sonnet 5.5/medium, handoff = Haiku 5.5/medium; OpenAI plan and review =
-Astra 6/high, implement = Sol 6.1/high, sync = Sol 6.1/medium, handoff = Luna 6/medium. Runtime IDs are pinned in the run skill's
+sync = Sonnet 5.5/medium, handoff = Haiku 5.5/medium, qa = Sonnet 5.5/high; OpenAI plan and review =
+Astra 6/high, implement = Sol 6.1/high, sync = Sol 6.1/medium, handoff = Luna 6/medium, qa = Sol 6.1/high. Runtime IDs are pinned in the run skill's
 `assets/models.json`; aliases are not used. Both sync checkpoints share route `sync`.
 
 Example override: `run.models.openai.plan = {"model": "gpt-6.1-sol", "effort": "high"}`.
-Only `sync`, `plan`, `implement`, `review`, `handoff` are valid stage keys. Overrides must be complete
+Only `sync`, `plan`, `implement`, `review`, `handoff`, `qa` are valid stage keys. Overrides must be complete
 pairs, available in the hosting runtime; Claude Code also needs a matching native
 agent definition. A mismatch blocks the run instead of inheriting the session
 model. `init` writes `{}`; `sync` preserves explicit overrides.
@@ -216,3 +217,4 @@ shape adds a row; one that does not, adds nothing.
 | `0.10.0` | `tracker.create.fields` names where `Priority` and `Size` land | Absent → add `{ "priority": "unknown", "size": "unknown" }` and append both keys to `unknown[]`; adapter `none` → `null` for both, nothing appended. Upgrade does not detect — say `/shipit:sync` resolves them once the tracker is reachable |
 | `0.15.0` | The contract moved from `.sdd/` to `.shipit/`; `sdd_tracking` retired | Performed by `init` (see its *Legacy migration*): `sync` finding `.sdd/config.json` without `.shipit/config.json` stops and points to `/shipit:init`. On the moved config: drop `sdd_tracking`; a `paths.*` value inside `.sdd/`, or reached through a `.sdd/` symlink, becomes its `.shipit/` default, and any other custom value is kept and reported; set `docs.owned_by_shipit` to `[".shipit/"]` and `docs.pointer` to the file that holds the `shipit:contract` block |
 | `0.25.0` | `worktree.credentials` and `worktree.database` record Rails decisions for parallel `run` worktrees | Absent → ask init recipe 12's Rails questions once; not a Rails app → `null` for both, nothing asked. Never edits `config/database.yml` |
+| `0.32.0` | `qa.services` lets `qa` start the local servers a run needs | Absent → add `{ "services": [] }` under `qa`, nothing asked |

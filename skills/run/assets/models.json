@@ -19,6 +19,10 @@
     "handoff": {
       "model": "claude-haiku-5-5",
       "effort": "medium"
+    },
+    "qa": {
+      "model": "claude-sonnet-5-5",
+      "effort": "high"
     }
   },
   "openai": {
@@ -41,6 +45,10 @@
     "handoff": {
       "model": "gpt-6-luna",
       "effort": "medium"
+    },
+    "qa": {
+      "model": "gpt-6.1-sol",
+      "effort": "high"
     }
   }
 }

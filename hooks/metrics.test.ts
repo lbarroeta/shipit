@@ -6,6 +6,7 @@ const u = (input: number, output: number, cacheRead = 0, cacheWrite = 0) => ({ i
 test('maps shipit run agents to their skills', async () => {
   expect(stageOf('shipit:run-builder')).toBe('code-implement')
   expect(stageOf('run-delivery')).toBe('code-handoff')
+  expect(stageOf('shipit:run-qa')).toBe('qa')
   expect(stageOf('Explore')).toBe('other')
 })
 

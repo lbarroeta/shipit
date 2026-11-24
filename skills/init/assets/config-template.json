@@ -96,5 +96,8 @@
     "config": null,
     "required_jobs": []
   },
+  "qa": {
+    "services": []
+  },
   "unknown": []
 }
