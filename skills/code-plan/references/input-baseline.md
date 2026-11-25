@@ -15,6 +15,9 @@ When the ticket cites a story and `.shipit/product/` exists, read that story's
 ACs, its MVP class and kept ACs, and its tech-design rows, per
 `../../../references/product-context.md`. A contradiction with the ticket is a
 blocker, not a choice. The status edits the change proves go in `Docs impact`.
+A ticket with an `Enables:` line delivers none of those stories: read them for
+context only, never as requirements or as stories to mark built, per its
+*Enabling work*.
 
 If local request criteria lack IDs, assign stable `AC-1`, `AC-2`, etc. in source
 order; do not renumber existing IDs. Clarifications are attached to the affected

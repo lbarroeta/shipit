@@ -141,11 +141,15 @@ Then, by outcome:
 | --- | --- |
 | Exactly one row matches | Write it. No question |
 | Two or more rows match, and no connected MCP breaks the tie | `"unknown"` → **ask** |
-| No row matches, and no tracker MCP is connected | `none`. No question — this repo has no tracker, which is a valid configuration |
+| No row matches, no tracker MCP is connected, and recipe 2 matched a manifest | `none`. No question — this repo has no tracker, which is a valid configuration |
+| No row matches, no tracker MCP is connected, and recipe 2 matched no manifest | **ask**. A repo with no product code yet has no branches, commits or templates for the patterns to read; their silence is not evidence |
 | No row matches, but a tracker MCP **is** connected | `"unknown"` → **ask**. The session has a tracker the patterns did not see |
 
 The question, when it happens: state what was found and what it was ambiguous
-between, list the candidates plus `none`, and let the user pick. Ask once.
+between, list the candidates plus `none`, and let the user pick. Ask once. In a
+repo with no product code the candidates are the four adapters plus `none`, and
+an explicit `none` is the answer, not an ambiguity: write it with no `unknown[]`
+entry.
 
 Declined, or "none of these" → write `none`, append `tracker.adapter` to `unknown[]`,
 and say in the report that the adapter is undetermined rather than absent. **Never

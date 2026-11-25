@@ -2,6 +2,24 @@
 
 How shipit takes an issue from ticket to pull request. Start with the [README](../README.md) for install and the command list.
 
+## Diagrams
+
+Three views of the flow. Each image is a preview; the `.html` next to it is the
+interactive version (open it in a browser), and the `.workflow.json` is its source,
+rendered with [archify](https://github.com/tt-a1i/archify).
+
+**From idea to pull request**: every skill, in order ([interactive](diagrams/shipit-flow.html)).
+
+![shipit: from idea to pull request](diagrams/shipit-flow.png)
+
+**From story to ticket**: how a ticket stays tied to its product story ([interactive](diagrams/story-to-ticket.html)).
+
+![shipit: from story to ticket](diagrams/story-to-ticket.png)
+
+**`run`**: one ticket, five subagents ([interactive](diagrams/run-pipeline.html)).
+
+![shipit run: one ticket, five agents](diagrams/run-pipeline.png)
+
 ## The cycle
 
 For an existing issue/card, Claude Code and local Codex can run the whole cycle:
@@ -233,7 +251,8 @@ what makes a half-finished epic safe to retry.
 `init` detects which one you use, and asks only when it genuinely cannot tell —
 `ENG-412` is a valid Linear id *and* a valid Jira key, so a branch name alone never
 decides between those two; a connected MCP does. A clean match asks nothing, and a
-repo with no tracker at all is not a question either. `/shipit:sync --tracker linear`
+repo with no tracker at all is not a question either — unless it has no code yet:
+with nothing to detect from, `init` asks once. `/shipit:sync --tracker linear`
 sets it outright, for CI or to correct a bad detection without hand-editing JSON.
 
 An ambiguity nobody resolves is recorded as `none` **and** listed in `unknown[]`, so

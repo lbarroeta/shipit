@@ -1,0 +1,295 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "shipit: from idea to pull request",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "Interviews you"
+        },
+        "database": {
+          "label": "Repo contract (.shipit/)"
+        },
+        "messagebus": {
+          "label": "Tracker tickets"
+        },
+        "backend": {
+          "label": "Plans or writes code"
+        },
+        "security": {
+          "label": "Checks the work"
+        },
+        "cloud": {
+          "label": "Delivers (git, PR)"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "plan",
+      "label": "Plan: decided with you, then turned into tickets"
+    },
+    {
+      "id": "build",
+      "label": "Build: one ticket at a time"
+    },
+    {
+      "id": "after",
+      "label": "After the pull request"
+    }
+  ],
+  "groups": [
+    {
+      "id": "run_chain",
+      "label": "/shipit:run chains these six",
+      "lane": "build",
+      "fromCol": 0,
+      "toCol": 5,
+      "variant": "emphasis"
+    }
+  ],
+  "mainPath": [
+    "sync_before",
+    "code_plan",
+    "code_implement",
+    "code_review",
+    "sync_after",
+    "code_handoff",
+    "qa"
+  ],
+  "nodes": [
+    {
+      "id": "init",
+      "lane": "plan",
+      "col": 0,
+      "type": "database",
+      "label": "init",
+      "sublabel": "reads the repo"
+    },
+    {
+      "id": "product_discovery",
+      "lane": "plan",
+      "col": 1,
+      "type": "frontend",
+      "label": "product-discovery",
+      "sublabel": "idea to PRD",
+      "width": 152
+    },
+    {
+      "id": "product_mvp_cut",
+      "lane": "plan",
+      "col": 2,
+      "type": "frontend",
+      "label": "product-mvp-cut",
+      "sublabel": "what ships first",
+      "width": 138
+    },
+    {
+      "id": "design_system",
+      "lane": "plan",
+      "col": 3,
+      "type": "frontend",
+      "label": "design-system",
+      "sublabel": "repos with UI",
+      "width": 124
+    },
+    {
+      "id": "task_create",
+      "lane": "plan",
+      "col": 4,
+      "type": "messagebus",
+      "label": "task-create",
+      "sublabel": "or task-import",
+      "width": 111
+    },
+    {
+      "id": "task_next",
+      "lane": "plan",
+      "col": 5,
+      "type": "messagebus",
+      "label": "task-next",
+      "sublabel": "recommends only",
+      "width": 97
+    },
+    {
+      "id": "sync_before",
+      "lane": "build",
+      "col": 0,
+      "type": "database",
+      "label": "sync",
+      "sublabel": "before planning"
+    },
+    {
+      "id": "code_plan",
+      "lane": "build",
+      "col": 1,
+      "type": "backend",
+      "label": "code-plan",
+      "sublabel": "the contract",
+      "width": 97
+    },
+    {
+      "id": "code_implement",
+      "lane": "build",
+      "col": 2,
+      "type": "backend",
+      "label": "code-implement",
+      "sublabel": "code + checks",
+      "width": 131
+    },
+    {
+      "id": "code_review",
+      "lane": "build",
+      "col": 3,
+      "type": "security",
+      "label": "code-review",
+      "sublabel": "read-only",
+      "width": 111
+    },
+    {
+      "id": "sync_after",
+      "lane": "build",
+      "col": 4,
+      "type": "database",
+      "label": "sync",
+      "sublabel": "after the change"
+    },
+    {
+      "id": "code_handoff",
+      "lane": "build",
+      "col": 5,
+      "type": "cloud",
+      "label": "code-handoff",
+      "sublabel": "commit, push, PR",
+      "width": 118
+    },
+    {
+      "id": "pr_fix",
+      "lane": "after",
+      "col": 4,
+      "type": "backend",
+      "label": "pr-fix",
+      "sublabel": "comments, red CI"
+    },
+    {
+      "id": "qa",
+      "lane": "after",
+      "col": 5,
+      "type": "security",
+      "label": "qa",
+      "sublabel": "a video per AC"
+    }
+  ],
+  "edges": [
+    {
+      "from": "init",
+      "to": "product_discovery"
+    },
+    {
+      "from": "product_discovery",
+      "to": "product_mvp_cut",
+      "label": "prd.md"
+    },
+    {
+      "from": "product_mvp_cut",
+      "to": "design_system",
+      "label": "mvp.md"
+    },
+    {
+      "from": "design_system",
+      "to": "task_create"
+    },
+    {
+      "from": "task_create",
+      "to": "task_next",
+      "label": "tickets"
+    },
+    {
+      "from": "task_next",
+      "to": "sync_before",
+      "label": "next ticket",
+      "variant": "emphasis"
+    },
+    {
+      "from": "sync_before",
+      "to": "code_plan"
+    },
+    {
+      "from": "code_plan",
+      "to": "code_implement",
+      "label": "plan"
+    },
+    {
+      "from": "code_implement",
+      "to": "code_review"
+    },
+    {
+      "from": "code_review",
+      "to": "sync_after",
+      "label": "approved"
+    },
+    {
+      "from": "sync_after",
+      "to": "code_handoff"
+    },
+    {
+      "from": "code_handoff",
+      "to": "qa",
+      "label": "open PR",
+      "variant": "emphasis"
+    },
+    {
+      "from": "code_review",
+      "to": "code_implement",
+      "label": "must fix",
+      "variant": "dashed",
+      "role": "return"
+    },
+    {
+      "from": "code_handoff",
+      "to": "pr_fix",
+      "label": "review feedback",
+      "role": "branch"
+    },
+    {
+      "from": "pr_fix",
+      "to": "code_handoff",
+      "label": "fixes",
+      "variant": "dashed",
+      "role": "return"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "You decide",
+      "items": [
+        "The product skills interview you",
+        "Tickets publish only if the repo allows it",
+        "Scope and security blockers return to you"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "It runs on its own",
+      "items": [
+        "/shipit:run <ID> chains the build stages",
+        "Needs a tracker and a clean tree",
+        "Ends at a PR ready for human QA"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Around the flow",
+      "items": [
+        "init asks the tracker only in an empty repo",
+        "task-next never starts the work",
+        "doctor, status and retro only report"
+      ]
+    }
+  ]
+}
