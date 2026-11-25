@@ -8,7 +8,7 @@ weight: 1
 ## Pass requires all of
 
 1. **The pilot environment draft is a `Chore` whose `Source` reads
-   `enables H1, H2`** (or names both stories as enabled). It is not flagged as
+   `enables H1`**, with or without H2, or names H1 as the story it enables. It is not flagged as
    absent from the PRD and carries no blocker pointing to
    `/shipit:product-mvp-cut` for that reason.
 2. **Its acceptance criteria are its own**: observable facts about the

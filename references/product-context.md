@@ -37,9 +37,9 @@ load the whole set.
 | Reader | Reads | For |
 | --- | --- | --- |
 | `task-create` | PRD stories and non-goals, MVP class of those stories | Cite the story; flag a request that is a non-goal, `Deferred`, `Manual` or not in the PRD, except *Enabling work* |
-| `task-next` | PRD goal, metrics and non-goals; MVP learning metric, core flow and story classes; `backlog.md` ticket↔story map; roadmap/current-state docs | Board outcome, relevance and ranking, after explicit priority; tracker stays authoritative |
+| `task-next` | PRD goal, metrics and non-goals; MVP learning metric, core flow and story classes; each ticket's `Story:` or `Enables:` line, or the `backlog.md` ticket↔story map; roadmap/current-state docs | Board outcome, relevance and ranking, after explicit priority; tracker stays authoritative |
 | `code-plan` | The cited story's ACs and MVP kept ACs; tech-design rows for it | Requirements and decisions; product status updates for `Docs impact` |
-| `sync` | Files the delivered change makes stale; `backlog.md` IDs and current-state docs for catch-up | Status updates per *Keeping it current* and *Catching up* |
+| `sync` | Files the delivered change makes stale; tickets' `Story:` lines, `backlog.md` IDs and current-state docs for catch-up | Status updates per *Keeping it current* and *Catching up* |
 
 A ticket that contradicts a product doc — builds a non-goal, a `Deferred` story,
 or an AC the MVP dropped — is a conflict to expose, never resolved silently in
