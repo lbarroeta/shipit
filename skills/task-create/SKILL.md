@@ -100,7 +100,10 @@ context that makes it hard to pick up. Decide with evidence and say why.
   (`H3`) in its `Source`. A
   request that is a non-goal, a `Deferred` or `Manual` story, or absent from the
   PRD is flagged in the draft's Blockers and the report, with
-  `/shipit:product-mvp-cut` to decide it; never edit product docs here.
+  `/shipit:product-mvp-cut` to decide it; never edit product docs here. A `Chore`
+  that delivers no story but that in-scope stories need cites them as
+  `enables H1, H3` and is not flagged as absent, per
+  `product-context.md § Enabling work`.
 - **Defined blocked work is valid.** A known prerequisite with a specific unblock
   condition is a dependency; the ticket may be drafted/published as blocked.
   Unresolved essential behaviour is an ambiguity blocker and is not ready for

@@ -16,7 +16,8 @@ file; `product-discovery`, `product-mvp-cut`, `init`, `sync`, `task-create`,
 
 All are committed and optional: an absent file is skipped silently, never
 reported as a gap. The tracker stays the source of truth for a ticket's body and
-state; `backlog.md` is an index into it.
+state; `backlog.md` is an optional index into it. A ticket's own `Story:` line
+maps it to its story without one.
 
 Story and criterion IDs (`H3`, `AC2`) are stable. Never renumber, reuse or
 delete one; a dropped story keeps its ID and gets a reason.
@@ -35,7 +36,7 @@ load the whole set.
 
 | Reader | Reads | For |
 | --- | --- | --- |
-| `task-create` | PRD stories and non-goals, MVP class of those stories | Cite the story; flag a request that is a non-goal, `Deferred`, `Manual` or not in the PRD |
+| `task-create` | PRD stories and non-goals, MVP class of those stories | Cite the story; flag a request that is a non-goal, `Deferred`, `Manual` or not in the PRD, except *Enabling work* |
 | `task-next` | PRD goal, metrics and non-goals; MVP learning metric, core flow and story classes; `backlog.md` ticket↔story map; roadmap/current-state docs | Board outcome, relevance and ranking, after explicit priority; tracker stays authoritative |
 | `code-plan` | The cited story's ACs and MVP kept ACs; tech-design rows for it | Requirements and decisions; product status updates for `Docs impact` |
 | `sync` | Files the delivered change makes stale; `backlog.md` IDs and current-state docs for catch-up | Status updates per *Keeping it current* and *Catching up* |
@@ -43,6 +44,22 @@ load the whole set.
 A ticket that contradicts a product doc — builds a non-goal, a `Deferred` story,
 or an AC the MVP dropped — is a conflict to expose, never resolved silently in
 either direction.
+
+### Enabling work
+
+Some work delivers no story, yet an `In` or `Reduced` story cannot ship without
+it: a deploy, seed data, the instrumentation of the learning metric. Such a
+`Chore` cites the stories it enables in place of a story it delivers:
+`enables H1, H3` in the draft's `Source`, published as an `Enables: H1, H3` line.
+
+- It is mapped, not "absent from the PRD", while at least one story it enables
+  is `In` or `Reduced` and not `built`. All of them `Deferred`, `Manual`, `built`
+  or non-goals → flagged like any other request for those.
+- Its acceptance criteria are its own. The stories it enables are context for
+  relevance and order, never requirements.
+- It never marks a story `(built)`: it covers none of its ACs.
+
+Work that names no story at all stays unmapped.
 
 ## Keeping it current
 
@@ -76,9 +93,11 @@ evidence like any status edit.
 
 1. **Tracker, read-only.** One scoped listing through the configured adapter
    (`skills/code-handoff/references/tracker-adapters.md`), not a call per ticket,
-   gives the state of every ticket `backlog.md` lists as published. A ticket
-   closed as completed → its delivery PR in the backlog when the tracker links
-   one. A story is `(built)` / `built` once completed tickets cover every AC the
+   gives the state of every ticket `backlog.md` lists as published and of every
+   ticket in the configured scope whose body carries a `Story:` line; no
+   `backlog.md` → the `Story:` lines alone. A ticket closed as completed → its
+   delivery PR in the backlog, when there is one and the tracker links a PR. A
+   story is `(built)` / `built` once completed tickets cover every AC the
    MVP keeps; a ticket citing some ACs (`H16 (AC1)`) covers only those, and the
    MVP note may name them. Closed as not planned or duplicate, or reopened → a
    report line, never a mark. Unreachable tracker → product status `unknown`,
@@ -88,7 +107,7 @@ evidence like any status edit.
    current-state doc names → status edit, citing the PR or commit. A claim the
    code contradicts with no change to explain it → proposed patch.
 3. **Unclassified work.** Open tracker issues in scope that no backlog row
-   cites and that cite no story → listed for `/shipit:product-mvp-cut`, never
+   cites, that cite no story and enable none → listed for `/shipit:product-mvp-cut`, never
    written into a product doc.
 
 In a run, catch-up edits unrelated to the task go to the delivery report's

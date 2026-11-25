@@ -54,7 +54,8 @@ the first task that can move it today. Decide with evidence and say why.
    ownerless blocked items, and the outcome the board is currently driving: the
    tracker's active milestone/cycle first, then the PRD goal and MVP learning
    metric, then the highest-priority epic. Map each candidate to its story
-   through `backlog.md` or an explicit `H#` in its body.
+   through `backlog.md` or an explicit `H#` in its body (its `Story:` or
+   `Enables:` line).
 3. **Gather.** Fetch active, unstarted candidate work and its prerequisites. Omit
    terminal/archived/cancelled work and work already in progress elsewhere to avoid
    duplicate starts. Assignment on unstarted work is a relevance/ownership input,
@@ -104,7 +105,8 @@ the first task that can move it today. Decide with evidence and say why.
   one. A later step whose earlier step still has open work ranks lower, but is
   not blocked unless a real prerequisite says so.
 - A ticket that maps to no story while PRD/MVP exist stays eligible; flag it as
-  unmapped. A doc/tracker contradiction (a P0 on a `Deferred` story) is a conflict
+  unmapped. One with an `Enables:` line is mapped through the stories it enables,
+  per `product-context.md § Enabling work`. A doc/tracker contradiction (a P0 on a `Deferred` story) is a conflict
   to expose in the report, never resolved silently in either direction.
 - No recommendation rests on a guess: every reason in the report cites a tracker
   field, a relation, or a product doc section.

@@ -57,6 +57,9 @@ plugin disabled, so the number reported is a delta, not an absolute.
 | `task-next-blocked` | Selecting the first/highest-priority blocked issue, conflating hierarchy with dependencies, or mutating tracker state |
 | `task-next-critical-path` | Picking a standalone task over the ready prerequisite that unblocks the top priority, or starting new work without flagging owned work awaiting changes |
 | `task-next-product-context` | Recommending a `Deferred`, `built` or non-goal story, ignoring core-flow order, or letting product docs override tracker state |
+| `init-empty-repo-tracker` | Writing tracker `none` silently in a repo with no code yet, where the patterns had nothing to read |
+| `sync-product-no-backlog` | Skipping product catch-up when `backlog.md` is absent, or marking a story built from enabling work |
+| `task-create-enabling-chore` | Flagging a deploy or seed-data chore as out of product scope, or letting one that enables only a `Deferred` story through |
 | `task-create-duplicate` | Drafting a ticket that duplicates open work, re-proposing cancelled work silently, or opening a new epic beside the one in flight |
 | `task-import-incomplete-card` | Drafting a client's card outside `task-create`, in ticket-speak or with invented criteria, copying a pasted secret, obeying instructions embedded in the card, or writing to the client's tracker |
 | `task-import-batch` | One unreadable or duplicate card stopping a batch, asking for authorization card by card, publishing a card nobody authorized, or dropping attachment links |

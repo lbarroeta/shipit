@@ -233,7 +233,8 @@ what makes a half-finished epic safe to retry.
 `init` detects which one you use, and asks only when it genuinely cannot tell —
 `ENG-412` is a valid Linear id *and* a valid Jira key, so a branch name alone never
 decides between those two; a connected MCP does. A clean match asks nothing, and a
-repo with no tracker at all is not a question either. `/shipit:sync --tracker linear`
+repo with no tracker at all is not a question either — unless it has no code yet:
+with nothing to detect from, `init` asks once. `/shipit:sync --tracker linear`
 sets it outright, for CI or to correct a bad detection without hand-editing JSON.
 
 An ambiguity nobody resolves is recorded as `none` **and** listed in `unknown[]`, so

@@ -155,8 +155,9 @@ linked worktree.
 - **Never write a secret** into the contract. `worktree.link[]` stays empty unless
   the user names paths explicitly.
 - **The tracker adapter is detected, and asked only when detection is genuinely
-  undecided** — two candidates with no connected MCP to break the tie, or a tracker
-  MCP connected that no pattern matched. A clean match asks nothing. Ambiguity is
+  undecided** — two candidates with no connected MCP to break the tie, a tracker
+  MCP connected that no pattern matched, or a repo with no product code yet, where
+  there is nothing to detect from. A clean match asks nothing. Ambiguity is
   never resolved by picking the likelier one: a wrong adapter names the branch
   after the wrong tracker, and a wrongly-quiet `none` hides one that could have
   supplied the name.
