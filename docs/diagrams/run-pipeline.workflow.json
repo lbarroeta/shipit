@@ -1,0 +1,219 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "shipit run: one ticket, five agents",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "Coordinator (your chat)"
+        },
+        "database": {
+          "label": "Context sync"
+        },
+        "backend": {
+          "label": "Plan and build"
+        },
+        "security": {
+          "label": "Review gate"
+        },
+        "cloud": {
+          "label": "Delivery"
+        },
+        "external": {
+          "label": "Waits for you"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "coordinator",
+      "label": "Coordinator: the chat that owns the ticket"
+    },
+    {
+      "id": "agents",
+      "label": "Subagents: one per stage"
+    },
+    {
+      "id": "pauses",
+      "label": "Pauses: the run stops and asks you",
+      "variant": "exception"
+    }
+  ],
+  "mainPath": [
+    "start",
+    "sync_before",
+    "planner",
+    "builder",
+    "reviewer",
+    "sync_after",
+    "delivery",
+    "human_qa"
+  ],
+  "nodes": [
+    {
+      "id": "start",
+      "lane": "coordinator",
+      "col": 0,
+      "type": "frontend",
+      "label": "Start",
+      "sublabel": "ticket + branch"
+    },
+    {
+      "id": "human_qa",
+      "lane": "coordinator",
+      "col": 5,
+      "type": "external",
+      "label": "Ready for QA",
+      "sublabel": "you test the PR",
+      "width": 118
+    },
+    {
+      "id": "sync_before",
+      "lane": "agents",
+      "col": 0,
+      "type": "database",
+      "label": "run-sync",
+      "sublabel": "sync, Sonnet"
+    },
+    {
+      "id": "planner",
+      "lane": "agents",
+      "col": 1,
+      "type": "backend",
+      "label": "run-planner",
+      "sublabel": "code-plan, Opus",
+      "width": 111
+    },
+    {
+      "id": "builder",
+      "lane": "agents",
+      "col": 2,
+      "type": "backend",
+      "label": "run-builder",
+      "sublabel": "code-implement, Sonnet",
+      "width": 132
+    },
+    {
+      "id": "reviewer",
+      "lane": "agents",
+      "col": 3,
+      "type": "security",
+      "label": "run-reviewer",
+      "sublabel": "code-review, Opus",
+      "width": 118
+    },
+    {
+      "id": "sync_after",
+      "lane": "agents",
+      "col": 4,
+      "type": "database",
+      "label": "run-sync",
+      "sublabel": "sync, Sonnet"
+    },
+    {
+      "id": "delivery",
+      "lane": "agents",
+      "col": 5,
+      "type": "cloud",
+      "label": "run-delivery",
+      "sublabel": "code-handoff, Haiku",
+      "width": 118
+    },
+    {
+      "id": "pause",
+      "lane": "pauses",
+      "col": 3,
+      "type": "external",
+      "label": "Paused",
+      "sublabel": "your decision"
+    }
+  ],
+  "edges": [
+    {
+      "from": "start",
+      "to": "sync_before",
+      "variant": "emphasis"
+    },
+    {
+      "from": "sync_before",
+      "to": "planner"
+    },
+    {
+      "from": "planner",
+      "to": "builder",
+      "label": "plan"
+    },
+    {
+      "from": "builder",
+      "to": "reviewer",
+      "label": "report"
+    },
+    {
+      "from": "reviewer",
+      "to": "sync_after",
+      "label": "approved",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "from": "sync_after",
+      "to": "delivery"
+    },
+    {
+      "from": "delivery",
+      "to": "human_qa",
+      "label": "PR delivered",
+      "variant": "emphasis"
+    },
+    {
+      "from": "reviewer",
+      "to": "builder",
+      "label": "must fix, once",
+      "variant": "dashed",
+      "role": "return",
+      "route": "up-channel",
+      "fromSide": "top",
+      "toSide": "top"
+    },
+    {
+      "from": "reviewer",
+      "to": "pause",
+      "label": "still failing",
+      "variant": "security",
+      "role": "error"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "One dispatcher",
+      "items": [
+        "One subagent per stage, then it waits",
+        "Subagents cannot spawn agents",
+        "Checkpoints let a repeated run resume"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Before it starts",
+      "items": [
+        "The ticket exists in your tracker",
+        "Clean tree, main tracks a remote",
+        "Models shown are the defaults"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "When it stops",
+      "items": [
+        "Any blocked stage pauses the run",
+        "Failed QA returns to the builder",
+        "No merge, no deploy: it ends at QA"
+      ]
+    }
+  ]
+}

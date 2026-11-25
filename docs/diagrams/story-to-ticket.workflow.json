@@ -1,0 +1,180 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "shipit: from story to ticket",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "database": {
+          "label": "Product file (.shipit/product/)"
+        },
+        "backend": {
+          "label": "shipit skill"
+        },
+        "messagebus": {
+          "label": "Tracker ticket"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "product",
+      "label": "Product: what was decided"
+    },
+    {
+      "id": "ticket",
+      "label": "Ticket: written, then published"
+    },
+    {
+      "id": "readers",
+      "label": "Readers: skills that use the line"
+    }
+  ],
+  "mainPath": [
+    "prd",
+    "mvp",
+    "task_create",
+    "task_handoff",
+    "issue",
+    "code_plan"
+  ],
+  "nodes": [
+    {
+      "id": "prd",
+      "lane": "product",
+      "col": 0,
+      "type": "database",
+      "label": "prd.md",
+      "sublabel": "stories H1, H2..."
+    },
+    {
+      "id": "mvp",
+      "lane": "product",
+      "col": 1,
+      "type": "database",
+      "label": "mvp.md",
+      "sublabel": "In or Deferred"
+    },
+    {
+      "id": "task_create",
+      "lane": "ticket",
+      "col": 1,
+      "type": "backend",
+      "label": "task-create",
+      "sublabel": "writes the draft",
+      "width": 111
+    },
+    {
+      "id": "task_handoff",
+      "lane": "ticket",
+      "col": 2,
+      "type": "backend",
+      "label": "task-handoff",
+      "sublabel": "publishes it",
+      "width": 118
+    },
+    {
+      "id": "issue",
+      "lane": "ticket",
+      "col": 3,
+      "type": "messagebus",
+      "label": "Ticket",
+      "sublabel": "in your tracker"
+    },
+    {
+      "id": "sync",
+      "lane": "readers",
+      "col": 3,
+      "type": "backend",
+      "label": "sync",
+      "sublabel": "what is built"
+    },
+    {
+      "id": "task_next",
+      "lane": "readers",
+      "col": 4,
+      "type": "backend",
+      "label": "task-next",
+      "sublabel": "what goes next",
+      "width": 97
+    },
+    {
+      "id": "code_plan",
+      "lane": "readers",
+      "col": 5,
+      "type": "backend",
+      "label": "code-plan",
+      "sublabel": "story and ACs",
+      "width": 97
+    }
+  ],
+  "edges": [
+    {
+      "from": "prd",
+      "to": "mvp",
+      "label": "stories"
+    },
+    {
+      "from": "mvp",
+      "to": "task_create",
+      "label": "stories in scope",
+      "variant": "emphasis"
+    },
+    {
+      "from": "task_create",
+      "to": "task_handoff",
+      "label": "Source: H3"
+    },
+    {
+      "from": "task_handoff",
+      "to": "issue",
+      "label": "Story: H3",
+      "variant": "emphasis"
+    },
+    {
+      "from": "issue",
+      "to": "sync"
+    },
+    {
+      "from": "issue",
+      "to": "task_next"
+    },
+    {
+      "from": "issue",
+      "to": "code_plan",
+      "label": "reads the line"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The line is the link",
+      "items": [
+        "A ticket carries Story: H3 in its body",
+        "That line alone maps it to its story",
+        "backlog.md is an optional index"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Enabling work",
+      "items": [
+        "A chore can deliver no story",
+        "It cites them: Enables: H1, H3",
+        "Mapped while one is in scope, not built"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Still flagged",
+      "items": [
+        "Work that names no story at all",
+        "A chore whose stories are all deferred",
+        "A chore never marks a story as built"
+      ]
+    }
+  ]
+}

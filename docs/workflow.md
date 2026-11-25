@@ -2,6 +2,24 @@
 
 How shipit takes an issue from ticket to pull request. Start with the [README](../README.md) for install and the command list.
 
+## Diagrams
+
+Three views of the flow. Each image is a preview; the `.html` next to it is the
+interactive version (open it in a browser), and the `.workflow.json` is its source,
+rendered with [archify](https://github.com/tt-a1i/archify).
+
+**From idea to pull request**: every skill, in order ([interactive](diagrams/shipit-flow.html)).
+
+![shipit: from idea to pull request](diagrams/shipit-flow.png)
+
+**From story to ticket**: how a ticket stays tied to its product story ([interactive](diagrams/story-to-ticket.html)).
+
+![shipit: from story to ticket](diagrams/story-to-ticket.png)
+
+**`run`**: one ticket, five subagents ([interactive](diagrams/run-pipeline.html)).
+
+![shipit run: one ticket, five agents](diagrams/run-pipeline.png)
+
 ## The cycle
 
 For an existing issue/card, Claude Code and local Codex can run the whole cycle:
